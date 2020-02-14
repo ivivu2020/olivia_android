@@ -1,0 +1,77 @@
+import { ValueGlobal } from './../providers/book-service';
+import { Component, OnInit, NgZone } from '@angular/core';
+import { NavController, ToastController } from '@ionic/angular';
+var request = require("request");
+import { C } from '../providers/constants';
+@Component({
+  selector: 'app-forgotpasschange',
+  templateUrl: './forgotpasschange.page.html',
+  styleUrls: ['./forgotpasschange.page.scss'],
+})
+export class ForgotpasschangePage implements OnInit {
+  passwordIcon: string = 'eye-off';
+  passwordType: string = 'password';
+  pass
+  constructor(public zone: NgZone, public navCtrl: NavController, public valueGlobal: ValueGlobal, private toastCtrl: ToastController) { }
+
+  ngOnInit() {
+  }
+  saveChange() {
+    var se = this;
+    if (this.pass) {
+      if (this.pass.length >= 6) {
+        var options = {
+          method: 'POST',
+          url: C.urls.baseUrl.urlMobile + '/api/account/SetForgotPassMobile',
+          headers:
+          {
+            'cache-control': 'no-cache',
+            'content-type': 'application/json'
+          },
+          body:
+          {
+            EmailOrPhone: this.valueGlobal.phone,
+            Token: se.valueGlobal.token,
+            Password: this.pass,
+            Password2: this.pass,
+            ResetToken: this.valueGlobal.resettoken,
+            UserId: this.valueGlobal.userid
+          },
+          json: true
+        };
+        request(options, function (error, response, body) {
+          if (error) throw new Error(error);
+          if (body.result) {
+            alert(body.msg);
+            se.navCtrl.navigateForward('loginusername');
+          } else {
+            alert(body.msg);
+          }
+        });
+      } else {
+        this.presentToastpass();
+      }
+    }
+    else
+    {
+      alert("Mật khẩu không được để trống");
+    }
+  }
+  async presentToastpass() {
+    let toast = await this.toastCtrl.create({
+      message: "Mật khẩu phải ít nhất 6 ký tự",
+      duration: 3000,
+      position: 'top'
+    });
+    toast.present();
+  }
+  goback() {
+    this.navCtrl.back();
+  }
+  hideShowPassword() {
+    this.zone.run(() => {
+      this.passwordType = this.passwordType === 'text' ? 'password' : 'text';
+      this.passwordIcon = this.passwordIcon === 'eye-off' ? 'eye' : 'eye-off';
+    })
+  }
+}

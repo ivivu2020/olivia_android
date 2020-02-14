@@ -1,0 +1,163 @@
+import { Bookcombo } from './../providers/book-service';
+import { GlobalFunction } from './../providers/globalfunction';
+import { OnInit, Component, NgZone } from '@angular/core';
+import { ModalController } from '@ionic/angular';
+
+@Component({
+  selector: 'app-cardeparture',
+  templateUrl: './cardeparture.page.html',
+  styleUrls: ['./cardeparture.page.scss'],
+})
+export class CardeparturePage implements OnInit {
+  isdepart = false; fromplace; daytitle: string; listcardisplay = []; listcar; departTicketSale; returnTicketSale; column: string;
+  listcarname=[];titlepage
+  constructor(public modalCtrl: ModalController, private gf: GlobalFunction, public bookCombo: Bookcombo, public zone: NgZone) {
+    var params = this.gf.getParams('listcar');
+    this.departTicketSale = this.bookCombo.ComboDetail.comboDetail.departTicketSale;
+    this.returnTicketSale = this.bookCombo.ComboDetail.comboDetail.returnTicketSale;
+    //console.log(params);
+    if (params) {
+      this.daytitle = params.title;
+      if (params.isdepart) {
+        this.titlepage="Giờ xe chiều đi"
+        this.isdepart = true;
+        this.listcar = params.listdepart;
+      } else {
+        this.titlepage="Giờ xe chiều về"
+        this.isdepart = false;
+        this.listcar = params.listreturn;
+      }
+      for (let i = 0; i < this.listcar.length; i++) {
+        this.listcar[i].sortByTime = this.listcar[i].route.pickup_time
+        this.listcar[i].cartime = this.listcar[i].route.pickup_time + ' → ' + this.listcar[i].route.arrival_time;
+        this.listcar[i].companyname = this.listcar[i].company.name;
+        this.listcar[i].id = this.listcar[i].company.id;
+        this.listcar[i].priceorder = this.listcar[i].route.schedules[0].fare.price
+        var price = this.listcar[i].route.schedules[0].fare.price - this.departTicketSale;
+        if (price <= 0) {
+          this.listcar[i].checkdiscountdepart = true;
+          price = Math.abs(price);
+        }
+        else {
+          this.listcar[i].checkdiscountdepart = false;
+        }
+        this.listcar[i].priceshow = price.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+        this.listcardisplay.push(this.listcar[i]);
+      }
+
+        for (let i = 0; i < this.listcardisplay.length; i++) {
+          var ischeck=this.checkitem(this.listcardisplay[i].company.id);
+          if (ischeck) {
+            var item={id : this.listcardisplay[i].company.id,name:this.listcardisplay[i].company.name}
+            this.listcarname.push(item);
+          }
+        }
+    }
+  }
+
+  ngOnInit() {
+  }
+
+  goback() {
+    this.modalCtrl.dismiss();
+  }
+  changeFlightInfo(obj) {
+    var se = this;
+    let cars = [];
+    cars.push(obj);
+    se.modalCtrl.dismiss({ isdepart: se.isdepart, cars: cars });
+  }
+  sortAirline(event) {
+    this.sort(event.detail.value);
+  }
+
+  /**Hàm sort list khách sạn theo giá, điểm trung bình 
+     * PDANH 23/01/2018
+     */
+  sort(property) {
+    var se = this;
+    se.column = property;
+
+
+    //se.sort('priceorder',se.listDepart[0]);
+
+    se.zone.run(() => se.listcardisplay.sort(function (a, b) {
+      let direction = -1;
+      if (property == "priceup") {
+        // if(!a[property] || !b[property]){
+        //   if(a[property] && !b[property]){
+        //     return -1;
+        //   }
+        //   if(!a[property] && b[property]){
+        //     return 1;
+        //   }
+        //   if(!a[property] && !b[property]){
+        //     return -1;
+        //   }
+        // }else{
+        // if (a[property] * 1 < b[property] * 1) {
+        //   return 1 * direction;
+        // }
+        // else if (a[property] * 1 > b[property] * 1) {
+        //   return -1 * direction;
+        // }
+        //}
+        let col = 'priceorder';
+        if (a[col] * 1 < b[col] * 1) {
+          return 1 * direction;
+        }
+        else if (a[col] * 1 > b[col] * 1) {
+          return -1 * direction;
+        }
+      } else {
+        let direction = (property == "sortByTimeDepartEarly" || property == "sortByTimeLandingEarly") ? -1 : 1;
+        let columnname = "sortByTime";
+        if (a[columnname] < b[columnname]) {
+          return 1 * direction;
+        }
+        else if (a[columnname] > b[columnname]) {
+          return -1 * direction;
+        }
+      }
+    }));
+  };
+
+  checkitem(id)
+  { 
+    for (let i = 0; i < this.listcarname.length; i++) {
+      if (this.listcarname[i].id==id) {
+        return false;
+      }
+    }
+    return true;
+  }
+  filterAirline(event)
+  {
+    var se = this;
+    if(event.detail.value && event.detail.value.length >0){
+      let arrCar = event.detail.value;
+      let strCar = "";
+      arrCar.forEach(element => {
+        strCar += (strCar != "")? (","+element) : element;
+      });
+      se.listcardisplay = [];
+      se.zone.run(()=>{
+        se.listcar.forEach(f => {
+          if(strCar.indexOf(f.id) != -1){
+            se.listcardisplay.push(f);
+          }
+        });
+      })
+    }else{
+      se.listcardisplay = [];
+      se.zone.run(()=>{
+        se.listcar.forEach(f => {
+          se.listcardisplay.push(f);
+        });
+      })
+    }
+    if(se.column){
+      this.sort(se.column);
+    }
+  }
+}

@@ -1,0 +1,381 @@
+import { Component,OnInit, ViewChild } from '@angular/core';
+import { NavController, NavParams, LoadingController, AlertController,IonRouterOutlet,Platform } from '@ionic/angular';
+import { FormGroup } from '@angular/forms';
+import { AuthService } from './../providers/auth-service';
+import { ToastController } from '@ionic/angular';
+import { Facebook, FacebookLoginResponse } from '@ionic-native/facebook/ngx';
+import { GooglePlus } from '@ionic-native/google-plus/ngx';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import * as request from 'requestretry';
+import jwt_decode from 'jwt-decode';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Router } from '@angular/router';
+
+
+@Component({
+  selector: 'app-login',
+  templateUrl: 'login.html',
+  styleUrls: ['login.scss'],
+})
+export class LoginPage implements OnInit{
+  toUser: Object;
+  public loginData: FormGroup;
+  id: string;
+  isLoggedIn: boolean = false;
+  userData: any;
+  public loader = this.loadingCtrl.create({
+    message: "Đang đăng nhập...",
+    duration: 4000
+  });
+  @ViewChild(IonRouterOutlet) routerOutlet: IonRouterOutlet;
+  constructor(
+    public navCtrl: NavController, public authService: AuthService, public platform: Platform, private fb: Facebook, private storage: Storage,
+
+    private googlePlus: GooglePlus, private alertCtrl: AlertController, private toastCtrl: ToastController, public loadingCtrl: LoadingController, public gf: GlobalFunction) {
+    //google analytic
+    gf.googleAnalytion('login', 'load', '');
+  
+  }
+
+  ngOnInit() {
+  }
+
+  ionViewDidLoad() {
+    //hide menu when on the login page, regardless of the screen resolution
+    // this.storage.remove('user');
+    // this.storage.remove('id_token');
+    // this.storage.get('id_token').then(id_token => {
+    //   if (id_token !== null) {
+    //     this.storage.get('user').then(user => {
+    //       this.id = user.id
+    //     });
+    //     this.toUser = {
+    //       toUserId: '',
+    //       toUserName: '',
+    //       UserId: this.id,
+    //       UserName: '',
+    //     }
+    //     this.navCtrl.push('ChatPage', this.toUser);
+    //   }
+
+    // });
+    //alert('Device UUID is: ' + this.device.uuid);
+    let elements = document.querySelectorAll(".tabbar");
+
+    if (elements != null) {
+      Object.keys(elements).map((key) => {
+        elements[key].style.display = 'none';
+      });
+    }
+  }
+
+  loginfb() {
+    // this.userData = { btn: ['1'] }
+    // this.app.getActiveNav().push('BlankPage', this.userData);
+    //this.loader.present();
+    var se = this;
+    this.fb.login(['email', 'public_profile']).then((response: FacebookLoginResponse) => {
+      this.fb.api('me?fields=id,name,email,first_name,gender,picture.width(720).height(720).as(picture_large)', []).then(profile => {
+        this.fb.getLoginStatus().then(response => {
+          var test = JSON.stringify(response.authResponse.accessToken);
+          this.userData = { accessToken: test, id: profile['id'], email: profile['email'], UserName: profile['first_name'], picture: profile['picture_large']['data']['url'], username: profile['name'], phone: profile['phone'], gender: profile['gender'] }
+          if (this.userData.email) {
+            this.postDatafb();
+          } else {
+            se.checknomail();
+          }
+        });
+
+      });
+    });
+    //google analytic
+    this.gf.googleAnalytion('login', 'loginfacebook', '');
+  }
+
+  postDatafb() {
+    var se = this;
+    //alert("test");
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlMobile + '/api/account/socialLogin',
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+        'cache-control': 'no-cache',
+        'content-type': 'application/json'
+      },
+      body:
+      {
+        userData:
+        {
+          email: this.userData.email,
+          name: this.userData.username,
+          id: this.userData.id,
+          image: this.userData.picture,
+          provider: 'facebook',
+          token: '',
+          idToken: this.userData.accessToken
+        }
+      },
+      json: true
+    };
+    // console.log(JSON.stringify(options.body))
+    request(options, function (error, response, body) {
+      if (error) {
+        error.page = "login";
+        error.func = "postDataFb";
+        C.writeErrorLog(error);
+      };
+      if (response.statusCode != 200) {
+        var objError = {
+          page: "login",
+          func: "postDataFb",
+          message: response.statusMessage,
+          content: response.body,
+          type: "warning"
+        };
+        C.writeErrorLog(objError);
+      }
+      if (body.result) {
+        var decoded = jwt_decode(body.auth_token);
+        // console.log(JSON.stringify(decoded))
+        se.storage.set("email", decoded.email);
+        se.storage.set("auth_token", body.auth_token);
+        se.storage.set("username", decoded.fullname);
+        // se.storage.set("jti", decoded.jti[0]);
+        if (Array.isArray(decoded.jti)) {
+          se.storage.set("jti", decoded.jti[0]);
+        }
+        else {
+          se.storage.set("jti", decoded.jti);
+        }
+        se.storage.set("point", decoded.point);
+        var text = "Bearer " + body.auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile + '/api/Dashboard/GetUserInfo',
+          headers:
+          {
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "blank";
+            error.func = "postDataFb";
+            C.writeErrorLog(error);
+          };
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "blank",
+              func: "postDataFb",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning"
+            };
+            C.writeErrorLog(objError);
+          }
+
+
+          // se.app.getRootNav().getActiveChildNav().select(0);
+          // se.navCtrl.push(se.valueGlobal.logingoback ? se.valueGlobal.logingoback : "MainPage").then(()=>{this.view.dismiss()});
+          // let elements = Array.from(document.querySelectorAll('page-main'));
+          // if(elements && elements.length >0){
+          //   se.app.getActiveNav().setRoot('MainPage');
+          //   se.app.getRootNav().getActiveChildNav().select(0);
+          // }else{
+          //   se.app.getActiveNav().push(se.valueGlobal.logingoback ? se.valueGlobal.logingoback : "MainPage").then(()=>{se.view.dismiss()});
+          // }
+          // let elements = Array.from(document.querySelectorAll('page-main'));
+          // if (elements && elements.length > 0) {
+          //   // se.app.getActiveNav().setRoot('MainPage');
+          //   // se.app.getRootNav().getActiveChildNav().select(0);
+          //   se.navCtrl.popToRoot();
+          //   se.app.getRootNav().getActiveChildNav().select(0);
+          // } else {
+          //   se.navCtrl.popToRoot();
+          // }
+          se.navCtrl.navigateRoot('/');
+        });
+      }
+    });
+  }
+  checknomail() {
+    var se = this;
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlMobile + '/api/account/CheckSocialNoEmail',
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+        'cache-control': 'no-cache',
+        'content-type': 'application/json'
+      },
+      body:
+      {
+        userData:
+        {
+          id: this.userData.id,
+          idToken: '',
+          image: this.userData.picture,
+          name: this.userData.username,
+          provider: 'facebook',
+          token: this.userData.accessToken
+        }
+      },
+      json: true
+    };
+    // console.log(JSON.stringify(options.body))
+    request(options, function (error, response, body) {
+      if (error) {
+        error.page = "login";
+        error.func = "checknomail";
+        C.writeErrorLog(error);
+      };
+      if (response.statusCode != 200) {
+        var objError = {
+          page: "login",
+          func: "checknomail",
+          message: response.statusMessage,
+          content: response.body,
+          type: "warning"
+        };
+        C.writeErrorLog(objError);
+      }
+      if (body.result) {
+        se.postDatafb();
+      } else {
+        se.presentPrompt();
+      }
+    });
+  }
+  validateEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  }
+  logingg() {
+    this.userData = { btn: ['2'] }
+    //this.app.getActiveNav().push('BlankPage', this.userData);
+    //google analytic
+    this.navCtrl.navigateForward('/blank');
+    this.gf.googleAnalytion('login', 'logingoogle', '');
+  }
+  logout() {
+    this.fb.logout()
+      .then(res => this.isLoggedIn = false)
+      .catch(e => {
+        console.log('Error logout from Facebook', e)
+        if (e) {
+          e.page = "login";
+          e.func = "logout";
+          C.writeErrorLog(e);
+        };
+      });
+    //google analytic
+    this.gf.googleAnalytion('login', 'logout', '');
+  }
+  logintk() {
+    //use this.loginData.value to authenticate the user
+
+    // this.app.getActiveNav().push('LoginusernamePage');
+    //google analytic
+    this.navCtrl.navigateForward('loginusername')
+    this.gf.googleAnalytion('login', 'logintk', '');
+
+  }
+
+  bypasslogin() {
+    // let elements = Array.from(document.querySelectorAll('page-main'));
+    //     if(elements && elements.length >0){
+    //       this.app.getActiveNav().setRoot('MainPage');
+    //       this.app.getRootNav().getActiveChildNav().select(0);
+    //     }else{
+    //       this.navCtrl.push("MainPage").then(()=>{this.view.dismiss()});
+    //     }
+    //this.navCtrl.popToRoot();
+    //google analytic
+    this.gf.googleAnalytion('login', 'bypasslogin', '');
+  }
+ 
+  async presentToast() {
+    let toast = await this.toastCtrl.create({
+      message: "Email hoặc mật khẩu không đúng.",
+      duration: 3000,
+      position: 'top'
+    });
+   
+    toast.present();
+  }
+  /**
+   * Opens a paage
+   * 
+   * @param page string Page name
+   */
+  openPage(page: string) {
+    //this.navCtrl.push(page);
+  }
+
+  goback() {
+    // if (this.navCtrl.canGoBack()) {
+    //   this.view.dismiss();
+    // } else {
+    //   this.platform.exitApp();
+    // }
+    this.navCtrl.back();
+  }
+  
+  async presentPrompt() {
+    let alert = await  this.alertCtrl.create({
+      subHeader: 'Tài khoản của bạn không có email hoặc không để ở chế độ công khai. Vui lòng cung cấp email để iVIVU có thể xác định và bảo mật tài khoản của bạn:',
+      inputs: [
+        {
+          name: 'email',
+          placeholder: 'Nhập email'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Bỏ qua',
+          role: 'cancel',
+          handler: data => {
+          }
+        },
+        {
+          text: 'Xác nhận',
+          handler: data => {
+            if (data.email) {
+              // logged in!
+              this.userData.email = data.email;
+              var test = this.validateEmail(data.email);
+              if (test == true) {
+                this.postDatafb();
+              } else {
+                this.presentToastemail();
+              }
+            } else {
+              // invalid login
+              return false;
+            }
+          }
+        }
+
+      ]
+    });
+    await alert.present();
+  }
+  async presentToastemail() {
+    let toast = await this.toastCtrl.create({
+      message: "Định dạng email không đúng",
+      duration: 3000,
+      position: 'top'
+    });
+    toast.present();
+  }
+  register(){
+    this.navCtrl.navigateForward('register');
+  }
+
+}

@@ -1,0 +1,69 @@
+<!--
+  Generated template for the HotelreviewsPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-toolbar style="min-height: 0px;text-align: center">
+    <ion-row>
+      <ion-col style="text-align: center">
+        <div style="align-self: center" >
+          <div style="position: absolute;height: 48px;width: 48px;align-self: center;" (click)="goback()">
+            <img style="height: 48px; padding: 8px;margin-top: -5px;margin-left:-14px" src="./assets/imgs/ios-arrow-round-back.svg" >
+          </div>
+          <div><label class="text-title">Đánh giá của khách hàng</label></div>
+          <div><label style="font-size: 11px;color: #828282">{{Name}}</label></div>
+        </div>
+      </ion-col>
+    </ion-row>
+    </ion-toolbar>
+</ion-header>
+<ion-content>
+    <div style="margin: 0px 11px;padding: 0;" *ngFor="let  msg of arrHotelReviews">
+      <ion-row>
+        <ion-col text-left>
+          <label style="color: #26bed6;font-weight:  500;font-size: 14px" *ngIf="msg.ReviewPoint>9 && msg.ReviewPoint<=10">
+            Tuyệt vời
+          </label>
+          <label style="color: #26bed6;font-weight:  500;font-size: 14px" *ngIf="msg.ReviewPoint>8 && msg.ReviewPoint<=9">
+            Rất tốt
+          </label>
+          <label style="color: #26bed6;font-weight:  500;font-size: 14px" *ngIf="msg.ReviewPoint>7 && msg.ReviewPoint<=8">
+            Khá Tốt
+          </label>
+          <label style="color: #26bed6;font-weight:  500;font-size: 14px" *ngIf="msg.ReviewPoint>5 && msg.ReviewPoint<=7">
+            Tạm được
+            </label>
+          <label style="color: #26bed6;font-weight:  500;font-size: 14px" *ngIf="msg.ReviewPoint<=5">
+            Không tốt
+          </label>
+        </ion-col>
+        <ion-col text-right>
+          <label style="color:#26bed6;font-size: 18px">
+            {{msg.ReviewPoint}}
+          </label>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col text-left>
+          <ion-label style="margin:0;font-weight: 300;font-size: 14px;" text-wrap>
+            {{msg.BestFeature}}
+          </ion-label>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col text-left>
+          <label style="margin:0" style="color: #828282;font-size: 12px" text-wrap>
+            {{msg.CustomerName}} • {{msg.DateStayed}}
+          </label>
+        </ion-col>
+      </ion-row>
+      <div *ngIf="msg.ReviewImages.length>0"  class="innerreview" style="overflow-x: auto" >
+          <div    *ngFor="let review of msg.ReviewImages;let i = index" style="position: relative;">
+              <img  (click)="imgreview(msg.ReviewImages,i,msg.CustomerName,msg.DateStayed)" class="img1" src={{review.ImageUrl}} />
+            </div>
+      </div>
+      <ion-row style="border-bottom: solid 1px #ccc; margin: 10px 5px;"></ion-row>
+    </div>
+</ion-content>

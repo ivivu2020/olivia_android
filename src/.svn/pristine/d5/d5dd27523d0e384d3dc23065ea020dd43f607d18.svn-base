@@ -1,0 +1,339 @@
+import { Component, NgZone,OnInit } from '@angular/core';
+import { NavController, Events, Platform, ModalController } from '@ionic/angular';
+import * as request from 'request';
+import { AuthService } from '../providers/auth-service';
+import { HttpClientModule } from '@angular/common/http';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { SearchHotel } from '../providers/book-service';
+
+@Component({
+  selector: 'app-experiencefilter',
+  templateUrl: './experiencefilter.page.html',
+  styleUrls: ['./experiencefilter.page.scss'],
+})
+export class ExperienceFilterPage implements OnInit {
+  dataLocal: any;
+  dataFacility: any;
+  dataStyle: any;
+  dataHotelType: any;
+  arrlocalcheck: any;
+  arrstylecheck:any;
+  strLocal: string;
+  strStyle: string;
+  objData: any;
+  ischeckbtnreset: boolean = false;
+  ischeckbtn: boolean = true;
+
+  constructor(public zone: NgZone,
+    private searchhotel: SearchHotel,
+    private navCtrl: NavController,
+    public gf: GlobalFunction,
+    private modalCtrl: ModalController) { }
+
+  ngOnInit() {
+  }
+
+  ionViewWillEnter(){
+    var se = this;
+    se.loadFilterData();
+  }
+
+  loadFilterData(){
+    var se = this;
+    //var code = se.searchhotel.gbmsg ?  (se.searchhotel.gbmsg.regionCode ? se.searchhotel.gbmsg.regionCode : se.searchhotel.gbmsg.RegionCode) : authService.regioncode;
+    //se.regioncode = code;
+    var code='phu-quoc';
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlPost + '/mGetListParamForFilter?region=' + code,
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+    };
+
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "search-hotel-filter-and-sort-list",
+            func: "likeItem",
+            message : response.statusMessage,
+            content : response.body,
+            type: "warning",
+            param:  JSON.stringify(options)
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page="search-hotel-filter-and-sort-list";
+        error.func="likeItem";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(error);
+      };
+      se.zone.run(()=>{
+          var lstData = JSON.parse(body);
+          se.objData = lstData;
+          se.bindData();
+      })
+    })
+  }
+
+  bindData(){
+    var se = this;
+    //se.arrtrademarkcheck =[];
+    //se.arrfacilitycheck=[];
+    //se.arrhoteltypecheck=[];
+    se.arrstylecheck=[];
+    se.arrlocalcheck=[];
+    se.zone.run(()=>{
+      // if (se.objData && se.objData[0].items.length >0)  {
+      //     for (let i = 0; i < se.objData[0].items.length; i++) {
+      //         var itemId = se.objData[0].items[i].id;
+      //         var itemChecked = se.objData[0].items[i].hasCheck;
+      //     }
+      //   }
+        //Khu vực
+        if(se.objData && se.objData.Locas && se.objData.Locas.length >0){
+          se.strLocal = se.objData.Locas.Name;
+          se.dataLocal = se.objData.Locas;
+        }
+        //Phong cách
+        if(se.objData && se.objData.Style && se.objData.Style.length >0){
+          se.strStyle = se.objData.Style.Name;
+          se.dataStyle = se.objData.Style;
+        }
+        //Loại hình
+        // if(se.objData && se.objData[3] && se.objData[3].items.length >0){
+        //   se.strHotelType = se.objData[3].propertyName;
+        //   se.dataHotelType = se.objData[3].items;
+        // }
+        //Tiện ích
+        // if(se.objData && se.objData[4] && se.objData[4].items.length >0){
+        //   se.strFacility = se.objData[4].propertyName;
+        //   se.dataFacility = se.objData[4].items;
+        // }
+       
+        setTimeout(()=>{
+          //Local
+          if(se.dataLocal && se.dataLocal.length >0){
+            se.dataLocal.forEach(item => {
+              se.renderCssByType("local",(Number(item.id)).toString(), item.hasCheck );
+              if(item.hasCheck){
+                if(!se.gf.checkExistsIndex(se.arrstylecheck,item)){
+                  se.arrlocalcheck.push(item.id);
+                }
+              }
+            });
+            }
+          //facility
+          // if(se.dataFacility && se.dataFacility.length >0){
+          //   se.dataFacility.forEach(item => {
+          //     se.renderCssByType("facility",(Number(item.id)).toString(), item.hasCheck );
+          //     if(item.hasCheck){
+          //       if(!se.gf.checkExistsIndex(se.arrfacilitycheck,item)){
+          //         se.arrfacilitycheck.push(item.id);
+          //       }
+          //     }
+          //   });
+          // }
+          //style
+          if(se.dataStyle && se.dataStyle.length >0){
+            se.dataStyle.forEach(item => {
+              se.renderCssByType("style",(Number(item.id)).toString(), item.hasCheck );
+              if(item.hasCheck){
+                if(!se.gf.checkExistsIndex(se.arrstylecheck,item)){
+                  se.arrstylecheck.push(item.id);
+                }
+              }
+            });
+            }
+          //hoteltype
+          // if(se.dataHotelType && se.dataHotelType.length >0){
+          //   se.dataHotelType.forEach(item => {
+          //     se.renderCssByType("hoteltype",(Number(item.id)).toString(), item.hasCheck );
+          //     if(item.hasCheck){
+          //       if(!se.gf.checkExistsIndex(se.arrhoteltypecheck,item)){
+          //         se.arrhoteltypecheck.push(item.id);
+          //       }
+          //     }
+          //   });
+          //   }
+        })
+          
+      },10)
+  }
+
+  goback(){
+    this.navCtrl.back();
+}
+
+/***
+ * Hàm set style mục chọn filter được check(màu xanh)/uncheck (ko màu)
+ * PDANH 28/01/2019
+ */
+renderCssByType(strType: string, strIndex: string,checked: boolean){
+  var objLocal = document.getElementsByClassName(strType + '-item-'+ strIndex);
+  if(objLocal[0]){
+    objLocal[0].classList.remove('local-check');
+    objLocal[0].classList.remove('local-uncheck');
+    if(strType == "local"){
+      objLocal[0].classList.add(checked ? 'local-check' : 'local-uncheck');
+    }else if(strType == "style"){
+      objLocal[0].classList.add(checked ? 'style-check' : 'style-uncheck');
+    }else if(strType == "facility"){
+      objLocal[0].classList.add(checked ? 'facility-check' : 'facility-uncheck');
+    }else if(strType == "hoteltype"){
+      objLocal[0].classList.add(checked ? 'hoteltype-check' : 'hoteltype-uncheck');
+    }else if(strType == "trademark"){
+      objLocal[0].classList.add(checked ? 'trademark-check' : 'trademark-uncheck');
+    }
+  }
+}
+
+close() {
+  this.modalCtrl.dismiss();
+}
+
+/***
+ * Hàm reset style mục chọn
+ * PDANH 28/01/2019
+ */
+clickCancel() {
+    this.ischeckbtnreset = true;
+    this.ischeckbtn = false;
+    //Reset other filter
+    this.arrlocalcheck = [];
+    //this.arrfacilitycheck = [];
+    //this.arrstylecheck=[];
+    //this.arrtrademarkcheck=[];
+    //this.arrhoteltypecheck=[];
+   
+    this.searchhotel.arrlocalcheck = [];
+    this.searchhotel.arrfacilitycheck = [];
+    this.searchhotel.arrstylecheck=[];
+    this.searchhotel.arrtrademarkcheck=[];
+    this.searchhotel.arrhoteltypecheck=[];
+    
+
+    let listMeal = document.getElementsByClassName("meal-check");
+    if(listMeal.length >0){
+      for(let i =listMeal.length-1; i>=0; i--){
+        listMeal[i].classList.remove('meal-check');
+      }
+    }
+    let listLocal = document.getElementsByClassName("local-check");
+    if(listLocal.length >0){
+      for(let i =listLocal.length-1; i>=0; i--){
+        listLocal[i].classList.remove('local-check');
+      }
+    }
+    let listStyle = document.getElementsByClassName("style-check");
+    if(listStyle.length >0){
+      for(let i =listStyle.length-1; i>=0; i--){
+        listStyle[i].classList.remove('style-check');
+      }
+    }
+    let listFacility = document.getElementsByClassName("facility-check");
+    if(listFacility.length >0){
+      for(let i =listFacility.length-1; i>=0; i--){
+        listFacility[i].classList.remove('facility-check');
+      }
+    }
+    let listHotelType = document.getElementsByClassName("hoteltype-check");
+    if(listHotelType.length >0){
+      for(let i =listHotelType.length-1; i >=0; i--){
+        listHotelType[i].classList.remove('hoteltype-check');
+      }
+    }
+    
+    this.strLocal="";
+    this.strStyle="";
+    //this.strFacility="";
+    //this.strHotelType="";
+}
+
+clickOk(namechanged, indexCheck) {
+  this.ischeckbtn = true;
+  this.ischeckbtnreset = false;
+  var items = {};
+  var objStar ={};
+  var objLocal ={};
+  var objfacility={};
+  var objstyle={};
+  var objhoteltype={};
+ 
+  //trademark
+  if(namechanged == 'local'){
+    this.dataLocal.forEach((element,index) => {
+      if(indexCheck == element.id){
+        element.hasCheck = this.gf.checkExistsIndex(this.arrlocalcheck,element.id)? true : false;
+        objLocal = {
+          changed: namechanged == 'local' ? true : false,
+          code: 'local',
+          propertyName: 'Khu vực',
+          items: [element]
+        }
+      }
+    });
+   
+  }
+    //Facility
+    // if(namechanged == 'facility'){
+    //   this.dataFacility.forEach((element,index) => {
+    //     if(indexCheck == element.id){
+    //       element.hasCheck = this.gf.checkExistsIndex(this.arrfacilitycheck,element.id)? true : false;
+    //       objfacility = {
+    //         changed: namechanged == 'facility' ? true : false,
+    //         code: 'facility',
+    //         propertyName: 'Tiện ích',
+    //         items: [element]
+    //       }
+    //     }
+    //   });
+    // }
+    //Style
+    if(namechanged == 'style'){
+    this.dataStyle.forEach((element,index) => {
+      if(indexCheck == element.id){
+      element.hasCheck = this.gf.checkExistsIndex(this.arrstylecheck,element.id)? true : false;
+      objstyle ={
+        changed: namechanged == 'style' ? true : false,
+        code: 'style',
+        propertyName: 'Phong cách',
+        items: [element]
+      }
+      }
+    });
+  }
+  
+    //HotelType
+    // if(namechanged == 'hoteltype'){
+    //   this.dataHotelType.forEach((element,index) => {
+    //     if(indexCheck == element.id){
+    //     element.hasCheck = this.gf.checkExistsIndex(this.arrhoteltypecheck,element.id)? true : false;
+    //       objhoteltype ={
+    //         changed: namechanged == 'hoteltype' ? true : false,
+    //         code: 'hoteltype',
+    //         propertyName: 'Loại hình',
+    //         items: [element]
+    //       }
+    //     }
+    //   });
+    // }
+  
+    var data = {};
+    if(namechanged == 'starlevel'){
+      data = objStar;
+    }
+    if(namechanged == 'local'){
+      data = objLocal;
+    }
+    if(namechanged == 'facility'){
+      data = objfacility;
+    }
+    if(namechanged == 'style'){
+      data = objstyle;
+    }
+    if(namechanged == 'hoteltype'){
+      data = objhoteltype;
+    }
+  }
+}

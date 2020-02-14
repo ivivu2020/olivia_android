@@ -1,0 +1,92 @@
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouteReuseStrategy } from '@angular/router';
+
+import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+
+import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
+import { Validators, FormBuilder, FormControl,FormGroup, FormsModule,ReactiveFormsModule  } from '@angular/forms';
+
+import { Platform,IonContent } from '@ionic/angular';
+import { Component, NgZone, Input, ViewChild } from '@angular/core';
+import { NavController, NavParams, ModalController,ToastController,LoadingController } from '@ionic/angular';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { InAppBrowserOptions } from '@ionic-native/in-app-browser';
+import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
+import { DateTime } from 'ionic-angular';
+import { FirebaseAnalytics } from '@ionic-native/firebase-analytics/ngx';
+import { IonicStorageModule } from '@ionic/storage';
+import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from './providers/auth-service';
+import { SearchHotel, ValueGlobal,Bookcombo,RoomInfo } from './providers/book-service';
+import { ComboPrice} from './providers/comboPrice';
+import { C } from './providers/constants';
+import { GlobalFunction } from './providers/globalfunction';
+import { DepartureCalendarPageModule} from './departurecalendar/departurecalendar.module';
+import { PickupCalendarPageModule} from './pickup-calendar/pickup-calendar.module';
+import { RequestComboPageModule} from './requestcombo/requestcombo.module';
+import { RequestCombo1PageModule} from './requestcombo1/requestcombo1.module';
+import { OccupancyPageModule} from './occupancy/occupancy.module';
+import { SocialSharing } from '@ionic-native/social-sharing/ngx';
+import { Facebook, FacebookLoginResponse } from '@ionic-native/facebook/ngx';
+import { GooglePlus } from '@ionic-native/google-plus/ngx';
+import { Camera } from '@ionic-native/camera/ngx';
+import { Http } from '@angular/http';
+import { Keyboard } from '@ionic-native/keyboard/ngx';
+import { FlightDeparturePageModule } from './flightdeparture/flightdeparture.module';
+import { Network } from '@ionic-native/network/ngx';
+import { NetworkProvider } from './network-provider.service';
+import { SearchHotelFilterAndSortPageModule} from './search-hotel-filter-and-sort/search-hotel-filter-and-sort.module';
+import { AppVersion } from '@ionic-native/app-version/ngx';
+import { AppUpdate } from '@ionic-native/app-update/ngx';
+import { LaunchReview } from '@ionic-native/launch-review/ngx';
+@NgModule({
+  declarations: [AppComponent],
+  entryComponents: [],
+  imports: [BrowserModule, IonicModule.forRoot(),IonicStorageModule.forRoot(), 
+    AppRoutingModule,
+    DepartureCalendarPageModule,
+    PickupCalendarPageModule,
+    RequestComboPageModule,
+    RequestCombo1PageModule,
+    FlightDeparturePageModule,
+    SearchHotelFilterAndSortPageModule,
+    OccupancyPageModule],
+  providers: [
+    StatusBar,
+    SplashScreen,
+    InAppBrowser,
+    AuthService,
+    SearchHotel,
+    ValueGlobal,
+    Bookcombo,
+    RoomInfo,
+    ComboPrice,
+    GlobalFunction,
+    C,
+    FormsModule, ReactiveFormsModule ,
+    HttpClientModule ,
+    LoadingController,
+    FirebaseAnalytics,
+    Platform,
+    ToastController,FormBuilder,Http,
+    IonContent,
+    SocialSharing,
+    Facebook,
+    GooglePlus,
+    Camera,
+    Keyboard,
+    Network,
+    NetworkProvider,
+    AppVersion,
+    AppUpdate,
+    LaunchReview,
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}

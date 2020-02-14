@@ -1,0 +1,72 @@
+<ion-header>
+    <ion-toolbar style="text-align: center;height: 56px;">
+      <ion-title>Thông tin đặt phòng</ion-title>
+      <ion-buttons start>
+        <button routerDirection="root" class="btn-close" (click)="closeModal()">
+          <img style="max-width: 150%" src="./assets/ic_close.svg">
+        </button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+<ion-content padding>
+    <div>
+        <ion-row class="cls-row" (touchend)="openPickupCalendar()">
+          <ion-col style="margin-top: 10px" size="2">
+            <div class="div-padding">
+              <img class="img-padding img-checkin" style="margin-left: 6px" src="./assets/iocnsearch/ic_checkin.svg">
+            </div>
+          </ion-col>
+          <ion-col col-3.5 class="col-calendar" size="3.5">
+            <div class="text-cin">
+              <label class="text-cin-input">{{cindisplay}}</label>
+            </div>
+            <div class="font-thu" *ngIf="cofdate==0"> 
+              <label class="text-color text-cinthu">{{cinthu}}</label>
+            </div>
+            <div class="font-thu" *ngIf="cofdate==1" >
+                <label class="text-color text-cinthu" style="color: #e52822;">{{cinthu}}</label>
+              </div>
+          </ion-col>
+          <ion-col>
+            <div class="vl"></div>
+          </ion-col>
+          <ion-col size="2" style="margin-top: 10px">
+            <div class="div-padding">
+              <img class="img-padding img-checkout" style="margin-left: -12px"
+                src="./assets/iocnsearch/ic_checkout.svg">
+            </div>
+          </ion-col>
+          <ion-col size="3.5" style="margin-left: -3px;" class="col-calendar">
+            <div class="text-cout">
+              <label class="text-cout-input">{{coutdisplay}}</label>
+            </div>
+            <div  class="font-thu" >
+              <label style="margin-left: -15px" *ngIf="cotdate==0" class="text-color text-cinthu">{{coutthu}}</label>
+              <label style="margin-left: -15px" *ngIf="cotdate==1" class="text-color text-cinthu" style="color: #e52822;margin-left: -15px">{{coutthu}}</label>
+            </div>
+          </ion-col>
+        </ion-row>
+        <ion-row  class="cls-row" (click)="openmnu()" style="background: #ffffff;border-radius: 2px;margin-top: 10px;height: 50px">
+          <ion-col style="margin-top: 10px" size="2">
+            <div class="div-padding">
+              <img class="img-padding img-people" style="margin-left: 6px" src="./assets/iocnsearch/ic_people.svg">
+            </div>
+          </ion-col>
+          <ion-col size="10">
+            <div>
+              <label style="margin-top: -10px;color: #333333;margin-left: -10px;font-size: 16px">{{adult}}
+                người lớn, {{child}} trẻ em</label>
+            </div>
+            <div>
+              <label class="text-color" style="margin-left: -10px;margin-top: 2px;font-size: 12px;color: #828282">{{roomnumber}} phòng</label>
+            </div>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <button ion-button round style="margin-top: 20px; margin-left: 0;margin-right: 0" (click)="search()" class="button btn-search" clear>Tìm
+            kiếm</button>
+        </ion-row>
+
+      </div>
+</ion-content>

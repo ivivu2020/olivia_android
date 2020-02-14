@@ -1,0 +1,1125 @@
+<ion-header>
+  <div style="background-color: #ffffff" *ngIf="isheader">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="4" (click)="selectclickcin()">
+          <ion-label style="font-weight: 300" stacked>Nhận phòng</ion-label>
+          <ion-datetime style="padding: 0px;color: #26bed6;font-weight: bold" displayFormat="DD-MM-YYYY"
+            pickerFormat="DD MM YYYY" [(ngModel)]="cin"></ion-datetime>
+        </ion-col>
+        <ion-col size="4" (click)="selectclickout()">
+          <ion-label style="font-weight: 300" stacked>Trả phòng</ion-label>
+          <ion-datetime style="padding: 0px;color: #26bed6;font-weight: bold" displayFormat="DD-MM-YYYY"
+            pickerFormat="DD MM YYYY" [(ngModel)]="cout"></ion-datetime>
+        </ion-col>
+        <ion-col size="2" (click)="openmnu()">
+          <ion-label style="font-weight: 300" stacked>Khách</ion-label>
+          <ion-label style="margin:0px;color: #26bed6;font-weight: bold;margin-top: 8px;">{{guest}}</ion-label>
+        </ion-col>
+        <ion-col size="2" (click)="openmnu()">
+          <ion-label style="font-weight: 300" stacked>Phòng</ion-label>
+          <ion-label style="margin:0px;color: #26bed6;font-weight: bold;margin-top: 8px;">{{room}}</ion-label>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div> 
+  <!-- <ion-toolbar *ngIf="showpopup==false" style="min-height: 0px">
+    <ion-title style="text-align: center">Số lượng đặt phòng</ion-title>
+    <ion-buttons start>
+      <button ion-button style="width:48px" (click)="closeModal()">
+        <span ion-text color="primary" showWhen="ios">Hủy</span>
+        <ion-icon name="md-close" showWhen="android,windows"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar> -->
+  <ion-toolbar *ngIf="showpopup==false">
+    <ion-row>
+      <ion-col size="10">
+        <ion-title class="text-title-header">Số lượng đặt phòng</ion-title>
+      </ion-col>
+      <ion-col size="2" style="text-align: right">
+        <ion-note class="button-header" routerDirection="root" (click)="closeModal()">
+          <ion-icon name="close" style="font-size: 2em;"></ion-icon>
+        </ion-note>
+      </ion-col>
+    </ion-row>
+  </ion-toolbar>
+</ion-header>
+<div class="div-float-arrow" (click)="goback()">
+  <!-- <ion-icon  style="font-size: 2em;color: #848484;" name="arrow-round-back" class="card-title">
+  </ion-icon> -->
+  <div class="div-go-back">
+    <img style="height: 48px;padding: 8px;margin-left: -6px;" src="./assets/imgs/ios-arrow-round-back.svg">
+  </div>
+</div>
+<ion-content #scrollArea (ionScroll)="scrollFunction($event)" [scrollEvents]="true"
+  *ngIf="showpopup==true&&ischeck==true">
+
+  <!-- <ion-infinite-scroll (ionInfinite)="scrollFunction($event)"> -->
+
+  <div *ngIf="showpopup==true&&ischeck==true">
+
+    <div class="card-background-page">
+
+      <ion-slides (ionSlideDidChange)="slidechange()" [options]="slideOpts" #mySlider>
+       
+        <ion-slide *ngFor="let slide of slideData">
+            <div id="grad1" class="grad1">
+              </div>
+          <img style="height: auto;width: 100%" [src]="slide.LinkImage" />
+          <div class="div-go-back" (click)="goback()">
+            <!-- <ion-icon (click)="goback()" name="arrow-round-back" class="card-title">
+              </ion-icon> -->
+            <img style="margin-top: 6px;height: 36px;" src="./assets/imgs/ios-arrow-round-back-white.svg">
+          </div>
+          <!-- <ion-badge class="badgescss">{{coutslide}}/{{lengthslide}}</ion-badge> -->
+          <div class="badgescss">
+            <span>{{coutslide}}/{{lengthslide}}</span>
+          </div>
+          <div class="img-heart" *ngIf="!itemlike" (click)="likeItem()">
+            <img style="padding-top:12px;width: 18px" src="./assets/imgs/heart-empty.svg">
+          </div>
+          <div class="img-heart" *ngIf="itemlike" (click)="unlikeItem()">
+            <ion-icon style="padding-top:10px" name="heart" color="danger"></ion-icon>
+          </div>
+          <div class="img-share" (click)="share()"><img style="padding-top:10px;width: 18px"
+              src="./assets/imgs/ic_share.svg"></div>
+
+        </ion-slide>
+
+      </ion-slides>
+
+    </div>
+    <div class="hoteldetail-point">
+      <div>
+        <h2 class="text-name" text-wrap>{{name}}
+        </h2>
+
+      </div>
+      <div style="padding-top: 6px"><img *ngIf="json" src={{json}}></div>
+      <div class="hotel-detail-note">
+        <ion-row *ngIf="AvgPoint>9 && AvgPoint<=10 && numHotelReviews >0" class="cls-row-review">
+          <ion-col style="padding:0px">
+            <ion-badge class="cls-badge" ion-badge-border-radius>{{AvgPoint}}</ion-badge>
+            <p class="cls-reviewpoint label-badge">Tuyệt vời
+            </p>
+            <ion-note item-end style="margin-right: -15px;margin-top: 0;" (click)="btnseemore()">
+              <button ion-button icon-only clear
+                style="color: #26bed6;font-size: 14px;float: right;padding-right: 24px;background: none;padding-top: 4px">
+                {{numHotelReviews}} Đánh giá
+                <ion-icon style="right: -4px;position: absolute;top: -1px;font-size: 24px;"
+                  name="ios-arrow-round-forward"></ion-icon>
+              </button>
+            </ion-note>
+          </ion-col>
+        </ion-row>
+        <ion-row *ngIf="AvgPoint>8 && AvgPoint<=9 && numHotelReviews >0">
+          <ion-col style="padding:0px">
+            <ion-badge class="cls-badge" ion-badge-border-radius>{{AvgPoint}}</ion-badge>
+            <p class="cls-reviewpoint label-badge">Rất tốt
+            </p>
+            <ion-note item-end style="margin-right: -15px;margin-top: 0;" (click)="btnseemore()">
+              <button ion-button icon-only clear
+                style="color: #26bed6;font-size: 14px;float: right;padding-right: 24px;background: none;;padding-top: 4px">
+                {{numHotelReviews}} Đánh giá
+                <ion-icon style="right: -4px;position: absolute;top: -1px;font-size: 24px;"
+                  name="ios-arrow-round-forward"></ion-icon>
+              </button>
+            </ion-note>
+          </ion-col>
+        </ion-row>
+        <ion-row *ngIf="AvgPoint>7 && AvgPoint<=8 && numHotelReviews >0">
+          <ion-col style="padding:0px">
+            <ion-badge class="cls-badge" ion-badge-border-radius>{{AvgPoint}}</ion-badge>
+            <p class="cls-reviewpoint label-badge">Khá tốt
+            </p>
+            <ion-note item-end style="margin-right: -15px;margin-top: 0;" (click)="btnseemore()">
+              <button ion-button icon-only clear
+                style="color: #26bed6;font-size: 14px;float: right;padding-right: 24px;background: none;;padding-top: 4px">
+                {{numHotelReviews}} Đánh giá
+                <ion-icon style="right: -4px;position: absolute;top: -1px;font-size: 24px;"
+                  name="ios-arrow-round-forward"></ion-icon>
+              </button>
+            </ion-note>
+          </ion-col>
+        </ion-row>
+        <ion-row *ngIf="AvgPoint>5 && AvgPoint<=7 && numHotelReviews >0">
+          <ion-col style="padding:0px">
+            <ion-badge class="cls-badge" ion-badge-border-radius>{{AvgPoint}}</ion-badge>
+            <p class="cls-reviewpoint label-badge">Tạm được
+            </p>
+            <ion-note item-end style="margin-right: -15px;margin-top: 0;" (click)="btnseemore()">
+              <button ion-button icon-only clear
+                style="color: #26bed6;font-size: 14px;float: right;padding-right: 24px;background: none;;padding-top: 4px">
+                {{numHotelReviews}} Đánh giá
+                <ion-icon style="right: -4px;position: absolute;top: -1px;font-size: 24px;"
+                  name="ios-arrow-round-forward"></ion-icon>
+              </button>
+            </ion-note>
+          </ion-col>
+        </ion-row>
+        <ion-row *ngIf="AvgPoint<=5 && numHotelReviews >0">
+          <ion-col style="padding:0px">
+            <ion-badge class="cls-badge" ion-badge-border-radius>{{AvgPoint}}</ion-badge>
+            <p class="cls-reviewpoint label-badge">Không tốt
+            </p>
+            <ion-note item-end style="margin-right: -15px;margin-top: 0;" (click)="btnseemore()">
+              <button ion-button icon-only clear
+                style="color: #26bed6;font-size: 14px;float: right;padding-right: 24px;background: none;;padding-top: 4px">
+                {{numHotelReviews}} Đánh giá
+                <ion-icon style="right: -4px;position: absolute;top: -1px;font-size: 24px;"
+                  name="ios-arrow-round-forward"></ion-icon>
+              </button>
+            </ion-note>
+          </ion-col>
+        </ion-row>
+        <ion-row class="cls-row-viewtopsale" *ngIf="topsale24Total > 2">
+          <ion-col style="padding-left: 0px;">
+            <button ion-button round class="btn-topsale">Đang bán chạy</button>
+            <ion-label class="text-topsale">Đã bán {{ topsale24Total }} phòng trong 24h qua</ion-label>
+          </ion-col>
+        </ion-row>
+      </div>
+    </div>
+    <!-- <hr style="margin-top: -16px"> -->
+    <ion-row *ngIf="topsale24Total <= 2" style="margin-top: 0px" class="row-border-cin"></ion-row>
+  </div>
+  <!-- <ion-row class="row-border-cin"></ion-row> -->
+  <!-- <div *ngIf="showpopup==true&&ischeck==true" style="margin-left: 15px;margin-top: 4px" id="map_canvas">
+  </div> -->
+  <div *ngIf="showpopup==true && linkGoogleMap" #map id="map" [ngClass]="topsale24Total < 2 ? 'div-map' : 'div-map'">
+    <iframe width="100%" height="60" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
+      [src]="linkGoogleMap">
+    </iframe>
+    <!-- <object width="100%" height="150" style="border:0" [data]="linkGoogleMap"></object> -->
+  </div>
+  <div *ngIf="showpopup==true&&ischeck==true">
+    <div style="margin-left: 15px;margin-top: 10px">
+
+      <img src="./assets/ic_facility/Group.svg">
+      <label style="color: #4f4f4f;font-size: 14px;">
+        {{Address}}
+      </label>
+    </div>
+    <ion-row class="row-border-cin"></ion-row>
+    <div class="row-cin-cout">
+      <ion-grid style="margin-top: -12px;padding:0">
+        <ion-row style="font-size:12px">
+          <ion-col size="4" style="padding:0" (click)="changeDate()">
+            <ion-label style="font-weight: 300" stacked>Nhận phòng</ion-label>
+          </ion-col>
+          <ion-col size="3.5" style="padding:0" (click)="changeDate()">
+            <ion-label style="font-weight: 300" stacked>Trả phòng</ion-label>
+          </ion-col>
+          <ion-col size="3" style="padding:0" (click)="openmnu()">
+            <ion-label class="label-guest" style="font-weight: 300;padding-left: 10px;" stacked>Số khách</ion-label>
+          </ion-col>
+          <ion-col size="1.5" style="padding:0" (click)="openmnu()">
+            <ion-label class="label-room" style="font-weight: 300" stacked>Phòng</ion-label>
+          </ion-col>
+        </ion-row>
+        <ion-row class="p-top-4">
+          <ion-col size="3.5" style="padding:0" (click)="changeDate()">
+            <ion-label class="text-cin" style="padding: 0px;color: #26bed6;font-weight: bold;font-size: 15px" stacked>
+              {{cindisplay}}</ion-label>
+          </ion-col>
+          <ion-col size="0.5" style="padding: 0;">
+            <ion-label style="margin-top: 32px;color: #666666;text-align: center">|</ion-label>
+          </ion-col>
+          <ion-col size="3.5" style="padding:0" (click)="changeDate()">
+            <ion-label class="text-cout" style="padding: 0px;color: #26bed6;font-weight: bold;font-size: 15px" stacked>
+              {{coutdisplay}}</ion-label>
+          </ion-col>
+          <ion-col size="0.5" style="padding: 0;margin-left: -3px;">
+            <ion-label style="margin-top: 32px;color: #666666;text-align: center">|</ion-label>
+          </ion-col>
+          <ion-col size="2" style="padding:0" (click)="openmnu()">
+            <ion-label class="text-guest"
+              style="margin:1px;color: #26bed6;font-weight: bold;font-size: 15px;margin-top: 8px;">{{guest}}</ion-label>
+          </ion-col>
+          <ion-col size="0.5" style="padding: 0;">
+            <ion-label style="margin-top: 32px;color: #666666;text-align: center">|</ion-label>
+          </ion-col>
+          <ion-col size="1" style="padding:0" (click)="openmnu()">
+            <ion-label class="text-input-room"
+              style="margin:1px;color: #26bed6;font-weight: bold;font-size: 15px;margin-top: 8px;">{{room}}</ion-label>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+    <!-- Vùng hiển thị combo -->
+    <div *ngIf="ischeckcombo" style="background-color: #feedc7;color: #333333" class="div-combo">
+      <div no-lines style="margin: 0">
+        <ion-row>
+          <!-- <ion-col size="2" style="padding:0">
+            <img class="icon-combo" src="./assets/ic_hoteldetail/ic_combo_black.svg">
+
+          </ion-col> -->
+          <ion-col style="padding:0;margin-top: 8px;padding-left: 16px">
+            <ion-label class="text-hotel-label text-white-space">{{titlecombo}} | <span
+                style="color:#ff9500">{{combopriceontitle}} VND/Khách</span></ion-label>
+          </ion-col>
+        </ion-row>
+        <!-- <hr style="background-color: rgba(255, 255, 255, 0.3)"> -->
+        <div no-lines style="padding:10px 16px">
+          <!-- <ion-row class="border-bottom"></ion-row> -->
+          <div style="padding: 7px 0px 5px 0px">
+            <label class="cls-combo-title">Combo bao gồm</label>
+          </div>
+          <div>
+            <label class="cls-combo-description" text-wrap [innerHTML]="Description">
+            </label>
+          </div>
+          <!-- <hr style="background-color: rgba(255, 255, 255, 0.3)"> -->
+          <!-- <ion-row class="border-bottom"></ion-row> -->
+          <div *ngIf="notecombo" style="padding: 16px 0px 5px 0px">
+            <label class="cls-combo-title">Điều kiện áp dụng</label>
+          </div>
+          <div *ngIf="notecombo">
+            <label class="cls-combo-description" style="margin: 2px 0; " text-wrap [innerHTML]="notecombo">
+            </label>
+          </div>
+          <div *ngIf="comboDetailList.length >0" class="div-combo-list">
+            <!-- <ion-row class="border-bottom"></ion-row> -->
+            <div *ngFor="let combolist of comboDetailList; let idxcombolist = index">
+              <ion-row class="line-height-17">
+                <ion-label class="text-combo-city">Khởi hành từ <span>{{combolist.departureName}}</span></ion-label>
+              </ion-row>
+              <div  class="line-height-17">
+                <ion-row style="padding-top: 2px;" *ngFor="let day of combolist.details">
+                  <ion-col size="7" class="combo-departure-date">{{ day.stayFromStr }} → {{ day.stayToStr }}</ion-col>
+                  <ion-col size="5" style="padding-right: 0;" class="text-right"
+                    [ngClass]="combolist.detailMinPrice == day.id ? 'text-combo-min-price': 'text-combo-price'">
+                    {{ day.totalPriceSale.toString().replace(',','.') | number:"1.0"}}đ</ion-col>
+                </ion-row>
+              </div>
+              <div *ngIf="combolist.salePriceUserFlight">
+                <ion-row *ngFor="let salePriceFlight of combolist.salePriceUserFlight" class="sale-price-flight">
+                  <!-- <ion-col size="1" style="padding-left: 0;">
+                          
+                            <img class="icon-flash" src="./assets/imgs/flash.svg">
+                        </ion-col>
+                        <ion-col class="text-flash" style="padding-right: 0;padding-left: 0;">
+                          <label>{{salePriceFlight}}</label>
+                        </ion-col> -->
+                  <img src="./assets/imgs/flash.svg">
+                  <label class="text-flash" style="padding-left: 5px">{{salePriceFlight}}</label>
+                </ion-row>
+              </div>
+
+              <ion-row style="padding-top: 2px" *ngIf="combolist.hasCalendar">
+                <ion-col class="text-departure" style="padding-right: 0;padding-left: 0;font-size: 14px"
+                  [ngClass]="idxcombolist ==0 ? 'p-bottom-24': '' "><a (click)="showDepartureCalendar(combolist)">Xem
+                    lịch khởi hành</a></ion-col>
+              </ion-row>
+            </div>
+          </div>
+          <!-- <ion-row *ngIf="sendRequest" style="padding: 8px 16px 16px 16px;">
+                <button ion-button round outline class="button btn-book" (click)="requestCombo(1)">Gửi yêu cầu</button>
+            </ion-row> -->
+          <div>
+            <ion-row
+              *ngIf="loginuser && loadpricecombodone && comboDetailList.length ==0 && !warningMaxPax && !flashSaleEndDate">
+              <ion-col size="6" class="text-pax"><span>{{adults}} người lớn | {{child}} trẻ em</span></ion-col>
+              <ion-col size="6" class="text-right text-combo-room-price">{{comboprice}}<span class="text-d">đ</span>
+              </ion-col>
+            </ion-row>
+            <ion-row *ngIf="loginuser && comboDetailList.length ==0 && warningMaxPax">
+              <ion-col style="    padding: 0 16px;color: #ff9500;"><span>{{warningMaxPax}}</span></ion-col>
+            </ion-row>
+            <!-- Text warning khi quá hạn flashsale -->
+            <ion-row *ngIf="loginuser && fs && flashSaleEndDate" style="padding:0px 11px">
+              <ion-col><label class="flashsale-enddate-warning">Combo chỉ áp dụng đến ngày {{flashSaleEndDate}}</label>
+              </ion-col>
+            </ion-row>
+            <!-- Text warning BOD -->
+            <ion-row *ngIf="loginuser && ischeckBOD && checkBODdone" style="padding:0px 11px">
+              <ion-col><label class="flashsale-enddate-warning">Phòng cuối cùng trong giai đoạn này vừa đặt xong</label>
+              </ion-col>
+            </ion-row>
+            <!-- Combo flashsale -->
+            <ion-row *ngIf="fs && flashSaleEndDate&& (ischeckBOD && checkBODdone)"  class="button-combo">
+              <button ion-button round outline class="button btn-book" (click)="changeDate()">Đổi ngày đi</button>
+            </ion-row>
+           
+            <ion-row *ngIf="fs && !flashSaleEndDate && loadcomplete && (!ischeckBOD && checkBODdone)&& comboDetailList.length==0"
+            class="button-combo">
+           <button ion-button round outline class="button btn-book" (click)="requestCombo(4)">Gửi yêu cầu</button>
+         </ion-row>
+          <!-- Combo vxr --> 
+         <ion-row *ngIf="ischeckcbcarhide"
+            class="button-combo">
+           <button ion-button round outline class="button btn-book" *ngIf="ischeckcbcar"  (click)="requestCombo(2)">Đặt combo</button>
+           <button ion-button round outline class="button btn-book"  *ngIf="!ischeckcbcar"  (click)="requestCombo(4)">Gửi yêu cầu</button>
+         </ion-row>
+         <!-- <ion-row *ngIf="fs && ((dateofcombo != duration+1) || !loginuser || !allowbookcombofc) && loadcomplete && (!ischeckBOD && checkBODdone)&&comboDetailList.length>0 && totalAdult>6"
+          class="button-combo">
+         <button ion-button round outline class="button btn-book" (click)="requestCombo(4)">Gửi yêu cầu</button>
+       </ion-row>
+       <ion-row *ngIf="fs && ((dateofcombo == duration+1) || !loginuser || !allowbookcombofc) && loadcomplete && (!ischeckBOD && checkBODdone)&&comboDetailList.length>0 && totalAdult>6"
+        class="button-combo">
+       <button ion-button round outline class="button btn-book" (click)="requestCombo(4)">Gửi yêu cầu</button>
+       </ion-row> -->
+       <!-- <ion-row *ngIf="ischeckcbcarhide"
+        class="button-combo">
+       <button ion-button round outline class="button btn-book" (click)="requestCombo(4)">Gửi yêu cầu</button>
+       </ion-row> -->
+            <!-- combo vmb -->
+            <ion-row
+              *ngIf="fc && ((dateofcombo != duration+1) || !loginuser || !allowbookcombofc || guest >9) && loadcomplete && (!ischeckBOD && checkBODdone)"
+               class="button-combo">
+              <button ion-button round outline class="button btn-book" (click)="sendRequestCombo()">Gửi yêu cầu</button>
+            </ion-row>
+            <!-- Trường hợp combo ko có phòng => gửi yc -->
+            <ion-row
+              *ngIf="fc && (dateofcombo == duration+1) && loadcomplete && loginuser && allowbookcombofc && hotelRoomClasses.length == 0 && (!ischeckBOD && checkBODdone )"
+               class="button-combo">
+              <button ion-button round outline class="button btn-book" (click)="sendRequestCombo()">Gửi yêu cầu</button>
+            </ion-row>
+
+            <ion-row
+              *ngIf="fc && (dateofcombo == duration+1) && loadcomplete && loginuser && allowbookcombofc && hotelRoomClasses.length > 0 && (!ischeckBOD && checkBODdone) && guest <=9"
+               class="button-combo">
+              <button ion-button round outline class="button btn-book" (click)="requestCombo(1)">Đặt Combo</button>
+            </ion-row>
+          </div>
+          <!-- Combo khác -->
+          <ion-row *ngIf="nm && loadcomplete && (!ischeckBOD && checkBODdone)" class="button-combo">
+            <button ion-button round outline class="button btn-book" (click)="requestCombo(3)">Gửi yêu cầu</button>
+          </ion-row>
+          <!-- <ion-row *ngIf="ischeckcombo && !hasComboRoom && changedate" style="padding: 8px 16px 16px 16px;">
+                <button ion-button round outline class="button btn-book" (click)="checkComboPrice()">Xem giá combo</button>
+            </ion-row> -->
+        </div>
+      </div>
+    </div>
+    <!-- End Vùng hiển thị combo -->
+    <!-- Filter bữa ăn-->
+    <!-- <div *ngIf="arrMeal.length>1" style="margin-top: 15px;margin-bottom: 15px">
+      <label style="font-weight: bold;margin-left: 15px;font-size: 18px;padding-bottom: 16px">
+          Lọc theo bữa ăn
+      </label>
+      <div class="item-div" >
+        <div  *ngFor="let item of arrMeal" style="margin-left: 10px;margin-top: 10px" >
+          <button  *ngIf="!item.ischeck" (click)="filterMealType(item)" class="btnmeal">{{item.Name}}</button>
+          <button *ngIf="item.ischeck" class="btnmealactive" (click)="notfilterMealType(item)">{{item.Name}}</button>
+      </div>
+      </div>
+     
+    </div> -->
+    <!-- Vùng hiển thị detail room -->
+    <div *ngIf="hotelRoomClasses.length >0 && loadcomplete">
+      <div class="hotel-detail-content">
+        <div class="hotel-detail-room-class">
+          <div>
+            <div class="card-background-detailpage">
+              <ion-item-group *ngFor="let hotelroom of hotelRoomClasses; let itemindex = index"
+                [myScrollVanish]="scrollArea">
+                <ion-row class="item-room-first-child" style="padding:3px 3px 7px 3px;;">
+                  <ion-col size="4">
+                    <div class="div-wrapimg">
+                      <img
+                        *ngIf="hotelroom.Rooms[0].Images.indexOf('noimage') != -1 || hotelroom.Rooms[0].Images.indexOf('http') != -1"
+                        src="{{hotelroom.Rooms[0].Images}}">
+                      <img
+                        *ngIf="hotelroom.Rooms[0].Images.indexOf('noimage') == -1 && hotelroom.Rooms[0].Images.indexOf('http') == -1"
+                        src="https:{{hotelroom.Rooms[0].Images}}">
+                    </div>
+                  </ion-col>
+                  <ion-col size="8" class="item-room-description-hoteldetail" style="padding:3px">
+                    <div class="text-left room-description-hoteldetail-right" [ngClass]="hotelroom.ClassName.length > 27 ? 'lh-12' : '' ">
+                      <h2 class="room-class-name">{{hotelroom.ClassName}}</h2>
+                      <ion-row>
+                        <ion-col size="1" class="no-padding room-class-icon">
+                          <img class="icon-detail-fix" src="./assets/iocnsearch/ic_people.svg">
+                        </ion-col>
+                        <ion-col class="no-padding p-top-10">
+                          <span
+                            *ngIf="hotelroom.Rooms[0].MaxAdults != hotelroom.Rooms[0].IncludeAdults && hotelroom.Rooms[0].MaxChils >0"
+                            class="text-room-class-description">{{hotelroom.Rooms[0].MaxAdults}} người lớn |
+                            {{hotelroom.Rooms[0].IncludeAdults}} người lớn & {{hotelroom.Rooms[0].MaxChils}} trẻ
+                            em</span>
+                          <span
+                            *ngIf="hotelroom.Rooms[0].MaxAdults == hotelroom.Rooms[0].IncludeAdults && hotelroom.Rooms[0].MaxPax >= hotelroom.Rooms[0].MaxAdults && hotelroom.Rooms[0].MaxChils >0"
+                            class="text-room-class-description">{{hotelroom.Rooms[0].MaxAdults}} người lớn &
+                            {{hotelroom.Rooms[0].MaxPax - hotelroom.Rooms[0].MaxAdults}} trẻ em</span>
+                          <span
+                            *ngIf="hotelroom.Rooms[0].MaxAdults == hotelroom.Rooms[0].IncludeAdults && (hotelroom.Rooms[0].MaxPax < hotelroom.Rooms[0].MaxAdults || hotelroom.Rooms[0].MaxChils ==0)"
+                            class="text-room-class-description">Phòng tối đa {{hotelroom.Rooms[0].MaxPax}} khách</span>
+                        </ion-col>
+                      </ion-row>
+                      <ion-row
+                        *ngIf="hotelroom.Rooms[0].RoomInfomations && hotelroom.Rooms[0].RoomInfomations.BedSummaryDisplaysMobile && hotelroom.Rooms[0].RoomInfomations.BedSummaryDisplaysMobile.length >0">
+                        <ion-col size="1" class="no-padding room-class-icon">
+                          <img class="icon-detail-fix" src="./assets/ic_hoteldetail/ic_bed.svg">
+                        </ion-col>
+                        <ion-col class="no-padding col-width-90-percent">
+                          <div *ngFor="let bed of hotelroom.Rooms[0].RoomInfomations.BedSummaryDisplaysMobile"
+                            class="text-room-class-description" [ngClass]="bed.length > 40 ? 'hidden-text': ''">{{bed}}
+                          </div>
+                        </ion-col>
+                      </ion-row>
+                      <ion-row class="row-see-detail" (click)="showRoomDetail(hotelroom)">
+                        <span class="text-see-detail" >Xem chi tiết</span>
+                      </ion-row>
+                    </div>
+                  </ion-col>
+                </ion-row>
+                <!-- Vùng hiển thị facility, mealtype, penalty -->
+                <div class="mealtype-item group-{{itemindex}}">
+                  <div class="div-mealtype"
+                    *ngFor="let mealtype of hotelroom.MealTypeRates; let gidx = index; let j = index">
+                    <div [ngClass]="mealtype.displayMealType && (itemindex==0 && gidx==0) ? 'cls-firstmealtype-border p-left-8 cls-fix-visible' : (mealtype.displayMealType ? 'cls-fix-visible p-left-8': 'cls-hidden p-left-8') ">
+                    <!-- <div
+                      [ngClass]="mealtype.displayMealType && (itemindex==0 && gidx==0) ? 'cls-firstmealtype-border p-left-8 cls-fix-visible' : (mealtype.displayMealType ? 'cls-fix-visible p-left-8': 'cls-hidden p-left-8') "
+                      *ngIf="mealtype.Supplier != 'HBED' "> -->
+                      <ion-row style="width:100%;align-items: center;padding-top: 4px">
+                        <img *ngIf="mealtype.Name || mealtype.Notes.length > 0" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_food_green.svg">
+                        <ion-label *ngIf="mealtype.Name != null && mealtype.Notes.length==0"
+                          class="text-hotel-description cls-green">{{mealtype.Name}}</ion-label>
+                        <ion-label
+                          *ngIf="mealtype.Name != null && mealtype.Notes.length!=0 && mealtype.Notes[0].length == mealtype.Name.length"
+                          class="text-hotel-description cls-green">{{mealtype.Notes.join(', ')}}</ion-label>
+                        <ion-label
+                          *ngIf="mealtype.Name != null && mealtype.Notes.length!=0 && mealtype.Notes[0].length != mealtype.Name.length"
+                          class="text-hotel-description cls-green">{{mealtype.Name}}, {{mealtype.Notes.join(', ')}}
+                        </ion-label>
+                      </ion-row>
+                      <ion-row style="width:100%;align-items: center;" *ngFor="let fac of hotelroom.Rooms[0].RoomInfomations.Facilitys">
+                        <ion-row style="width:100%;padding-top: 4px" *ngIf="mealtype.PromotionInclusions.length == 0">
+                          <!-- <ion-icon class="icon-detail-check-green-fix" name="checkmark-circle-outline"></ion-icon> -->
+                          <img *ngIf="fac.Name.indexOf('Đưa đón') == -1 && fac.Name.indexOf('Wifi') == -1" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_check_green.svg">
+                          <img *ngIf="fac.Name.indexOf('Wifi') != -1" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_wifi.svg">
+                          <img *ngIf="fac.Name.indexOf('Đưa đón') != -1" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_bus_green.svg">
+                          <ion-label class="text-hotel-description cls-green">{{ fac.Name }}</ion-label>
+                        </ion-row>
+                      </ion-row>
+                      <!-- Promotion include -->
+                      <ion-row style="width:100%;align-items: center" *ngFor="let promo of mealtype.PromotionInclusions">
+                        <ion-row style="width:100%;padding-top: 4px"
+                          *ngIf="hotelroom.Rooms[0].RoomInfomations.Facilitys.length != 0 && hotelroom.Rooms[0].RoomInfomations.Facilitys != 0">
+                          <!-- <ion-icon class="icon-detail-check-green-fix" name="checkmark-circle-outline"></ion-icon> -->
+                          <img *ngIf="promo.indexOf('Đưa đón') == -1 && promo.indexOf('Wifi') == -1" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_check_green.svg">
+                          <img *ngIf="promo.indexOf('Wifi') != -1" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_wifi.svg">
+                          <img *ngIf="promo.indexOf('Đưa đón') != -1" class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_bus_green.svg">
+                          <ion-label class="text-hotel-description cls-green">{{promo}}</ion-label>
+                        </ion-row>
+                      </ion-row>
+                      <ion-row style="width:100%;align-items: center;padding-top: 4px">
+                        <img class="icon-detail-green-fix" src="./assets/ic_hoteldetail/ic_fee_green.svg">
+                        <ion-label class="text-hotel-description cls-green">Đã bao gồm thuế phí</ion-label>
+                      </ion-row>
+                      <ion-row class="penal-detail"
+                        *ngIf='mealtype.Penaltys[0] && !mealtype.Penaltys[0].IsPenaltyFree && hotelroom.Rooms[0].Penaltys[0]'>
+                        <img *ngIf="mealtype.Penaltys[0].PenaltyDescription.length <=70"
+                          class="icon-detail-check-green-fix" src="./assets/ic_hoteldetail/uc_nonrefund_green.svg">
+                        <img *ngIf="mealtype.Penaltys[0].PenaltyDescription.length > 70"
+                          class="icon-detail-check-green-fix" src="./assets/ic_hoteldetail/ic_info.svg">
+                        <span *ngIf="mealtype.Penaltys[0].PenaltyDescription.length <=70" class="penalty-text"
+                          [innerHTML]="mealtype.Penaltys[0].PenaltyDescription.replace('p>','ion-label>')"></span>
+                        <div style="margin-top: -4px;" (click)="penaltySelected(hotelRoomClasses.length*itemindex+j+1)">
+                          <button
+                            *ngIf="!mealtype.Penaltys[0].IsPenaltyFree && mealtype.Penaltys[0].PenaltyDescription.length > 70"
+                            class="penalty-text link-penalty">Chính sách hủy phòng</button>
+                        </div>
+
+                        <div class="penalty-active arrow"
+                          [class.active]="penaltyItemSelected==hotelRoomClasses.length*itemindex+j+1"
+                          *ngIf="penaltyItemSelected==hotelRoomClasses.length*itemindex+j+1">
+                          <ion-label *ngFor="let pen of mealtype.Penaltys; let k = index"
+                            class="penalty-active-description"
+                            [innerHTML]="pen.PenaltyDescription.replace('p>','ion-label>')"
+                            [ngClass]="mealtype.Penaltys.length > 1 && k==mealtype.Penaltys.length-1 ? 'none-p-top' : ''">
+                          </ion-label>
+                        </div>
+                      </ion-row>
+                      <ion-row style="width:100%" class="penal-detail"
+                        *ngIf='mealtype.Penaltys[0] && mealtype.Penaltys[0].IsPenaltyFree && hotelroom.Rooms[0].Penaltys[0]'>
+                        <img class="icon-detail-check-green-fix" src="./assets/ic_hoteldetail/ic_info.svg">
+                        <div style="margin-top: -4px;" (click)="penaltySelected(hotelRoomClasses.length*itemindex+j+1)">
+                          <button class="penalty-text link-penalty">Hủy miễn phí trước ngày
+                            {{mealtype.Penaltys[0].PenaltyShortDateStr}}</button>
+                        </div>
+                        <div class="penalty-active arrow"
+                          [class.active]="penaltyItemSelected==hotelRoomClasses.length*itemindex+j+1"
+                          *ngIf="penaltyItemSelected==hotelRoomClasses.length*itemindex+j+1">
+                          <ion-label *ngFor="let pen of mealtype.Penaltys; let k = index"
+                            class="penalty-active-description"
+                            [innerHTML]="pen.PenaltyDescription.replace('p>','ion-label>')"
+                            [ngClass]="mealtype.Penaltys.length > 1 && k==mealtype.Penaltys.length-1 ? 'none-p-top' : ''">
+                          </ion-label>
+                        </div>
+                      </ion-row>
+
+                      <ion-row *ngIf="hotelRooms.SummaryFilter && (loginuser || mealtype.IsshowpricesOTA) && !hotelroom.MSG"
+                        class="text-room-description">
+                        <ion-col style="text-align: right;padding:0">
+                          <ion-label style="margin:0px">{{hotelRooms.SummaryFilter}}</ion-label>
+                        </ion-col>
+
+                      </ion-row>
+                      <ion-row *ngIf="hotelroom.MSG" class="text-room-description">
+                        <ion-col style="text-align: right;padding:0">
+                          <ion-label style="margin:0px">Giá cơ bản dành cho {{hotelroom.Rooms[0].IncludeAdults}} người
+                            lớn</ion-label>
+                        </ion-col>
+                      </ion-row>
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA) && mealtype.PromotionNote" class="text-promotion-note">
+                        <div class="div-promotion-note">
+                          <span class="icon-text-promotion">
+                            <img style="width:14px" src="./assets/imgs/gift2.svg">
+                          </span>
+                          <span>{{mealtype.PromotionNote}}</span>
+                        </div>
+                      </ion-row>
+                      <ion-row
+                        *ngIf="(loginuser || mealtype.IsshowpricesOTA) && mealtype.PriceAvgPlusTA != mealtype.PriceAvgPlusOTA && mealtype.PriceAvgPlusOTA > mealtype.PriceAvgPlusTA">
+                        <ion-col class="text-room-price-ota">
+                          <ion-label style="margin:0px;line-height: 24px;text-decoration: line-through;">
+                            {{mealtype.PriceAvgPlusOTAStr}}đ</ion-label>
+                        </ion-col>
+                      </ion-row>
+                      <!-- Hiển thị default giá lớn nhất trong cùng group bữa ăn -->
+                      <ion-row
+                        *ngIf="(loginuser || mealtype.IsshowpricesOTA) && mealtype.PriceAvgPlusTA == mealtype.PriceAvgPlusOTA && mealtype.PriceAvgPlusOTA <= mealtype.PriceAvgPlusTA && mealtype.displayLastPriceAvgPlusOTA && mealtype.displayLastPriceAvgPlusOTAStr != mealtype.PriceAvgPlusOTAStr">
+                        <ion-col class="text-room-price-ota">
+                          <ion-label style="margin:0px;line-height: 24px;text-decoration: line-through;">
+                            {{mealtype.displayLastPriceAvgPlusOTAStr}}đ</ion-label>
+                        </ion-col>
+                      </ion-row>
+
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA)">
+                        <ion-col
+                          [ngClass]="((loginuser || mealtype.IsshowpricesOTA) && mealtype.AvailableNo >0 && mealtype.Status=='AL')? 'text-room-price-no-bottom':'text-room-price' ">
+                          <ion-label style="margin:0px;line-height: 24px;">{{mealtype.PriceAvgPlusTAStr}}đ</ion-label>
+                        </ion-col>
+
+                      </ion-row>
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA) && mealtype.AvailableNo >0 && mealtype.Status=='AL'">
+                        <ion-col style="text-align: right">
+                          <ion-label *ngIf="mealtype.AvailableNo <= 10 else hideAvailableNo"
+                            style="margin:0px;text-align: right;font-size: 14px;color: #26bed6;padding-bottom: 5px;padding-right: 8px;">
+                            (Còn {{mealtype.AvailableNo}} phòng)</ion-label>
+                            <ng-template #hideAvailableNo><ion-label style="margin:0px;text-align: right;font-size: 14px;color: #26bed6;padding-bottom: 5px;padding-right: 8px;">
+                              (Còn 10+ phòng)</ion-label></ng-template>
+                        </ion-col>
+
+                      </ion-row>
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA) && hotelroom.MSG">
+                        <ion-col style="text-align: right">
+                          <ion-label style="color:#F79321;white-space: normal;padding-bottom: 16px;padding-right: 8px">
+                            {{ hotelroom.MSG.toString().trim()}}</ion-label>
+                        </ion-col>
+                      </ion-row>
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA) && !mealtype.MSG.toString()" style="margin-top: -10px">
+                        <ion-col>
+                          <ion-label style="text-align: right;color: #003C71;font-size: 14px">+{{mealtype.point}} điểm
+                            khi đặt phòng này</ion-label>
+                        </ion-col>
+                      </ion-row>
+                      <!-- Thêm trường hợp số trẻ em quá số lượng cho phép -->
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA) && !hotelroom.MSG && mealtype.MSG">
+                        <ion-col style="text-align: right">
+                          <ion-label style="color:#F79321;white-space: normal;padding-bottom: 16px;padding-right: 8px">
+                            {{ mealtype.MSG.toString().trim()}}</ion-label>
+                        </ion-col>
+                      </ion-row>
+                      <ion-row *ngIf="!loginuser && !mealtype.IsshowpricesOTA" class="text-register" (click)="goToLogin()">
+                        <div style="margin:0px;line-height: 24px;width:100%;border: none;">
+                          <span class="icon-text-register">
+                            <img src="./assets/imgs/ic_email.svg">
+                          </span>
+                          <span style="font-size:22px;font-weight: bold">Đăng nhập</span> để xem giá phòng</div>
+                      </ion-row>
+
+                      <ion-row *ngIf="(loginuser || mealtype.IsshowpricesOTA) && !mealtype.MSG.toString()"
+                        style="padding-right: 8px;">
+                        <button style="margin: 11px 0px 0px 0px;"
+                          (click)="book(hotelroom.Rooms[0].RoomID,mealtype,j,hotelroom.ClassName,itemindex)" ion-button
+                          round outline class="button btn-book-outline">Đặt ngay</button>
+                      </ion-row>
+                      <div class="div-border-bottom"></div>
+                    </div>
+                  </div>
+                  <div class="cls-seemoreroomdetail div-show-{{itemindex}}" (click)="seemoreroomdetail(1, itemindex )"
+                    *ngIf="!(mealtypegrouplist && mealtypegrouplist.indexOf(itemindex) != -1) && hotelroom.countMealType > 0">
+                    Xem thêm {{ hotelroom.countMealType }} lựa chọn <img class="img-seemoreroom"
+                      src="./assets/imgs/ic_down.svg">
+                  </div>
+                  <div class="cls-hiddenroomdetail div-hide-{{itemindex}}" (click)="seemoreroomdetail(2, itemindex)"
+                    *ngIf="mealtypegrouplist && mealtypegrouplist.indexOf(itemindex) != -1 && hotelroom.countMealType > 0">
+                    Ẩn {{ hotelroom.countMealType }} lựa chọn <img class="img-seemoreroom"
+                      src="./assets/imgs/ic_up.svg">
+                  </div>
+                </div>
+                <div class="div-split"></div>
+              </ion-item-group>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!loadcomplete && hotelRoomClasses && hotelRoomClasses.length == 0" class="div-pending-load-data"
+      style="height: 760px">
+      <!-- <img src="./assets/placeholder/group_review.svg"> -->
+      <div *ngFor="let i of itemsSk" padding>
+        <div class="div-sk-detail">
+          <ion-row class="row-item-hoteldetail-sk">
+            <ion-col size="4" class="col-img-hoteldetail-sk">
+              <ion-skeleton-text animated style="width:104px;height:104px;border-radius:6px;margin:0">
+              </ion-skeleton-text>
+            </ion-col>
+            <ion-col size="8" class="col-description-hoteldetail-sk" style="line-height: 16px;padding-top: 0">
+              <ion-skeleton-text animated style="width: 50%;margin: 0;height: 16px;"></ion-skeleton-text>
+              <ion-skeleton-text animated style="width: 100%;margin: 0;margin-top:16px;height: 16px;">
+              </ion-skeleton-text>
+              <ion-skeleton-text animated style="width: 75%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+              <ion-skeleton-text animated style="width: 50%;margin: 0;margin-top:16px;height: 16px;">
+              </ion-skeleton-text>
+            </ion-col>
+          </ion-row>
+          <ion-row class="row-item-description-sk">
+            <ion-skeleton-text animated style="width: 104px;margin: 0;margin-top:16px;height: 16px;">
+            </ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 83%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 67%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 100%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+          </ion-row>
+          <ion-row>
+            <ion-col size="8.5" style="padding: 0"></ion-col>
+            <ion-col size="3.5" style="padding: 0">
+              <ion-skeleton-text animated style="margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="6.3" style="padding: 0"></ion-col>
+            <ion-col size="5.7" style="padding: 0">
+              <ion-skeleton-text animated style="margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+            </ion-col>
+          </ion-row>
+          <ion-row class="row-item-button-sk">
+            <ion-skeleton-text animated style="width: 100%;margin: 0;height: 48px;border-radius: 6px;margin-top:16px">
+            </ion-skeleton-text>
+          </ion-row>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="loadcomplete && hotelRoomClasses && hotelRoomClasses.length == 0" class="div-empty-room">
+      <ion-row>
+        <ion-col>
+          <div class="empty-room"><img src="./assets/empty/ic_outofroom.png"></div>
+        </ion-col>
+      </ion-row>
+      <ion-row><label class="label-empty-room">Xin lỗi, không còn phòng trống trong khoảng thời gian này</label>
+      </ion-row>
+      <ion-row>
+        <ion-col class="btn-empty-left"><button ion-button round outline class="button btn-change-hotel"
+            (click)="changeHotel()">Đổi khách sạn</button></ion-col>
+        <ion-col class="btn-empty-right"><button ion-button round outline class="button btn-change-date"
+            (click)="changeDate()">Đổi ngày</button></ion-col>
+      </ion-row>
+    </div>
+    <!-- End Vùng Detail Room -->
+
+    <div class="list-item-end">
+      <div class="div-row-item-end" (click)="FacilitiesPage()">
+        <label>
+          Tiện ích
+        </label>
+        <ion-icon slot="end" name="ios-arrow-round-forward" class="item-end"></ion-icon>
+      </div>
+      <div class="div-row-item-end" (click)="DescriptionPage()">
+        <label>
+          Thông tin khách sạn
+        </label>
+        <ion-icon slot="end" name="ios-arrow-round-forward" class="item-end"></ion-icon>
+      </div>
+      <div class="div-row-item-end" (click)="PolicyPage()">
+        <label>
+          Chính sách khách sạn
+        </label>
+        <ion-icon slot="end" name="ios-arrow-round-forward" class="item-end"></ion-icon>
+      </div>
+    </div>
+
+    <div *ngIf="numHotelReviews>0">
+      <label style="font-weight: bold;margin-left: 15px;font-size: 18px">
+        Đánh giá của khách hàng
+      </label>
+      <div style="margin-left: 10px;font-size: 14px;padding-top: 5px;" *ngFor="let  msg of arrHotelReviews; let idx = index">
+        <ion-row>
+          <ion-col text-left>
+            <label class="text-reviews"  *ngIf="msg.ReviewPoint>9 && msg.ReviewPoint<=10">
+              Tuyệt vời
+            </label>
+            <label class="text-reviews" *ngIf="msg.ReviewPoint>8 && msg.ReviewPoint<=9">
+              Rất tốt
+            </label>
+            <label class="text-reviews" *ngIf="msg.ReviewPoint>7 && msg.ReviewPoint<=8">
+              Khá tốt
+            </label>
+            <label class="text-reviews" *ngIf="msg.ReviewPoint>5 && msg.ReviewPoint<=7">
+              Tạm được
+            </label>
+            <label class="text-reviews" *ngIf="msg.ReviewPoint<=5">
+              Không tốt
+            </label>
+          </ion-col>
+          <ion-col text-right>
+            <label class="text-reviews-point">
+              {{msg.ReviewPoint}}
+            </label>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col text-left>
+            <label style="margin:0" text-wrap>
+              {{msg.BestFeature}}
+            </label>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col text-left>
+            <label class="text-date-reviews" text-wrap>
+              {{msg.CustomerName}} • {{msg.DateStayed}}
+            </label>
+          </ion-col>
+        </ion-row>
+        <div *ngIf="msg.ReviewImages.length>0" class="innerreview" style="overflow-x: auto">
+          <div *ngFor="let review of msg.ReviewImages;let i = index" style="position: relative;">
+            <img (click)="imgreview(msg.ReviewImages,i,msg.CustomerName,msg.DateStayed)" class="img1"
+              src={{review.ImageUrl}} />
+          </div>
+        </div>
+        <ion-row *ngIf="idx < arrHotelReviews.length-1" class="border-bottom-item-end"></ion-row>
+      </div>
+      <div *ngIf="numHotelReviews>3" align="center" class="div-seedetail">
+        <button ion-button clear class="text-seedetails" (click)="btnseemore()">Xem tất cả đánh giá</button>
+      </div>
+      <!-- <hr *ngIf="numHotelReviews>3" style="margin-top: 0px; margin-left: 16px;"> -->
+    </div>
+    <div *ngIf="HotelRelated && HotelRelated.length >0" class="text-hotel-relate">
+      <label class="label-bold-18">
+        Khách sạn tương tự
+      </label>
+    </div>
+    <div>
+      <div>
+          <div style="overflow: auto;height: auto;" class="div-hotel-related">
+              <div *ngFor="let msg of HotelRelated; let i = index">
+                <div class="row-item-hotelrelate">
+                  <!-- left image region-->
+                  <div class="col-img-hotelrelate">
+                      <img  class="img-radius" src={{msg.Avatar}} style="position:relative" (click)="itemHotelRelated(msg.Id)">
+                      <!-- <div *ngIf="msg.Liked" class="img-heart" (click)="unlikeItem(msg.HotelId)">
+                        <ion-icon name="heart" color="danger" class="cls-icon-content" ></ion-icon>
+                      </div>
+                      <div *ngIf="!msg.Liked" class="img-heart" (click)="likeItem(msg.HotelId)">
+                        <img src="./assets/imgs/heart-empty.svg" style="width:14px;height:14px" class="cls-img-content" >
+                      </div> -->
+                      <div *ngIf="msg.PromotionDescriptionSubstring" class="hotel-related-img transbox_0">
+                          {{msg.PromotionDescriptionSubstring}}
+                        </div>
+                  </div>
+                  <!-- right content region -->
+                  <div class="col-description-hotelrelate">
+                      <div  class="fix-height-104">
+                          <div (click)="itemHotelRelated(msg.Id)" >
+                          <h2 class="text-name" >{{msg.Name}}
+                          </h2>
+                          <p>
+                              <img *ngIf="msg.Rating!=0" src={{msg.Rating}}>
+                          </p>
+                          <p *ngIf="msg.SubLocation" class="text">
+                            <img style="height:10px" src="./assets/ic_hoteldetail/group.svg">
+                            <label style="color: #4f4f4f;margin-left: 5px"> {{msg.SubLocation}}
+                            </label>
+                          </p>
+                          <div *ngIf="msg.AvgPoint>0">
+                            <ion-row *ngIf="msg.AvgPoint>9 && msg.AvgPoint<=10" class="m-top-5">
+                              <ion-badge class="cls-badge" ion-badge-border-radius>{{msg.AvgPoint}}</ion-badge>
+                              <p class="label-badge">Tuyệt vời
+                              </p>
+                            </ion-row>
+                            <ion-row *ngIf="msg.AvgPoint>8 && msg.AvgPoint<=9" class="m-top-5">
+                              <ion-badge class="cls-badge" ion-badge-border-radius>{{msg.AvgPoint}}</ion-badge>
+                              <p class="label-badge">Rất tốt
+                              </p>
+                            </ion-row>
+                            <ion-row *ngIf="msg.AvgPoint>7 && msg.AvgPoint<=8" class="m-top-5">
+                              <ion-badge class="cls-badge" ion-badge-border-radius>{{msg.AvgPoint}}</ion-badge>
+                              <p class="label-badge">Khá tốt
+                              </p>
+                            </ion-row>
+                            <ion-row *ngIf="msg.AvgPoint>5 && msg.AvgPoint<=7" class="m-top-5">
+                              <ion-badge class="cls-badge" ion-badge-border-radius>{{msg.AvgPoint}}</ion-badge>
+                              <p class="label-badge">Tạm được
+                              </p>
+                            </ion-row>
+                            <ion-row *ngIf="msg.AvgPoint<=5" class="m-top-5">
+                              <ion-badge class="cls-badge" ion-badge-border-radius>{{msg.AvgPoint}}</ion-badge>
+                              <p class="label-badge">Không tốt
+                              </p>
+                            </ion-row>
+                        </div>
+                      </div>
+                        <div class="m-top-10">
+                          <div *ngFor="let itemstyle of msg.StyleTag; let idx = index">
+                              <div *ngIf="idx < 2" class="sp-item-style">{{itemstyle.Name}}</div>
+                          </div>
+                          
+                        </div>
+                        <!-- last row -->
+                        <div class="last-row">
+                            <div *ngIf="loginuser" >
+                              <div *ngIf="msg.DealType"   [ngClass]="msg.AvgPoint==0? 'p-top-18' : ''">
+                                  <div style="font-weight: bold">
+                                    <div *ngIf="msg.DealPrice" class="text-combo"  text-left class="p-top-dealtype">
+                                      <img src="./assets/ic_combo.svg">
+                                      <label class="cls-lineheight">{{msg.DealType.split('|')[0]}}</label>
+                                    </div>
+                                    <div *ngIf="!msg.DealPrice" class="text-combo"  text-left class="p-top-dealtype-6">
+                                        <img src="./assets/ic_combo.svg">
+                                        <label class="cls-lineheight">{{msg.DealType.split('|')[0]}}</label>
+                                      </div>
+                                    <div  *ngIf="msg.DealPrice" text-right class=" price">
+                                      <label *ngIf="msg.DealPrice!=0" class="label-dealprice">{{ msg.DealPrice }} đ</label>
+                                    </div>
+                                    <div  *ngIf="!msg.DealPrice" text-right class="price" style="top:4px">
+                                      <ion-icon class="ico-gift" name="gift"></ion-icon>
+                                      <label *ngIf="!msg.DealPrice" class="label-nondealprice">Giá ưu đãi!</label>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div *ngIf="!msg.DealType"  [ngClass]="msg.AvgPoint==0? 'p-top-18' : ''">
+                                  <div text-right *ngIf="msg.MinPriceOTAStr && msg.MinPriceTAStr && msg.MinPriceOTAStr!=msg.MinPriceTAStr && msg.MinPriceTAStr!=0 && msg.MinPriceOTAStr<msg.MinPriceTAStr && loginuser" class="label-minpriceTA">{{msg.MinPriceTAStr}} đ</div>
+                                  <div >
+                                    <div col-7 text-left class="p-top-minprice">
+                                      <label >{{msg.RoomNameSubString}}</label>
+                                    </div>
+                                    <div col-5 text-right class="p-top-10 price">
+                                      <div>
+                                          <label *ngIf="msg.MinPriceOTAStr" class="label-minprice">{{msg.MinPriceOTAStr}} đ</label>
+                                          <label *ngIf="!msg.MinPriceOTAStr" class="label-minprice">Hết phòng</label>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                                <div *ngIf="!loginuser"  [ngClass]="msg.AvgPoint==0? 'p-top-18' : ''" (click)="goToLogin()">
+                                    <div *ngIf="msg.DealType">
+                                        <div>
+                                            <div>
+                                                <span class="label-price-login t-bold">Giá ưu đãi!</span><span class="label-price-login text-login"> Đăng nhập để xem</span>
+                                            </div>
+                                          </div>
+                                    </div>
+                                  <div *ngIf="!msg.DealType">
+                                    <div>
+                                        <span class="label-price-login t-bold">Giá ưu đãi!</span><span class="label-price-login text-login"> Đăng nhập để xem</span>
+                                    </div>
+                                  </div>
+                                </div>
+                          </div>
+                          
+                        </div>
+                  </div>
+                </div>
+                <p class="h-line"></p>
+              </div>
+            </div>
+       
+      </div>
+    </div>
+
+
+  </div>
+  <div *ngIf="showpopup==false">
+    <div style="margin-left: -15px">
+      <ion-list>
+        <ion-item>
+          <ion-row style="width: 100%">
+            <ion-col size="8" text-left>
+              <p style="color: #26bed6;padding: 5px">
+                <label style="font-weight: bold;padding-left: 4px;">{{adults1}}</label>
+                <label style="color: #000000;padding-left: 4px;">người lớn</label>
+                <p>
+            </ion-col>
+            <ion-col size="2" text-center>
+              <div align="left">
+                <img *ngIf="ischeckadults==true" (click)="minusadults()" src="./assets/ic_facility/ic_minus.png">
+                <img *ngIf="ischeckadults==false" (click)="minusadults()"
+                  src="./assets/ic_facility/ic_minus_disable.png">
+              </div>
+            </ion-col>
+            <ion-col size="2" text-right>
+              <img (click)="plusadults()" src="./assets/ic_facility/ic_add.png">
+            </ion-col>
+          </ion-row>
+        </ion-item>
+        <ion-item>
+          <ion-row style="width:100%">
+            <ion-col size="8" text-left>
+              <p style="color: #26bed6;padding: 5px 5px">
+                <label style="font-weight: bold;padding-left: 4px;">{{child1}}</label>
+                <label style="color: #000000;padding-left: 4px;">trẻ em</label>
+                <p>
+            </ion-col>
+            <ion-col size="2" text-center>
+              <div align="left">
+                <img *ngIf="ischeckchild==true" (click)="minuschild()" src="./assets/ic_facility/ic_minus.png">
+                <img *ngIf="ischeckchild==false" (click)="minuschild()" src="./assets/ic_facility/ic_minus_disable.png">
+              </div>
+            </ion-col>
+            <ion-col size="2" text-right>
+              <img (click)="pluschild()" src="./assets/ic_facility/ic_add.png">
+            </ion-col>
+          </ion-row>
+        </ion-item>
+        <ion-item>
+          <ion-row style="width:100%">
+            <ion-col size="8" text-left>
+              <p style="color: #26bed6;padding: 5px 5px">
+                <label style="font-weight: bold;padding-left: 4px;">{{room1}}</label>
+                <label style="color: #000000;padding-left: 4px;">phòng</label>
+                <p>
+            </ion-col>
+            <ion-col size="2" text-center>
+              <div align="left">
+                <img *ngIf="ischeckroom==true" (click)="minusroom()" src="./assets/ic_facility/ic_minus.png">
+                <img *ngIf="ischeckroom==false" (click)="minusroom()" src="./assets/ic_facility/ic_minus_disable.png">
+              </div>
+            </ion-col>
+            <ion-col size="2" text-right>
+              <img (click)="plusroom()" src="./assets/ic_facility/ic_add.png">
+            </ion-col>
+          </ion-row>
+        </ion-item>
+      </ion-list>
+    </div>
+    <div style="margin-left: 16px">
+      <label style="font-size: 14px;font-weight: bold">
+        Tuổi trẻ em
+      </label>
+      <ion-list *ngFor="let msg of arrchild2">
+        <ion-item style="margin-left: -15px">
+          <ion-label>{{msg.text}}</ion-label>
+          <ion-select style="color: #26bed6" [(ngModel)]="msg.numage" interface="action-sheet">
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="<1">
+              <1</ion-select-option> <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="1">1
+            </ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="2">2</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="3">3</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="4">4</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="5">5</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="6">6</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="7">7</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="8">8</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="9">9</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="10">10</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="11">11</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="12">12</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="13">13</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="14">14</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="15">15</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="16">16</ion-select-option>
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="17">17</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-list>
+    </div>
+  </div>
+
+
+</ion-content>
+<ion-content *ngIf="ischeck==false">
+    <div>
+        <!-- <img src="./assets/placeholder/group_hoteldetail.svg"> -->
+        <div class="div-sk-image">
+            <ion-skeleton-text  animated style="width:100%;height:197px"></ion-skeleton-text>
+        </div>
+        <div padding >
+            <div class="div-sk-text-title">
+                <ion-skeleton-text  animated style="width:100%;margin: 0;height: 16px;"></ion-skeleton-text>
+                <ion-skeleton-text  animated style="width:75%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+                <ion-skeleton-text  animated style="width:50%;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+            </div>
+            <div class="div-sk-detail" *ngFor="let i of itemsSk">
+                <ion-row class="row-item-hoteldetail-sk">
+                    <ion-col size="4" class="col-img-hoteldetail-sk" >
+                        <ion-skeleton-text animated style="width:104px;height:104px;border-radius:6px;margin:0"></ion-skeleton-text>
+                    </ion-col>
+                    <ion-col size="8" class="col-description-hoteldetail-sk" style="line-height: 16px;padding-top: 0">
+                        <ion-skeleton-text animated style="width: 50%;margin: 0;height: 16px;"></ion-skeleton-text>
+                        <ion-skeleton-text animated style="width: 100%;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+                        <ion-skeleton-text animated style="width: 75%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+                        <ion-skeleton-text animated style="width: 50%;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+                    </ion-col>
+                </ion-row>
+                <ion-row class="row-item-description-sk">
+                    <ion-skeleton-text animated style="width: 104px;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width: 83%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width: 67%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width: 100%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+                </ion-row>
+                <ion-row>
+                  <ion-col size="8.5" style="padding: 0"></ion-col>
+                  <ion-col size="3.5" style="padding: 0"><ion-skeleton-text animated style="margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text></ion-col>
+                </ion-row>
+                <ion-row>
+                    <ion-col size="6.3" style="padding: 0"></ion-col>
+                    <ion-col size="5.7" style="padding: 0"><ion-skeleton-text animated style="margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text></ion-col>
+                  </ion-row>
+                <ion-row class="row-item-button-sk">
+                    <ion-skeleton-text animated style="width: 100%;margin: 0;height: 48px;border-radius: 6px;margin-top:16px"></ion-skeleton-text>
+                </ion-row>
+            </div>
+        </div>
+        
+      </div>
+      <div class="div-sk-detail" *ngFor="let i of itemsSk">
+        <ion-row class="row-item-hoteldetail-sk">
+          <ion-col size="4" class="col-img-hoteldetail-sk">
+            <ion-skeleton-text animated style="width:104px;height:104px;border-radius:6px;margin:0"></ion-skeleton-text>
+          </ion-col>
+          <ion-col size="8" class="col-description-hoteldetail-sk" style="line-height: 16px;padding-top: 0">
+            <ion-skeleton-text animated style="width: 50%;margin: 0;height: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 100%;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 75%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 50%;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+          </ion-col>
+        </ion-row>
+        <ion-row class="row-item-description-sk">
+          <ion-skeleton-text animated style="width: 104px;margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 83%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 67%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 100%;margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+        </ion-row>
+        <ion-row>
+          <ion-col size="8.5" style="padding: 0"></ion-col>
+          <ion-col size="3.5" style="padding: 0">
+            <ion-skeleton-text animated style="margin: 0;margin-top:16px;height: 16px;"></ion-skeleton-text>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size="6.3" style="padding: 0"></ion-col>
+          <ion-col size="5.7" style="padding: 0">
+            <ion-skeleton-text animated style="margin: 0;margin-top:8px;height: 16px;"></ion-skeleton-text>
+          </ion-col>
+        </ion-row>
+        <ion-row class="row-item-button-sk">
+          <ion-skeleton-text animated style="width: 100%;margin: 0;height: 48px;border-radius: 6px;margin-top:16px">
+          </ion-skeleton-text>
+        </ion-row>
+      </div>
+
+</ion-content>
+<ion-footer>
+  <div *ngIf="isShown&&showpopup==true" style="background-color: #ffffff; text-align: center">
+    <button (click)="scrollToTop()" ion-button round outline class="button button2">Book a room</button>
+  </div>
+  <div *ngIf="showpopup==false" style="background-color: #ffffff; text-align: center">
+    <button (click)="done()" ion-button round outline class="button button2">Hoàn thành</button>
+  </div>
+</ion-footer>

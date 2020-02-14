@@ -1,0 +1,329 @@
+import { Component, OnInit, NgZone, ViewChild } from '@angular/core';
+import { AuthService } from '../providers/auth-service';
+import * as request from 'requestretry';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import * as $ from 'jquery';
+import * as moment from 'moment';
+import { ActionSheetController, NavController, ModalController, Platform, IonContent } from '@ionic/angular';
+import { ExperienceFilterPage } from '../experiencefilter/experiencefilter.page';
+import { OverlayEventDetail } from '@ionic/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { Map, tileLayer, marker, icon,latLng } from 'leaflet';
+import * as L from 'leaflet';
+import 'leaflet-routing-machine';
+import { map } from 'rxjs/operators';
+declare const H;
+@Component({
+  selector: 'app-experiencesearch',
+  templateUrl: './experiencesearch.page.html',
+  styleUrls: ['./experiencesearch.page.scss'],
+})
+export class ExperienceSearchPage implements OnInit {
+  @ViewChild('scrollArea') content: IonContent;
+  herePlatform;
+  region = 'phú quốc';
+  linkMap:any;
+  canLoadBlog: boolean=true;
+  pageBlog=1;
+  pageSizeBlog=5;
+  listBlog=[];
+  showloadmoreblog: boolean= true;
+  arrbloglike=[];
+  blog=[];
+  map:any;
+  listRestaurant = [{ id: 1, name: 'BoatHouse Restaurant, Khu đô thị An Phú, Thao Dien, District 2, Ho Chi Minh City',lat: 10.8092809, long: 106.7355885 },
+    { id: 2, name: 'Khu Phan Xích Long (quận Phú Nhuận)',lat: 10.7992354, long: 106.6848483 },
+    { id: 3, name: 'Khu phố Tây Bùi Viện (quận 1)',lat: 10.7679735, long: 106.6934983 },
+    { id: 4, name: 'Khu Vĩnh Viễn (quận 10)',lat: 10.7634253, long: 106.6642136 },
+    { id: 5, name: 'Khu Hà Tôn Quyền (quận 5)',lat: 10.7567114, long: 106.6517515 },
+    { id: 6, name: 'Khu Hàng Xanh (quận Bình Thạnh)',lat: 10.8045888, long: 106.7054792 }
+  ]
+  textsearch: string;
+  curLat: number;
+  curLng: number;
+
+  
+  constructor(private storage: Storage, private zone: NgZone,
+    private navCtrl: NavController,
+    private actionSheetCtrl: ActionSheetController,
+    private gf: GlobalFunction,
+    private modalCtrl: ModalController,
+    private sanitizer: DomSanitizer,
+    private platform: Platform,
+    private geolocation: Geolocation
+    ) { }
+
+  ngOnInit() {
+   
+  }
+
+  ionViewWillEnter(){
+    var se=this;
+    let link = "https://maps.google.com/maps?q=" + se.region + "&hl=es;z=18&amp&output=embed";
+    se.linkMap = se.sanitizer.bypassSecurityTrustResourceUrl(link);
+    se.platform.ready().then(() => {
+      setTimeout(()=>{
+        //$("#experiencesearch-map").click(()=>{
+          se.hideMapElement();
+        //}) 
+      },2000)
+      
+    })
+
+    se.initMap();
+    se.getNewsBlog(0);
+  }
+
+  initMap(){
+    this.geolocation.getCurrentPosition().then((resp) => {
+      if(resp){
+          this.curLat = resp.coords.latitude;
+          this.curLng = resp.coords.longitude;
+          this.map = new Map('mapContainer').setView([resp.coords.latitude,resp.coords.longitude], 12);
+          tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          }).addTo(this.map);
+          $('.leaflet-top.leaflet-left').css('display', 'none');
+          $('.leaflet-bottom.leaflet-right').css('display', 'none');
+          //this.addMarkersToMap(map);
+
+          this.animateMap(true);
+          
+      }
+      
+    }).catch((error) => {
+      console.log('Error getting location', error);
+    });
+    
+
+  }
+
+  animateMap(isShow){
+    if(isShow){
+      $('.content-search').removeClass('cls-hidden').addClass('cls-visible');
+    }else{
+      $('.content-search').removeClass('cls-visible').addClass('cls-hidden');
+    }
+  }
+
+  addMarkersToMap(type) {  
+
+      const customMarkerIcon = icon({
+        iconUrl: this.getImageByType(type),
+        iconSize: [24, 24], 
+        popupAnchor: [0, -20]
+      });
+      //if(type == 1){
+        this.listRestaurant.forEach(rest =>{
+          marker([rest.lat,rest.long], {icon: customMarkerIcon,title: rest.name }).addTo(this.map)
+          .bindPopup(rest.name)
+          .openPopup()
+          .on('click',() => this.markerClick(rest,this.map));
+        })
+      //}
+      this.map.invalidateSize();
+      //marker([10.7795987,106.7039997], {icon: customMarkerIcon}).addTo(map);
+  }
+
+  markerClick(marker, map){
+    var se = this;
+     L.Routing.control({
+            waypoints: [L.latLng(se.curLat, se.curLng), L.latLng(marker.lat, marker.long)],
+            routeWhileDragging: true,
+            showAlternatives: false,
+            fitSelectedRoutes: true,
+            show: true,
+          }).addTo(map);
+        $('.leaflet-routing-container.leaflet-bar.leaflet-routing-collapsible.leaflet-control').css('display','none');
+  }
+
+  getImageByType(type){
+    switch(type){
+      case 1:
+        return './assets/img_musttry/an_gi.svg'
+        break;
+      case 2:
+        return './assets/img_musttry/xem_gi.svg'
+        break;
+      case 3:
+        return './assets/img_musttry/choi_gi.svg'
+        break;
+      case 4:
+        return './assets/img_musttry/o_dau.svg'
+        break;
+      case 5:
+        return './assets/img_musttry/song_ao.svg'
+        break;
+      case 6:
+        return './assets/img_musttry/phuong_tien.svg'
+        break;
+    }
+  }
+
+  hideMapElement(){
+    var se = this;
+    var el = $("#mapDiv");
+    if(el && el.length >0){
+      var elgmno = $("#mapDiv").querySelector('.gmnoprint');
+      if(elgmno && elgmno.length >0){
+        elgmno.attributes.style.value = elgmno.attributes.style.value + "; display: none";
+      }
+
+      var elplacecard = $("#mapDiv").querySelector('.place-card');
+      if(elplacecard && elplacecard.length >0){
+        elplacecard.attributes.style.value = elplacecard.attributes.style.value + "; display: none";
+      }
+
+      var ellogincontrol = $("#mapDiv").querySelector('.login-control');
+      if(ellogincontrol && ellogincontrol.length >0){
+        ellogincontrol.attributes.style.value = ellogincontrol.attributes.style.value + "; display: none";
+      }
+
+      var elgminset = $("#mapDiv").querySelector('.gm-inset');
+      if(elgminset && elgminset.length >0){
+        elgminset.attributes.style.value = elgminset.attributes.style.value + "; display: none";
+      }
+      
+    }
+  }
+
+  getNewsBlog(value) {
+    var se = this;
+    se.canLoadBlog = false;
+    var options = {
+      method: 'GET',
+      url: C.urls.baseUrl.urlBlog + '/GetNewsBlog?pageIndex=' + se.pageBlog + '&pageSize=' + se.pageSizeBlog,
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+      }
+    };
+    request(options, function (error, response, body) {
+      if (response.statusCode != 200) {
+        var objError = {
+          page: "main",
+          func: "getNewsBlog",
+          message: response.statusMessage,
+          content: response.body,
+          param: JSON.stringify(options),
+          type: "warning"
+        };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page = "main";
+        error.func = "getNewsBlog";
+        error.param = JSON.stringify(options),
+          C.writeErrorLog(error);
+      }
+      se.zone.run(() => {
+        var listBlogtemp = JSON.parse(body);
+        se.listBlog=[];
+        se.showloadmoreblog = listBlogtemp.length == 0 ? false : true;
+        for (let i = 0; i < listBlogtemp.length; i++) {
+          listBlogtemp[i].Date = moment(listBlogtemp[i].Date).format('DD/MM/YYYY');
+        }
+        if (se.arrbloglike && se.arrbloglike.length>0) {
+          var itemblog;
+          for (let i = 0; i < listBlogtemp.length; i++) {
+            itemblog={Avatar:listBlogtemp[i].Avatar,Date:listBlogtemp[i].Date,Id:listBlogtemp[i].id,Title:listBlogtemp[i].Title,Url:listBlogtemp[i].Url,Like:false}
+            for (let j = 0; j < se.arrbloglike.length; j++) {
+              if (se.arrbloglike[j].id==listBlogtemp[i].id) {
+                itemblog={Avatar:listBlogtemp[i].Avatar,Date:listBlogtemp[i].Date,Id:listBlogtemp[i].id,Title:listBlogtemp[i].Title,Url:listBlogtemp[i].Url,Like:true};
+                break;
+              }
+            }
+            se.blog.push(itemblog);
+          }
+        }
+        else{
+          for (let i = 0; i < listBlogtemp.length; i++) {
+            itemblog={Avatar:listBlogtemp[i].Avatar,Date:listBlogtemp[i].Date,Id:listBlogtemp[i].id,Title:listBlogtemp[i].Title,Url:listBlogtemp[i].Url,Like:false}
+            se.blog.push(itemblog);
+          }
+        }
+      
+    //      se.blog.push(se.listBlog);
+      se.canLoadBlog = true;
+      })
+
+    });
+  }
+
+  itemSearchClick(type){
+    var se = this;
+    //animation zoom map
+    se.animateMap(false);
+    //Add pin to map
+    se.addMarkersToMap(type);
+    //hide item-search
+    se.showHideItemSearch(true);
+    //add text to input search
+    se.addTextSearch(type);
+    //scroll to Top
+    se.content.scrollToTop(500);
+  }
+
+  addTextSearch(type){
+    var se = this;
+    if(type==1){
+      se.textsearch = "Ăn gì";
+    }
+    if(type==2){
+      se.textsearch = "Xem gì";
+    }
+    if(type==3){
+      se.textsearch = "Chơi gì";
+    }
+    if(type==4){
+      se.textsearch = "Ở đâu";
+    }
+    if(type==5){
+      se.textsearch = "Sống ảo";
+    }
+    if(type==6){
+      se.textsearch = "Di chuyển";
+    }
+    $('.input-search').addClass('searchbar-has-focus');
+  }
+
+  showHideItemSearch(show){
+    if(show){
+      $('.div-list-search-result').addClass('cls-show').removeClass('cls-hide');
+      $('.div-item-search').removeClass('cls-show').addClass('cls-hide');
+    }else{
+      $('.div-item-search').addClass('cls-show').removeClass('cls-hide');
+      $('.div-list-search-result').removeClass('cls-show').addClass('cls-hide');
+    }
+    
+  }
+
+  getItems(event){
+
+  }
+
+  cancelInput(){
+    var se= this;
+    se.animateMap(true);
+    se.showHideItemSearch(false);
+    
+    if(se.map){
+      se.map.eachLayer(function(layer) {
+        // Remove all layers except the background (tilelayer)
+        // EDIT: and the main marker with the custom property
+        if (!(layer instanceof tileLayer)) {
+          se.map.removeLayer(layer);
+        }
+      });
+    }
+    tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+  }
+
+  onScrollBlog(event){
+
+  }
+}

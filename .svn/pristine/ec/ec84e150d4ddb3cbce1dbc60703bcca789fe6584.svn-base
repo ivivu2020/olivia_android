@@ -1,0 +1,27 @@
+
+    .text-name
+    {
+      font-weight: 500;
+      font-size: 18px;
+      .text-green
+      {
+        color: #26bed6
+      }
+    }
+    .text{
+        font-size: 12px;
+    }
+    .total-price{
+
+      font-size: 14px;
+      font-weight: 1000;
+
+    }
+    .total-price1{
+      color: #26bed6;
+      font-size: 24px;
+      font-weight: bold;
+
+    }
+
+

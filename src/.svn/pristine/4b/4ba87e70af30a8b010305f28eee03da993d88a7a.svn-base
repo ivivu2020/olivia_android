@@ -1,0 +1,137 @@
+.insurrance-header{
+    .div-goback{
+        position: absolute;
+        height: 48px;
+        width: 48px;
+        top: 12px;
+        z-index: 888;
+    }
+    .img-goback{
+        height: 48px; 
+        padding: 8px;
+        margin-top: -7px;
+        margin-left:-14px
+    }
+    .toolbar-title{
+        font-weight: bold;
+    }
+} 
+
+.insurrance-note{
+    .note-title1{
+        padding: 24px 16px 0 16px;
+        text-align: center;
+        font-size: 16px !important;
+        font-weight: bold;
+    }
+    .note-title2{
+        padding: 24px 16px;
+        text-align: center;
+        font-size: 16px !important;
+        font-weight: bold;
+    }
+
+    .table-insurrance{
+        //padding: 16px;
+        font-size: 11px;
+        .text-left{
+            text-align: left;
+        }
+        ion-col{
+            padding: 5;
+            text-align: center;
+            align-self: center;
+        }
+        .col-height{
+            height: 38px;
+        }
+        .no-padding{
+            padding: 0;
+        }
+        .row-header{
+            background-color: #9BBB59;
+        }
+        .row-border{
+            border: solid 0.5px #000;
+        }
+        .row-border-no-top{
+            border: solid 0.5px #000;
+            border-top: none;
+        }
+        .col-border-lr{
+            border-left: solid 0.5px #000;
+            border-right: solid 0.5px #000;
+        }
+        .col-border-l{
+            border-left: solid 0.5px #000;
+        }
+        .text-bold{
+            font-weight: bold;
+        }
+
+        .note-title{
+            padding: 16px;
+            padding-top: 24px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .note-sub-title{
+            padding: 0 16px;
+            font-size: 14px;
+            font-style: italic;
+            text-align: center;
+        }
+    }
+    .note-content{
+        padding: 16px;
+        font-size: 14px;
+
+        .note-header-text{
+            font-weight: bold;
+        }
+        .p-left-14{
+            padding-left: 14px;
+        }
+        .p-left-16{
+            padding-left: 16px;
+        }
+        .p-top-16{
+            padding-top: 16px;
+        }
+        .p-top-30{
+            padding-top: 30px;
+        }
+        .p-top-12{
+            padding-top: 12px;
+        }
+        .text-italic{
+            font-style: italic;
+        }
+        .text-right{
+            text-align: right;
+        } 
+        .text-bold{
+            font-weight: bold;
+        }
+        .note-content-header{
+            padding: 8px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #0070C0;
+        }
+        .note-content-sub-header{
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .hot-line{
+            padding-top: 24px;
+        }
+    }
+    .text-callcenter{
+        color: #26bed6;
+        font-weight: bold;
+        padding: 10px 0;
+    }
+}

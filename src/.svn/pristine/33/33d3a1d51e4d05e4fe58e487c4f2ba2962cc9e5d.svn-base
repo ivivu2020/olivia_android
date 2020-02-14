@@ -1,0 +1,452 @@
+import { Component, OnInit, NgZone } from '@angular/core';
+import { Storage } from '@ionic/storage';
+import {  NavController, Platform } from '@ionic/angular';
+import * as request from 'requestretry';
+import { SearchHotel, ValueGlobal } from './../providers/book-service';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Network } from '@ionic-native/network/ngx';
+import { NetworkProvider } from './../network-provider.service';
+@Component({
+  selector: 'app-tab2',
+  templateUrl: './tab2.page.html',
+  styleUrls: ['./tab2.page.scss'],
+})
+export class Tab2Page implements OnInit {
+
+  ishide = false;
+  public json1 = [];
+  public jsontemp = [];
+  nodata = false;
+  dataList = [];
+  listhotels = "";
+  listhotelIdInternal = "";
+  jsonhtprice = [];
+  jsonhtprice1;
+  istext = false;
+  intervalID;
+  public isConnected:boolean= true;
+  constructor(public platform: Platform, public navCtrl: NavController, public storage: Storage, public zone: NgZone, public searchhotel: SearchHotel,public gf: GlobalFunction, public valueGlobal: ValueGlobal,
+    public network: Network,
+    public networkProvider: NetworkProvider) {
+    this.handleSplashScreen();
+  }
+  ionViewDidLoad() {
+    let elements = document.querySelectorAll(".tabbar");
+
+    if (elements != null) {
+      Object.keys(elements).map((key) => {
+        elements[key].style.display = 'flex';
+      });
+    }
+    //google analytic
+    this.gf.googleAnalytion('hotel-like', 'Search', '');
+  }
+
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      console.error('Platform initialization bug')
+    }
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+
+  }
+  ionViewWillEnter() {
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+
+    this.nodata = false;
+    this.json1 = [];
+    this.istext = false;
+    //this.getlisthotellike();
+    //Kiểm tra mạng on/off để hiển thị
+    //this.networkProvider.getNetworkStatus().subscribe((connected: boolean) => {
+      //this.isConnected = connected;
+      //if (this.isConnected) {
+      //this.intervalID =  setInterval(()=>{
+      if (this.networkProvider.isOnline()) {
+        this.isConnected = true;
+        this.networkProvider.setNetworkStatus(true);
+        this.gf.setNetworkStatus(true);
+        setTimeout(()=>{
+          this.getlisthotellike();
+        },100)
+      }else{
+        this.isConnected = false;
+        this.networkProvider.setNetworkStatus(false);
+        this.gf.setNetworkStatus(false);
+        this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      }
+    //});
+    //});
+    // if(this.gf.getNetworkStatus()){
+    //   setTimeout(()=>{
+    //     this.getlisthotellike();
+    //   },100)
+    // }
+  }
+  ionViewWillLeave() {
+    this.zone.run(()=>{
+        clearInterval(this.intervalID);
+    })
+  }
+  ionViewDidEnter() {
+   
+  }
+  itemSelected(item) {
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    let id1 = { detailId: item.HotelId };
+    this.searchhotel.hotelID = item.HotelId;
+    this.searchhotel.rootPage = "likepage";
+    //this.navCtrl.navigateForward('/hoteldetail/'+item.HotelId);
+    this.navCtrl.navigateForward(['/app/tabs/hoteldetail/'+item.HotelId]);
+    //this.navCtrl.navigateForward('HoteldetailPage', id1);
+  }
+  unlikeItem(id) {
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    var se = this;
+    se.jsontemp = se.json1;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/RemoveFavouriteHotelByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            'postman-token': 'a19ecc0a-cb83-4dd9-3fd5-71062937a931',
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          },
+          body: { hotelId: id },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "hotellike";
+            error.func = "unlikeitem";
+            error.param =  JSON.stringify(options);
+            C.writeErrorLog(error);
+            throw new Error(error)
+          };
+          se.json1 = [];
+          se.zone.run(() => {
+            for (let i = 0; i < se.jsontemp.length; i++) {
+              if (se.jsontemp[i].HotelId != id) {
+                se.json1.push(se.jsontemp[i]);
+              }
+            }
+            if (se.json1.length == 0) {
+              se.nodata = true;
+            }
+          });
+
+        });
+      }
+    });
+  }
+  setItemLikeStatus(id) {
+    this.json1.forEach(el => {
+      if (el.HotelId == id) {
+        el.Liked = !el.Liked;
+      }
+    });
+  }
+  getlisthotellike() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/GetFavouriteHotelByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          }
+        };
+
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "hotellike";
+            error.func = "getlisthotellike";
+            error.param =  JSON.stringify(options);
+            C.writeErrorLog(error);
+            throw new Error(error)
+          };
+          var arr = JSON.parse(body);
+          var chuoi = "";
+          for (let i = 0; i < arr.length; i++) {
+            if (i == arr.length - 1) {
+              chuoi = chuoi + arr[i];
+            } else {
+              chuoi = chuoi + arr[i] + ",";
+            }
+
+          }
+          se.zone.run(() => {
+            console.log(chuoi);
+            if (chuoi) {
+              se.postdata(chuoi);
+            }
+            else {
+              se.nodata = true;
+            }
+          });
+
+
+        });
+      }
+      else {
+        this.nodata = true;
+        this.istext = true;
+      }
+
+    });
+  }
+  postdata(chuoi) {
+    var se = this;
+    var options = {
+      method: 'GET',
+      url: C.urls.baseUrl.urlGet + '/hotelslist?hotelIds='+chuoi,
+      timeout: 100000, maxAttempts: 5, retryDelay: 2000,
+      //qs: { hotelIds: chuoi },
+      // headers:
+      //   { 'cache-control': 'no-cache' }
+    };
+
+    request(options, function (error, response, body) {
+      if (error) {
+        error.page = "hotellike";
+        error.func = "postdata";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+      var json = JSON.parse(body)
+      se.dataList = json.List;
+      se.pushdata();
+
+      se.listhotels = "";
+      se.listhotelIdInternal = "";
+      for (let i = 0; i < se.dataList.length; i++) {
+        if (i == se.dataList.length - 1) {
+          if (se.dataList[i].EANCode != "") {
+            se.listhotels = se.listhotels + se.dataList[i].EANCode;
+          }
+          se.listhotelIdInternal = se.listhotelIdInternal + se.dataList[i].HotelId;
+
+        } else {
+          if (se.dataList[i].EANCode != "") {
+            se.listhotels = se.listhotels + se.dataList[i].EANCode + ",";
+          }
+          se.listhotelIdInternal = se.listhotelIdInternal + se.dataList[i].HotelId + ",";
+        }
+      }
+      se.getHotelprice();
+      // console.log(json);
+    });
+
+  }
+
+  pushdata() {
+
+    var se = this;
+    se.zone.run(() => {
+      for (let index = 0; index < se.dataList.length; index++) {
+
+        if (se.dataList[index].Avatar) {
+          se.dataList[index].Avatar = (se.dataList[index].Avatar.toLocaleString().trim().indexOf("http") != -1) ? se.dataList[index].Avatar : 'https:' + se.dataList[index].Avatar;
+        } else {
+          se.dataList[index].Avatar = "https://cdn1.ivivu.com/iVivu/2018/02/07/15/noimage.png";
+        }
+
+        if (se.dataList[index].DealType) {
+          if (se.dataList[index].DealPrice) {
+            se.dataList[index].DealPrice = se.dataList[index].DealPrice.toLocaleString();
+          }
+
+        }
+        switch (se.dataList[index].Rating) {
+          case 50:
+            se.dataList[index].Rating = "./assets/star/ic_star_5.png";
+            break;
+          case 45:
+            se.dataList[index].Rating = "./assets/star/ic_star_4.5.png";
+            break;
+          case 40:
+            se.dataList[index].Rating = "./assets/star/ic_star_4.png";
+            break;
+          case 35:
+            se.dataList[index].Rating = "./assets/star/ic_star_3.5.png";
+            break;
+          case 30:
+            se.dataList[index].Rating = "./assets/star/ic_star_3.png";
+            break;
+          case 25:
+            se.dataList[index].Rating = "./assets/star/ic_star_2.5.png";
+            break;
+          case 20:
+            se.dataList[index].Rating = "./assets/star/ic_star_2.png";
+            break;
+          case 15:
+            se.dataList[index].Rating = "./assets/star/ic_star_1.5.png";
+            break;
+          case 10:
+            se.dataList[index].Rating = "./assets/star/ic_star.png";
+            break;
+          case 5:
+            se.dataList[index].Rating = "./assets/star/ic_star_0.5.png";
+            break;
+          default:
+            break;
+        }
+        var item;
+        if (se.dataList[index].DealType) {
+
+          if (se.dataList[index].Address) {
+            item = { Avatar: se.dataList[index].Avatar, Name: se.dataList[index].HotelName, AvgPoint: se.dataList[index].Point, DealPrice: se.dataList[index].DealPrice, DealType: se.dataList[index].DealType, SubLocation: se.dataList[index].Address, Rating: se.dataList[index].Rating, HotelId: se.dataList[index].HotelId, Liked: true };
+          } else {
+            item = { Avatar: se.dataList[index].Avatar, Name: se.dataList[index].HotelName, AvgPoint: se.dataList[index].Point, DealPrice: se.dataList[index].DealPrice, DealType: se.dataList[index].DealType, SubLocation: '', Rating: se.dataList[index].Rating, HotelId: se.dataList[index].HotelId, Liked: true };
+          }
+        }
+        else {
+          if (se.dataList[index].Address) {
+            item = { Avatar: se.dataList[index].Avatar, Name: se.dataList[index].HotelName, AvgPoint: se.dataList[index].Point, DealPrice: se.dataList[index].DealPrice, DealType: se.dataList[index].DealType, SubLocation: se.dataList[index].Address, Rating: se.dataList[index].Rating, HotelId: se.dataList[index].HotelId, RoomNameSubString: "", MinPriceOTAStr: se.dataList[index].MinPrice ? se.dataList[index].MinPrice.toLocaleString().replace("VND", "").trim() : se.dataList[index].MaxPrice.toLocaleString().replace("VND", "").trim(), PromotionDescriptionSubstring: "", MinPriceTAStr: se.dataList[index].MinPrice ? se.dataList[index].MinPrice.toLocaleString().replace("VND", "").trim() : se.dataList[index].MaxPrice.toLocaleString().replace("VND", "").trim(), Liked: true };
+          } else {
+            item = { Avatar: se.dataList[index].Avatar, Name: se.dataList[index].HotelName, AvgPoint: se.dataList[index].Point, DealPrice: se.dataList[index].DealPrice, DealType: se.dataList[index].DealType, SubLocation: '', Rating: se.dataList[index].Rating, HotelId: se.dataList[index].HotelId, RoomNameSubString: "", MinPriceOTAStr: se.dataList[index].MinPrice ? se.dataList[index].MinPrice.toLocaleString().replace("VND", "").trim() : se.dataList[index].MaxPrice.toLocaleString().replace("VND", "").trim(), PromotionDescriptionSubstring: "", MinPriceTAStr: se.dataList[index].MinPrice ? se.dataList[index].MinPrice.toLocaleString().replace("VND", "").trim() : se.dataList[index].MaxPrice.toLocaleString().replace("VND", "").trim(), Liked: true };
+          }
+        }
+        se.json1.push(item);
+      }
+      se.ishide = true;
+    });
+
+  }
+  getHotelprice() {
+    var se = this;
+    var options;
+    var form = {
+      RoomNumber: '1',
+      IsLeadingPrice: '',
+      ReferenceClient: '',
+      Supplier: 'IVIVU',
+      CheckInDate: se.searchhotel.CheckInDate,
+      CheckOutDate: se.searchhotel.CheckOutDate,
+      CountryID: '',
+      CityID: '',
+      NationalityID: '',
+      'RoomsRequest[0][RoomIndex]': '0',
+      'RoomsRequest[0][Adults][value]': se.searchhotel.adult,
+      'RoomsRequest[0][Child][value]': se.searchhotel.child,
+      StatusMethod: '2',
+      'CityCode': '',
+      CountryCode: 'VN',
+      NoCache: 'false',
+      SearchType: '2',
+      HotelIds: se.listhotels,
+      HotelIdInternal: se.listhotelIdInternal
+    };
+    if (this.searchhotel.arrchild) {
+      for (var i = 0; i < this.searchhotel.arrchild.length; i++) {
+        form["RoomsRequest[0][AgeChilds][" + i + "][value]"] = + this.searchhotel.arrchild[i].numage;
+      }
+    }
+
+    options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlContracting + '/api/contracting/HotelsSearchPriceAjax',
+      timeout: 180000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+        {},
+      form
+    };
+    request(options, function (error, response, body) {
+      if (error) {
+        error.page = "hotellike";
+        error.func = "getHotelprice";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+      if (response.statusCode != 200) {
+        var objError = {
+          page: "hotellike",
+          func: "getHotelprice",
+          message: response.statusMessage,
+          content: response.body,
+          type: "warning"
+        };
+        C.writeErrorLog(objError);
+      }
+      se.zone.run(() => {
+        se.jsonhtprice = [];
+        se.jsonhtprice1 = JSON.parse(body);
+        if (se.jsonhtprice1.HotelListResponse) {
+          se.jsonhtprice1 = se.jsonhtprice1.HotelListResponse.HotelList.HotelSummary;
+          for (var i = 0; i < se.jsonhtprice1.length; i++) {
+            let itemprice = se.jsonhtprice1[i];
+            //Add vào list ks có giá
+            se.jsonhtprice.push(itemprice);
+
+          }
+          //Bind giá vào list ks đã search
+          se.zone.run(() => se.fillDataPrice());
+          se.ishide = true;
+        }
+      });
+    });
+
+  }
+  fillDataPrice() {
+    for (let index = 0; index < this.dataList.length; index++) {
+      for (let i = 0; i < this.jsonhtprice.length; i++) {
+        //Chỉ bind lại giá cho hotel, combo bỏ qua
+        if (this.json1[index] && this.json1[index].HotelId == this.jsonhtprice[i].HotelId) {
+          this.json1[index].MinPriceOTAStr = this.jsonhtprice[i].MinPriceOTAStr;
+          this.json1[index].MinPriceTAStr = this.jsonhtprice[i].MinPriceTAStr;
+          this.json1[index].RoomNameSubString = this.jsonhtprice[i].RoomNameSubString;
+          this.json1[index].PromotionDescription = this.jsonhtprice[i].PromotionDescription;
+          this.json1[index].PromotionDescriptionSubstring = this.jsonhtprice[i].PromotionDescriptionSubstring;
+        }
+      }
+    }
+    //this.pushdata(0, this.json1.length);
+
+  }
+  gologin() {
+    this.valueGlobal.logingoback = 'HotelLikePage';
+    this.navCtrl.navigateForward('login');
+  }
+
+  goToLogin() {
+    this.storage.remove('auth_token');
+    this.storage.remove('email');
+    this.storage.remove('username');
+    this.storage.remove('jti');
+    this.navCtrl.navigateForward('login');
+  }
+
+  ngOnInit() {
+  }
+
+}

@@ -1,0 +1,147 @@
+<!--
+  Generated template for the SearchHotelFilterPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-toolbar>
+      <ion-row>
+          <ion-col size="10" style="text-align: center"><ion-title class="text-title">Lọc</ion-title></ion-col>
+          <ion-col size="2" style="text-align: right" (click)="close()">
+                <ion-note class="button-header" routerLink="/hotellist/false">
+                    <ion-icon name="close" style="font-size: 2em;"></ion-icon>
+                </ion-note>
+          </ion-col>
+      </ion-row>
+    </ion-toolbar>
+</ion-header>
+<ion-content padding>
+  <!-- <div class="cls-sort">
+      <ion-label class="text-title1 cls-title">
+          Sắp xếp theo
+      </ion-label>
+          <ion-item>
+              <ion-select interface="popover" [(ngModel)]="itemOrder" class="item-order" placeholder="iVIVU gợi ý">
+                <ion-option value="1">Giá (từ thấp đến cao)</ion-option>
+                <ion-option value="2">Giá (từ cao đến thấp)</ion-option>
+                <ion-option value="3">Điểm nhận xét</ion-option>
+              </ion-select>
+          </ion-item>
+  </div> -->
+  
+  <div class="cls-filter" *ngIf="hasfilter"> 
+      <ion-label class="text-title1 cls-title">
+          Lọc theo
+      </ion-label>
+      <ion-label class="text-title1">
+          Giá
+        </ion-label>
+        <ion-row>
+          <ion-col>
+            <label class="text-range">
+              {{minprice}}đ
+            </label>
+          </ion-col>
+          <ion-col text-right>
+            <label class="text-range">
+              {{maxprice}}đ
+            </label>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+            <ion-col>
+                <ion-range style="--bar-background: #ccc !important;--ion-color-primary: #26bed6;" step=50000 (ionChange)="test()" min="100000" max="15000000" dualKnobs="true" [(ngModel)]="structure"
+                >
+              </ion-range>
+            </ion-col>
+          </ion-row>
+        <ion-label class="text-title1">
+          Sao
+        </ion-label>
+        <ion-row>
+          <ion-col (click)="star1()" col-2.5>
+            <img *ngIf="star_1" src="./assets/star/1_star.svg">
+            <img *ngIf="star_1active" src="./assets/star/1_star_active.svg">
+          </ion-col>
+          <ion-col (click)="star2()" col-2.5>
+            <img *ngIf="star_2" src="./assets/star/2_star.svg">
+            <img *ngIf="star_2active" src="./assets/star/2_star_active.svg">
+          </ion-col>
+          <ion-col (click)="star3()" col-2.5>
+            <img *ngIf="star_3" src="./assets/star/3_star.svg">
+            <img *ngIf="star_3active" src="./assets/star/3_star_active.svg">
+          </ion-col>
+          <ion-col (click)="star4()" col-2.5>
+            <img *ngIf="star_4" src="./assets/star/4_star.svg">
+            <img *ngIf="star_4active" src="./assets/star/4_star_active.svg">
+          </ion-col>
+          <ion-col (click)="star5()" col-2.5>
+            <img *ngIf="star_5" src="./assets/star/5_star.svg">
+            <img *ngIf="star_5active" src="./assets/star/5_star_active.svg">
+          </ion-col>
+        </ion-row>
+        <ion-label class="text-title1">
+          Đánh giá
+        </ion-label>
+        <ion-row>
+          <ion-col>
+            <label class="text-range">
+              Điểm đánh giá {{review}} và cao hơn
+            </label>
+          </ion-col>
+        </ion-row>
+        <ion-range  style="--bar-background: #26bed6 !important;--knob-background: #26bed6;--bar-background-active:#ccc" pin="true" step=1 (ionChange)="reviewchange()" min="0" max="10" [(ngModel)]="review">
+        </ion-range>
+  </div>
+  <!-- <div class="cls-order-meal">
+      <ion-label class="text-title1">
+          Bữa ăn
+        </ion-label>
+        <ion-row class="row-meal">
+         <ion-col class="col-meal-1 meal-item-1" [ngClass]="meal1check? 'meal-check' : 'meal-uncheck'" (click)="meal1Click()">Bữa sáng và trưa</ion-col>
+         <ion-col class="col-meal-2 meal-item-2" [ngClass]="meal2check? 'meal-check' : 'meal-uncheck'" (click)="meal2Click()">Bữa sáng và tối</ion-col>
+         <ion-col class="col-meal-3 meal-item-3" [ngClass]="meal3check? 'meal-check' : 'meal-uncheck'" (click)="meal3Click()">3 bữa</ion-col>
+        </ion-row>
+  </div> -->
+  
+  <div class="cls-order-local" *ngIf="dataLocal">
+      <ion-label class="text-title1">
+          Khu vực
+        </ion-label>
+        <div class="item-local p-top">
+            <div *ngFor="let item of dataLocal; let i = index" id="{{item.Id}}" class="cls-col-border local-item-{{i}}" (click)="localClick($event,'local')" >{{ item.Name }}</div>
+        </div>
+  </div>
+
+  <div class="cls-order-style" *ngIf="dataStyle">
+      <ion-label class="text-title1">
+          Phong cách
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemStyle of dataStyle; let i = index" id="{{itemStyle.Id}}" class="cls-col-border style-item-{{i}}" (click)="localClick($event,'style')" >{{ itemStyle.Name }}</div>
+        </div>
+  </div>
+
+  <div class="cls-order-style" *ngIf="dataHotelType">
+      <ion-label class="text-title1">
+          Loại hình nơi ở
+        </ion-label>
+        <div class="item-hotel-tyle p-top">
+            <div *ngFor="let itemHotelTyle of dataHotelType; let i = index" id="{{itemHotelTyle.Id}}" class="cls-col-border hoteltype-item-{{i}}" (click)="localClick($event,'hoteltype')" >{{ itemHotelTyle.Name }}</div>
+        </div>
+  </div>
+
+  <div class="cls-order-facility" *ngIf="dataFacility">
+      <ion-label class="text-title1">
+          Tiện ích
+        </ion-label>
+        <div class="item-facility p-top">
+            <div *ngFor="let itemfacility of dataFacility; let j = index" id="{{itemfacility.Id}}" class="cls-col-border facility-item-{{j}}" (click)="localClick($event,'facility')" >{{ itemfacility.Name }}</div>
+        </div>
+  </div>
+</ion-content>
+<ion-footer style="text-align: center">
+  <button ion-button round outline class="button" (click)="clickCancel()">Xóa</button>
+  <button ion-button round outline class="button" (click)="clickOk()">Lọc</button>
+</ion-footer>

@@ -1,0 +1,41 @@
+// http://ionicframework.com/docs/theming/
+@import '~@ionic/angular/css/core.css';
+@import '~@ionic/angular/css/normalize.css';
+@import '~@ionic/angular/css/structure.css';
+@import '~@ionic/angular/css/typography.css';
+@import '~@ionic/angular/css/display.css';
+@import '~@ionic/angular/css/padding.css';
+@import '~@ionic/angular/css/float-elements.css';
+@import '~@ionic/angular/css/text-alignment.css';
+@import '~@ionic/angular/css/text-transformation.css';
+@import '~@ionic/angular/css/flex-utils.css';
+
+:root{
+    --ion-row-width:100%;
+}
+
+.button {
+    height: 48px;
+    border-radius: 28px;
+    font-size: 18px;
+    margin: 8px;
+}
+
+label > p{
+    margin: 2px 0;
+    line-height: 20px;
+}
+.item-inner{
+    padding-inline-end: 0;
+}
+
+::ng-deep {
+    .item-inner{
+        border-style: none;
+    }
+    
+}
+// ion-range.range-review div.range-bar{
+//     --bar-background: #26bed6;
+//     --ion-color-primary: #ccc;
+// }

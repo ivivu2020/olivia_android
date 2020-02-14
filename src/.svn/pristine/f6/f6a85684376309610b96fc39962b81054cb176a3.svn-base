@@ -1,0 +1,18 @@
+.header-title{
+  padding: 12px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+    .toolbar-title-md {
+        text-align: center;
+        margin-right: 70px;
+      }  
+      .text-trip-empty{
+        text-align: center;
+        color: #bdbdbd;
+    }
+    .img-inbox-empty{
+      padding-top: 20%;
+    }
+

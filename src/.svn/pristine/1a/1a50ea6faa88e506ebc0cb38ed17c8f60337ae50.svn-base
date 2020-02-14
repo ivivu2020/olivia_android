@@ -1,0 +1,49 @@
+<ion-header class="experiencefilter-header">
+    <ion-row>
+        <ion-col class="col-header"><ion-title class="text-title">Lọc</ion-title></ion-col>
+          <img class="img-close" style="max-width: 150%" src="./assets/ic_close.svg" (click) = "close()">
+    </ion-row>
+</ion-header>
+
+<ion-content class="experiencefilter-content" padding style="--padding-top:0">
+  <!-- Khu vực -->
+  <div class="cls-experiencefilter-local cls-padding-top" *ngIf="dataLocal && dataLocal.length >0">
+      <ion-label class="text-title">
+        Khu vực
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemLocal of dataLocal; let i = index" attr.name="{{ itemLocal.name }}" id="{{itemLocal.id}}" class="cls-col-border local-item-{{itemLocal.id}}" (click)="itemClick($event,'local',itemLocal.id)" >{{ itemLocal.name }}</div>
+        </div>
+  </div>
+  <!-- Loại hình -->
+  <div class="cls-order-style cls-padding-top" *ngIf="dataHotelType && dataHotelType.length >0">
+      <ion-label class="text-title">
+       Loại hình
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemHotelType of dataHotelType; let i = index" attr.name="{{ itemHotelType.name }}" id="{{itemHotelType.placeTagId}}" class="cls-col-border hoteltype-item-{{itemHotelType.placeTagId}}" (click)="itemClick($event,'hoteltype',itemHotelType.placeTagId)" >{{ itemHotelType.name }}</div>
+        </div>
+  </div>
+  <!-- Giờ hoạt động -->
+  <div class="cls-order-style cls-padding-top" *ngIf="dataHourOpen && dataHourOpen.length >0">
+      <ion-label class="text-title">
+        Giờ hoạt động
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemHourOpen of dataHourOpen; let i = index" attr.name="{{ itemHourOpen.name }}" id="{{itemHourOpen.placeTagId}}" class="cls-col-border houropen-item-{{itemHourOpen.placeTagId}}" (click)="itemClick($event,'houropen',itemHourOpen.placeTagId)" >{{ itemHourOpen.name }}</div>
+        </div>
+  </div>
+   <!-- Phong cách -->
+   <div class="cls-order-style cls-padding-top" *ngIf="dataDistance && dataDistance.length >0">
+      <ion-label class="text-title">
+        Khoảng cách
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemDistance of dataDistance; let i = index" attr.name="{{ itemDistance.name }}" id="{{itemDistance.id}}" class="cls-col-border distance-item-{{itemDistance.id}}" (click)="itemClick($event,'distance',itemDistance.id)" >{{ itemDistance.name }}</div>
+        </div>
+  </div>
+  <div class="group-button">
+      <button ion-button round outline class="button btncancel" [class.click]=" ischeckbtnreset==true " [class.none]=" ischeckbtn==true " (click)="clickCancel()">Xóa lọc</button>
+      <button ion-button round outline class="button btnok" [class.click]=" ischeckbtn==true " [class.none]=" ischeckbtnreset==true " (click)="clickOk()">Xem</button>
+  </div>
+</ion-content>

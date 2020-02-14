@@ -1,0 +1,620 @@
+import { Component, NgZone,ViewChild,OnInit, Input } from '@angular/core';
+import { NavController, ModalController,AlertController,Platform,IonContent,IonSlides } from '@ionic/angular';
+import * as request from 'requestretry';
+import moment from 'moment';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import { ValueGlobal } from '../providers/book-service';
+import { GlobalFunction } from './../providers/globalfunction';
+/**
+ * Generated class for the MytripsPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-tab3',
+  templateUrl: 'tab3.page.html',
+  styleUrls: ['./tab3.page.scss'],
+})
+export class Tab3Page implements OnInit{
+  @Input('myScrollVanish') scrollArea;
+  @ViewChild(IonContent) content: IonContent;
+  @ViewChild('mySlider') slider: IonSlides;
+    public listMyTrips = [];
+    public listHistoryTrips= [];
+    public listRequestTrips = [];
+    public listAlltrips = [];
+    public listSupport = [];
+    public currentTrip = 0;
+    public currentRQTrip = 0 ;
+    public showCalCin = false;
+    public showCalCout = false;
+    public datecin:Date;
+    public datecout:Date;
+    public cindisplay;coutdisplay;
+    public cinRQdisplay;coutRQdisplay;
+    public cincombodeparturedisplay;cincomboarrivaldisplay;coutcombodeparturedisplay;coutcomboarrivaldisplay;
+    public cincombodeparturelocationdisplay;cincomboarrivallocationdisplay;coutcombodeparturelocationdisplay;coutcomboarrivallocationdisplay;
+    public cincombodeparturetimedisplay;cincomboarrivaltimedisplay;coutcombodeparturetimedisplay;coutcomboarrivaltimedisplay;
+    public cincombodepartureflightnumberdisplay;cincomboarrivalflightnumberdisplay;coutcombodepartureflightnumberdisplay;coutcomboarrivalflightnumberdisplay;
+    public cin; cout; coutthu;cinthu;numberOfDay = 0;numberOfRQDay = 0;
+    public hasloaddata = false;
+    public hasloadRQdata = false;
+    public activeTabTrip = 1;
+    public tabtrip: string="nexttrip";
+    public isShowConfirm = false;
+    private tabBarHeight;
+    private topOrBottom:string;
+    private contentBox;
+    public currentPosition = 0;
+    public intervalID;
+
+  constructor(public platform: Platform,public navCtrl: NavController,
+    public storage:Storage,public zone: NgZone,public modalCtrl: ModalController,
+    public alertCtrl: AlertController,public valueGlobal: ValueGlobal,public gf: GlobalFunction) {
+    this.handleSplashScreen();
+    //this.getdata();
+    //google analytic
+    gf.googleAnalytion('mytrips','load','');
+  }
+  
+  ngOnInit(){
+
+  }
+
+  /***
+   * Hàm load thông tin phòng
+   */
+  getListSupportByUser(auth_token) {
+    var se = this;
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/BookingMemberDetailByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if(response.statusCode != 200){
+            var objError ={
+                page: "mytrips",
+                func: "getListSupportByUser",
+                message : response.statusMessage,
+                content : response.body,
+                type: "warning",
+                param: JSON.stringify(options)
+              };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getListSupportByUser";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+            throw new Error(error)
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.listSupport = JSON.parse(body);
+             });
+            }else{
+              if(response.statusCode == 400 || response.statusCode == 401){
+                if(se.isShowConfirm) return;
+                se.showConfirm();
+                se.isShowConfirm = true;
+              }
+            }
+            
+          }
+          
+        });
+      }
+  }
+
+  getdata() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/api/dashboard/getmytrip?getall=true',
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if(response.statusCode != 200){
+            var objError ={
+                page: "mytrips",
+                func: "getdata",
+                message : response.statusMessage,
+                content : response.body,
+                type: "warning"
+              };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getdata";
+            C.writeErrorLog(error);
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.listMyTrips = [];
+                se.listHistoryTrips = [];
+                
+                let lstTrips = JSON.parse(body);
+                se.hasloaddata = true;
+                //List trip sắp đi
+                if(lstTrips.tripFuture.length >0){
+                  lstTrips.tripFuture.forEach(element => {
+                    if(element.avatar){
+                      let urlavatar = element.avatar.substring(0,element.avatar.length-4);
+                      let tail = element.avatar.substring(element.avatar.length-4,element.avatar.length);
+                      element.avatar = urlavatar + "-" + "104x104" +tail;
+                    }
+                    se.listMyTrips.push(element);
+                  });
+  
+                  let obj = se.listMyTrips[0];
+                  se.setCheckInCheckOutInfo(obj);
+                }
+                //List trip đã đi
+                if(lstTrips.tripHistory.length >0){
+                  lstTrips.tripHistory.forEach(elementHis => {
+                      let urlavatar = elementHis.avatar.substring(0,elementHis.avatar.length-4);
+                      let tail = elementHis.avatar.substring(elementHis.avatar.length-4,elementHis.avatar.length);
+                      elementHis.avatar = urlavatar + "-" + "104x157" +tail;
+                    se.listHistoryTrips.push(elementHis);
+                  });
+                }
+                //List trip yêu cầu
+
+                //Lấy list support
+                se.getListSupportByUser(auth_token);
+              });
+            }else{
+              if(response.statusCode != 200){
+                se.listMyTrips = [];
+                se.listHistoryTrips = [];
+                se.hasloaddata = true;
+                se.showConfirm();
+              }
+            }
+            
+          }
+          
+        });
+      }else{
+        se.hasloaddata = true;
+        se.listMyTrips = [];
+        se.listHistoryTrips = [];
+      }
+    });
+  }
+
+  setCheckInCheckOutInfo(obj){
+    var se = this;
+    se.datecin=new Date(obj.checkInDate);
+    se.datecout=new Date(obj.checkOutDate);
+    se.cindisplay = moment(se.datecin).format('DD-MM-YYYY');
+    se.coutdisplay = moment(se.datecout).format('DD-MM-YYYY');
+    if(obj.bookingsComboData){
+      se.cincombodeparturedisplay = moment(new Date(obj.bookingsComboData[0].departureDate)).format('DD-MM-YYYY');
+      se.cincomboarrivaldisplay = moment(new Date(obj.bookingsComboData[0].arrivalDate)).format('DD-MM-YYYY');
+      se.coutcombodeparturedisplay = moment(new Date(obj.bookingsComboData[1].departureDate)).format('DD-MM-YYYY');
+      se.coutcomboarrivaldisplay = moment(new Date(obj.bookingsComboData[1].arrivalDate)).format('DD-MM-YYYY');
+    }
+    
+    se.numberOfDay = moment(se.datecout).diff(moment(se.datecin),'days');
+    //Set flight info nếu là combo
+    if(obj.flight_ticket_info){
+      let arrInfo = obj.flight_ticket_info.split("<br/>");
+      if(arrInfo.length ==2){
+        let arrFlightStart = arrInfo[0].split("|");
+        let arrFlightReturn = arrInfo[1].split("|");
+        se.cincombodeparturedisplay = arrFlightStart[0];
+        se.cincombodeparturelocationdisplay = arrFlightStart[1];
+        se.cincombodeparturetimedisplay = arrFlightStart[2];
+        se.cincombodepartureflightnumberdisplay = arrFlightStart[3];
+
+        se.cincomboarrivaldisplay = arrFlightReturn[0];
+        se.cincomboarrivallocationdisplay = arrFlightReturn[1];
+        se.cincomboarrivaltimedisplay = arrFlightReturn[2];
+        se.cincomboarrivalflightnumberdisplay = arrFlightReturn[3];
+      }
+      else if(arrInfo.length >2){
+        let arrFlightStart = arrInfo[0].split("|");
+        let arrFlightReturn = arrInfo[2].split("|");
+        se.cincombodeparturedisplay = arrFlightStart[0];
+        se.cincombodeparturelocationdisplay = arrFlightStart[1];
+        se.cincombodeparturetimedisplay = arrFlightStart[2];
+        se.cincombodepartureflightnumberdisplay = arrFlightStart[3];
+
+        se.cincomboarrivaldisplay = arrFlightReturn[0];
+        se.cincomboarrivallocationdisplay = arrFlightReturn[1];
+        se.cincomboarrivaltimedisplay = arrFlightReturn[2];
+        se.cincomboarrivalflightnumberdisplay = arrFlightReturn[3];
+      }
+    }
+  }
+
+  setCheckInCheckOutRQInfo(obj){
+    var se = this;
+    var datecinRQ =new Date(obj.start_date);
+    var datecoutRQ =new Date(obj.end_date);
+    se.cinRQdisplay = moment(datecinRQ).format('DD-MM-YYYY');
+    se.coutRQdisplay = moment(datecoutRQ).format('DD-MM-YYYY');
+    
+    se.numberOfRQDay = moment(datecoutRQ).diff(moment(datecinRQ),'days');
+  }
+
+  ionViewDidLoad() {
+    let elements = document.querySelectorAll(".tabbar");
+
+    if (elements != null) {
+      Object.keys(elements).map((key) => {
+        elements[key].style.display = 'flex';
+      });
+    }
+    //30p load lại trạng thái 1 lần
+    var se = this;
+        se.intervalID =  setInterval(()=>{
+            se.getdata();
+        },1800000);
+  }
+  ionViewWillEnter(){
+    if(!this.hasloaddata || (this.hasloaddata && this.listAlltrips.length==0)){
+      setTimeout(() => {
+        this.getdata();
+      }, 300);
+    }
+  }
+
+  ionViewDidEnter(){
+    // //Xử lý nút back của dt
+    // this.platform.ready().then(() => {
+    //   this.platform.registerBackButtonAction(() => {
+    //     // if(this.app.getActiveNav().getActive().name != 'MainPage'){
+    //     //   this.app.getActiveNav().setRoot('MainPage');
+    //     // }
+    //     if(this.navCtrl.canGoBack()){
+    //       this.navCtrl.popToRoot();
+    //       this.app.getRootNav().getActiveChildNav().select(0);
+    //     }else{
+    //       this.platform.exitApp();
+    //     }
+        
+    //   })
+    // })
+    //Xử lý nút back của dt
+    this.platform.ready().then(() => {
+      this.platform.backButton.subscribe(() => {
+        this.navCtrl.navigateRoot('/');
+      })
+    })
+    // this.topOrBottom=this.content._tabsPlacement;
+    // this.contentBox=document.querySelector(".scroll-content")['style'];
+  
+    // if (this.topOrBottom == "top") {
+    //   this.tabBarHeight = this.contentBox.marginTop;
+    // } else if (this.topOrBottom == "bottom") {
+    //   this.tabBarHeight = this.contentBox.marginBottom;
+    // }
+  }
+
+  ionViewDismiss(){
+    this.hasloaddata = false;
+  }
+
+  ionViewWillLeave() {
+    this.zone.run(()=>{
+        clearInterval(this.intervalID);
+    })
+}
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      if (error) {
+        error.page = "mytrips";
+        error.func = "handleSplashScreen";
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+    }
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+
+  }
+
+  goback() {
+    this.navCtrl.navigateRoot('/');
+  }
+
+  enableTabbar(modal){
+    modal.onDidDismiss(() => {
+      let elements = document.querySelectorAll(".tabbar");
+      if (elements != null) {
+        Object.keys(elements).map((key) => {
+          elements[key].style.display = 'flex';
+        });
+      }
+    })
+  }
+
+  openBookingTrip(trip){
+    this.gf.setParams(trip,'mytripbookingdetail');
+    this.navCtrl.navigateForward('/mytripbookingdetail');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','opentripdeail','');
+  }
+
+  openWeather(cityname){
+    this.navCtrl.navigateForward('/tripweather/'+cityname);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','openweather','');
+  }
+
+  openHotelNotes(notes){
+    this.gf.setParams(notes,'hotelnotes');
+    this.navCtrl.navigateForward('/hotelnotes');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','opentripnote','');
+  }
+
+  openHotelExpsNotes(notes, provincename){
+    this.gf.setParams({ notes: notes, provincename: provincename},'hotelexpsnotes')
+    this.navCtrl.navigateForward('/hotelexpsnotes');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','opentripexpsnotes','');
+  }
+
+  nextTrip(){
+    this.currentTrip = this.currentTrip +1;
+    let obj = this.listMyTrips[this.currentTrip];
+    this.setCheckInCheckOutInfo(obj);
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','nexttrip','');
+  }
+
+  previousTrip(){
+    this.currentTrip = this.currentTrip -1;
+    let obj = this.listMyTrips[this.currentTrip];
+    this.setCheckInCheckOutInfo(obj);
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','previoustrip','');
+  }
+
+  nextRQTrip(){
+    this.currentRQTrip = this.currentRQTrip +1;
+    let obj = this.listRequestTrips[this.currentRQTrip];
+    this.setCheckInCheckOutRQInfo(obj);
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','nextrequesttrip','');
+  }
+
+  previousRQTrip(){
+    this.currentRQTrip = this.currentRQTrip -1;
+    let obj = this.listRequestTrips[this.currentRQTrip];
+    this.setCheckInCheckOutRQInfo(obj);
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','previousrequesttrip','');
+  }
+
+  openHistoryTrip(){
+    // let modal = this.modalCtrl.create('MytripsHistoryPage',{lstHistoryTrips: this.listHistoryTrips});
+    // modal.present();
+    // this.enableTabbar(modal);
+    this.navCtrl.navigateForward('/mytripshistory');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','openhistorytrip','');
+  }
+
+  openInclusion(inclusion){
+    // let modal = this.modalCtrl.create('ComboInClusionPage',{comboInclusion: inclusion});
+    // modal.present();
+    // this.enableTabbar(modal);
+    this.navCtrl.navigateForward('/comboinclusion');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','openinclusion','');
+  }
+
+  /***
+     * Gọi tổng đài hỗ trợ
+     * PDANH 26/02/2019
+     */
+    async makeCallSupport(phone){
+      try {
+        setTimeout(() => {
+          window.open(`tel:${phone}`, '_system');
+        },10);
+      }
+      catch (error) {
+        if (error) {
+          error.page = "mytrips";
+          error.func = "makeCallSupport";
+          C.writeErrorLog(error);
+        };
+      }
+      //google analytic
+      this.gf.googleAnalytion('mytrips','callsupport','');
+    }
+    
+    public async showConfirm(){
+      let alert = await this.alertCtrl.create({
+        message: "Phiên đăng nhập hết hạn. Nhấn OK để về trang đăng nhập hoặc nhấn Cancel để về màn hình chính.",
+        buttons: [{
+          text: 'OK',
+          role: 'OK',
+          handler: () => {
+            this.storage.remove('auth_token');
+            this.storage.remove('email');
+            this.storage.remove('username');
+            this.storage.remove('jti');
+            this.valueGlobal.logingoback = "MainPage";
+            this.navCtrl.navigateForward('/login');
+          }
+        },
+        {
+          text: 'Cancel',
+          handler: () => {
+            this.storage.remove('auth_token');
+            this.storage.remove('email');
+            this.storage.remove('username');
+            this.storage.remove('jti');
+            // this.app.getActiveNav().push('MainPage');
+            // this.navCtrl.setRoot('MainPage');
+            // this.navCtrl.popToRoot();
+            // this.app.getRootNav().getActiveChildNav().select(0);
+            this.navCtrl.navigateRoot('/');
+          }
+        }
+      ]
+    });
+    alert.present();
+  }
+
+  SelectNextTrip(){
+    this.activeTabTrip = 1;
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    //google analytic
+    this.gf.googleAnalytion('mytrips','selectnexttrip','');
+  }
+
+  SelectHistoryTrip(){
+    this.activeTabTrip = 2;
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    //google analytic
+    this.gf.googleAnalytion('mytrips','selecthistorytrip','');
+  }
+
+  SelectRequestTrip(){
+    this.activeTabTrip = 3;
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    this.getRequestTrip();
+    //google analytic
+    this.gf.googleAnalytion('mytrips','selectrequesttrip','');
+  }
+
+  getRequestTrip() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/api/dashboard/GetMyRequestPrice',
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if(response.statusCode != 200){
+            var objError ={
+                page: "mytrips",
+                func: "getRequestTrip",
+                message : response.statusMessage,
+                content : response.body,
+                type: "warning"
+              };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getRequestTrip";
+            C.writeErrorLog(error);
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.listRequestTrips = [];
+                var result = JSON.parse(body);
+                let lstRQTrips = result.data;
+                se.hasloadRQdata = true;
+                //List trip yêu cầu
+                lstRQTrips.forEach(element => {
+                  let urlavatar = element.hotelAvatar.substring(0,element.hotelAvatar.length-4);
+                      let tail = element.hotelAvatar.substring(element.hotelAvatar.length-4,element.hotelAvatar.length);
+                      element.hotelAvatar = urlavatar + "-" + "104x104" +tail;
+                      se.listRequestTrips.push(element);
+                });
+                if(se.listRequestTrips.length >0){
+                  let obj = se.listRequestTrips[0];
+                  se.setCheckInCheckOutRQInfo(obj);
+                }
+              });
+            }else{
+              if(response.statusCode != 200){
+                se.listRequestTrips = [];
+                se.hasloadRQdata = true;
+              }
+            }
+            
+          }
+          
+        });
+      }else{
+        se.hasloadRQdata = true;
+        se.listRequestTrips = [];
+      }
+    });
+  }
+
+  public scrollFunction = (event: any) => {
+    var se = this;
+    se.zone.run(() => {
+      if(!se.currentPosition){
+        se.currentPosition = event.detail.scrollTop;
+      }
+      if (event.detail.scrollTop > se.currentPosition) {
+        document.querySelector(".tabbar")['style'].display = 'none';
+        if (se.topOrBottom == "top") {
+          se.contentBox.marginTop = 0;
+        } else if (se.topOrBottom == "bottom") {
+          se.contentBox.marginBottom = 0;
+        }
+  
+      } else {
+        if(document.querySelector(".tabbar")){
+          document.querySelector(".tabbar")['style'].display = 'flex';
+        }
+        
+        if (se.topOrBottom == "top") {
+          se.contentBox.marginTop = se.tabBarHeight;
+        } else if (se.topOrBottom == "bottom") {
+          se.contentBox.marginBottom = se.tabBarHeight;
+        }
+  
+      }//if else
+    })
+  }
+}

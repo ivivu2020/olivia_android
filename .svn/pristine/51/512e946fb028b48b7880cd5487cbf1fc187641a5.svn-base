@@ -1,0 +1,124 @@
+<ion-header>
+<ion-toolbar>
+  <ion-title style="text-align: center;font-size: 18px">Khách sạn yêu thích</ion-title>
+</ion-toolbar>
+
+</ion-header>
+
+<ion-content>
+  <ion-list *ngIf="ishide==true">
+    <div class="card-background-detailpage">
+      <ion-item-group *ngFor="let msg of json1; let i = index">
+        <ion-row class="row-item-hotellist">
+          <ion-col size="4" class="col-img-hotellist">
+            <img (click)="itemSelected(msg)" class="img-radius" src={{msg.Avatar}} style="position:relative">
+            <div *ngIf="msg.Liked" class="img-heart" (click)="unlikeItem(msg.HotelId)">
+              <ion-icon name="heart" color="danger" class="cls-icon-content"></ion-icon>
+            </div>
+            <div *ngIf="!msg.Liked" class="img-heart" (click)="likeItem(msg.HotelId)">
+              <img src="./assets/imgs/heart-empty.svg" style="width:14px;height:14px" class="cls-img-content">
+            </div>
+            <div (click)="itemSelected(msg)" *ngIf="msg.PromotionDescriptionSubstring" class="transbox_0">
+              {{msg.PromotionDescriptionSubstring}}
+            </div>
+          </ion-col>
+          <ion-col size="8" class="text-right-hotellike" style="line-height: 18px">
+            <div (click)="itemSelected(msg)">
+              <h2 class="text-name">{{msg.Name}}
+              </h2>
+              <p>
+                <img *ngIf="msg.Rating!=0" src={{msg.Rating}}>
+              </p>
+              <p *ngIf="msg.SubLocation" class="text">
+                <img style="height:10px" src="./assets/ic_hoteldetail/group.svg">
+                <label style="color: #4f4f4f;margin-left: 5px"> {{msg.SubLocation}}
+                </label>
+              </p>
+              <div *ngIf="msg.AvgPoint>0">
+
+                <ion-row *ngIf="msg.AvgPoint>=9 && msg.AvgPoint<=10"
+                  style="--padding-start: 0px;--inner-border-width: 0 0 0px 0;height: 20px;">
+                  <ion-badge style="width:30px">{{msg.AvgPoint}}</ion-badge>
+                  <label style="padding-left: 4px;padding-top: 3px;font-size: 12px;" class="label-badge">Tuyệt vời </label>
+                </ion-row>
+
+
+                <ion-row *ngIf="msg.AvgPoint>=7 && msg.AvgPoint<9">
+                  <ion-badge style="width:30px">{{msg.AvgPoint}}</ion-badge>
+                  <label style="padding-left: 4px;padding-top: 3px;font-size: 12px;" class="label-badge">Rất tốt
+                  </label>
+                </ion-row>
+                <ion-row *ngIf="msg.AvgPoint>=6 && msg.AvgPoint<7">
+                  <ion-badge style="width:30px">{{msg.AvgPoint}}</ion-badge>
+                  <label style="padding-left: 4px;padding-top: 3px;font-size: 12px;" class="label-badge">Tốt
+                  </label>
+                </ion-row>
+                <ion-row *ngIf="msg.AvgPoint<6">
+                  <ion-badge style="width:30px">{{msg.AvgPoint}}</ion-badge>
+                  <label style="padding-left: 4px;padding-top: 3px;font-size: 12px;" class="label-badge">Bình thường
+                  </label>
+                </ion-row>
+              </div>
+
+            </div>
+            <div>
+              <div>
+                <div *ngIf="msg.DealType" class="last-row" [ngClass]="msg.AvgPoint==0? 'p-top-18' : ''">
+                  <ion-row style="margin-left: -5px;font-weight: bold">
+                    <ion-col *ngIf="msg.DealPrice" class="text-combo" text-left class="p-top-dealtype">
+                      <img src="./assets/ic_combo.svg">
+                      <label>{{msg.DealType}}</label>
+                    </ion-col>
+                    <ion-col *ngIf="!msg.DealPrice" class="text-combo" text-left class="p-top-dealtype-6">
+                      <img src="./assets/ic_combo.svg">
+                      <label>{{msg.DealType}}</label>
+                    </ion-col>
+                    <ion-col *ngIf="msg.DealPrice" text-right class="p-top-10  price">
+                      <label *ngIf="msg.DealPrice!=0" class="label-dealprice">{{msg.DealPrice}} đ</label>
+                    </ion-col>
+                  </ion-row>
+                </div>
+                <div *ngIf="!msg.DealType" class="last-row" [ngClass]="msg.AvgPoint==0? 'p-top-18' : ''">
+                  <!-- Hiển thị thêm giá TA nếu giá TA <> OTA -->
+                  <div text-right
+                    *ngIf="msg.MinPriceOTAStr && msg.MinPriceTAStr && msg.MinPriceOTAStr!=msg.MinPriceTAStr && msg.MinPriceTAStr!=0 && msg.MinPriceOTAStr<msg.MinPriceTAStr && loginuser"
+                    class="label-minpriceTA">{{msg.MinPriceTAStr}} đ</div>
+                  <!-- Hiển thị giá OTA -->
+                  <ion-row style="margin-left: -5px">
+                    <ion-col class="text-nameroom" text-left class="p-top-minprice">
+                      <label>{{msg.RoomNameSubString}}</label>
+                    </ion-col>
+                    <ion-col text-right class="p-top-10 price">
+                      <div>
+                        <label *ngIf="msg.MinPriceOTAStr" class="label-minprice">{{msg.MinPriceOTAStr}} đ</label>
+                        <label *ngIf="!msg.MinPriceOTAStr" class="label-minprice">Hết phòng</label>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                </div>
+              </div>
+            </div>
+          </ion-col>
+        </ion-row>
+        <p class="h-line"></p>
+      </ion-item-group>
+
+    </div>
+  </ion-list>
+
+  <div *ngIf="nodata==true" style="text-align: center;margin-top: 10px">
+    <img src="./assets/imgs/empty.svg">
+    <div *ngIf="!istext">
+      <p class="text-empty">Không có khách sạn yêu thích!</p>
+    </div>
+
+    <div *ngIf="istext">
+      <div class="text-trip-empty">
+        <label>Đăng nhập để xem khách sạn đã yêu thích.</label>
+      </div>
+      <div class="button-trip-empty">
+        <button ion-button round outline class="button btn-trip-empty" (click)="goToLogin()">Đăng nhập ngay</button>
+      </div>
+    </div>
+  </div>
+</ion-content>

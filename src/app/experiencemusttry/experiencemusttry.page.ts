@@ -1,0 +1,289 @@
+import { Component, OnInit, NgZone } from '@angular/core';
+import { AuthService } from '../providers/auth-service';
+import * as request from 'requestretry';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import * as $ from 'jquery';
+
+import { ActionSheetController, NavController, ModalController } from '@ionic/angular';
+import { ExperienceFilterPage } from '../experiencefilter/experiencefilter.page';
+import { OverlayEventDetail } from '@ionic/core';
+@Component({
+  selector: 'app-experiencemusttry',
+  templateUrl: './experiencemusttry.page.html',
+  styleUrls: ['./experiencemusttry.page.scss'],
+})
+export class ExperienceMustTryPage implements OnInit {
+  slideData1:any = [];
+  slideData:any = [];
+  page=1;
+  memberid: any;
+  input;
+  like= false;
+
+  constructor(private storage: Storage, private zone: NgZone,
+    private navCtrl: NavController,
+    private actionSheetCtrl: ActionSheetController,
+    private gf: GlobalFunction,
+    private modalCtrl: ModalController
+    ) { }
+
+  ngOnInit() {
+
+  }
+
+  search(){
+    
+  }
+
+  goback(){
+    this.navCtrl.back();
+  }
+
+  ionViewWillEnter(){
+    var se=this;
+    se.storage.get('jti').then((uid:any)=>{
+      se.memberid = uid;
+    })
+    se.storage.get('listtopdealdefault').then((data) =>{
+      if(data){
+        se.loadRecommendData(data);
+      }else{
+        se.getHoteldeal();
+      }
+    })
+  }
+
+  getHoteldeal() {
+    var se = this;
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/TopDeals?pageIndex=' + se.page + '&pageSize=200'+ (se.memberid ? '&memberid='+se.memberid : ''),
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+        apikey: 'sx25k7TABO6W4ULFjfxoJJaLjQr0wUGxYCph1TQiTBM',
+        apisecret: 'wZH8vCalp5-ZsUzJiP1IP6V2beWUm0ej8G_25gzg2xg'
+      }
+    };
+    request(options, function (error, response, body) {
+      if (response.statusCode != 200) {
+        var objError = {
+          page: "experiencemusttry",
+          func: "getHoteldeal",
+          message: response.statusMessage,
+          content: response.body,
+          param: JSON.stringify(options),
+          type: "warning"
+        };
+        C.writeErrorLog(objError,response);
+      }
+      if (error) {
+        error.page = "experiencemusttry";
+        error.func = "getHoteldeal";
+        error.param = JSON.stringify(options);
+        C.writeErrorLog(error,response);;
+      };
+      se.slideData = JSON.parse(body);
+      if(se.slideData && se.slideData.length >0){
+        se.storage.set('listtopdealdefault', se.slideData);
+      }
+      
+      var chuoi = "";
+      se.zone.run(() => {
+        for (let i = 0; i < 2; i++) {
+          if (se.slideData && se.slideData[i].images[i]) {
+            var res = se.slideData[i].images[i].url.substring(0, 4);
+            if (res != "http") {
+              se.slideData[i].images[i].url = 'https:' + se.slideData[i].images[i].url;
+            }
+            var minPrice = se.slideData[i].minPrice.toLocaleString();
+            chuoi = "";
+            var name = se.slideData[i].name.split('|');
+            for (let x = 1; x < name.length; x++) {
+              if (x == name.length - 1) {
+                chuoi = chuoi + name[x];
+              } else {
+                chuoi = chuoi + name[x] + "|";
+              }
+            }
+            switch (se.slideData[i].rating) {
+                case 50:
+                  se.slideData[i].rating = "./assets/star/ic_star_5.svg";
+                  break;
+                case 45:
+                  se.slideData[i].rating = "./assets/star/ic_star_4.5.svg";
+                  break;
+                case 40:
+                  se.slideData[i].rating = "./assets/star/ic_star_4.svg";
+                  break;
+                case 35:
+                  se.slideData[i].rating = "./assets/star/ic_star_3.5.svg";
+                  break;
+                case 30:
+                  se.slideData[i].rating = "./assets/star/ic_star_3.svg";
+                  break;
+                case 25:
+                  se.slideData[i].rating = "./assets/star/ic_star_2.5.svg";
+                  break;
+                case 20:
+                  se.slideData[i].rating = "./assets/star/ic_star_2.svg";
+                  break;
+                case 15:
+                  se.slideData[i].rating = "./assets/star/ic_star_1.5.svg";
+                  break;
+                case 10:
+                  se.slideData[i].rating = "./assets/star/ic_star.svg";
+                  break;
+                case 5:
+                  se.slideData[i].rating = "./assets/star/ic_star_0.5.svg";
+                  break;
+                default:
+                  break;
+              }
+            
+            var item = { ischecked: 0, id: se.slideData[i].id, name: name[0], imageUrl: se.slideData[i].images[i].url, regionName: se.slideData[i].regionName, minPrice: minPrice, description: chuoi, rating: se.slideData[i].rating, priceshow: (se.slideData[i].minPrice/1000).toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.").replace(',','.'), topsale24Total: 0,Liked: false, url: se.slideData[i].url, address: se.slideData[i].address };
+            se.slideData1.push(item);
+          }
+
+        }
+        
+      })
+    });
+  }
+
+  loadRecommendData(data){
+    var se = this;
+    //se.storage.get('listtopdealdefault').then((data) =>{
+      if(data){
+        se.slideData = data;
+        for (let i = 0; i < 2; i++) {
+        let item = data[i];
+        switch (item.rating) {
+          case 50:
+            item.rating = "./assets/star/ic_star_5.svg";
+            break;
+          case 45:
+            item.rating = "./assets/star/ic_star_4.5.svg";
+            break;
+          case 40:
+            item.rating = "./assets/star/ic_star_4.svg";
+            break;
+          case 35:
+            item.rating = "./assets/star/ic_star_3.5.svg";
+            break;
+          case 30:
+            item.rating = "./assets/star/ic_star_3.svg";
+            break;
+          case 25:
+            item.rating = "./assets/star/ic_star_2.5.svg";
+            break;
+          case 20:
+            item.rating = "./assets/star/ic_star_2.svg";
+            break;
+          case 15:
+            item.rating = "./assets/star/ic_star_1.5.svg";
+            break;
+          case 10:
+            item.rating = "./assets/star/ic_star.svg";
+            break;
+          case 5:
+            item.rating = "./assets/star/ic_star_0.5.svg";
+            break;
+          default:
+            break;
+        }
+        var minPrice = item.minPrice ? item.minPrice.toLocaleString() : '';
+        var chuoi = "";
+        var name = item.name.split('|');
+            for (let x = 1; x < name.length; x++) {
+              if (x == name.length - 1) {
+                chuoi = chuoi + name[x];
+              } else {
+                chuoi = chuoi + name[x] + "|";
+              }
+            }
+        var itemslide = { ischecked: 0, id: item.id, name: name[0], imageUrl: item.images[0].url, regionName: item.regionName, minPrice: minPrice, description: chuoi, rating: item.rating, priceshow: (item.minPrice/1000).toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.").replace(',','.'), topsale24Total: 0,Liked: false, url: item.url, address: se.slideData[0].address };
+        se.slideData1.push(itemslide);
+        }
+      }
+   
+    //})
+  }
+
+  async choiceExperienceProfile(data){
+    var se = this;
+    se.copyAvatarIconToActionSheet();
+    let actionSheet = await se.actionSheetCtrl.create({
+      cssClass: 'action-sheets-experience',
+      header: 'Được recommend bởi',
+      animated: true,
+      backdropDismiss: true,
+      buttons: [
+        {
+          text: 'Quỷ Lệ',
+          cssClass: 'avatar1',
+          handler: () => {
+            se.showExperienceProfile(data);
+          }
+        },
+        {
+          text: 'Lục Tuyết Kỳ',
+          cssClass: 'avatar2',
+          handler: () => {
+            //se.showNotification(data);
+          }
+        },
+        {
+          text: 'Bích Dao',
+          cssClass: 'avatar3',
+          handler: () => {
+            //se.showNotification(data);
+          }
+        }
+      ]
+    });
+    actionSheet.present();
+  }
+
+  copyAvatarIconToActionSheet(){
+    for(let i = 1; i<=3; i++){
+      var linkAvatarImage = $('.item-image-avatar.avatar'+i).attr('src'),
+          lengthAvatar = linkAvatarImage.length,
+          avatarUrlx30 = linkAvatarImage.substring(0,lengthAvatar-4) + "-30x30",
+          filetype = linkAvatarImage.substring(lengthAvatar-4),
+          linkAvatarImagex30 = avatarUrlx30 + filetype;
+          (document.styleSheets[0] as CSSStyleSheet).addRule('.avatar'+i+' .action-sheet-button-inner.sc-ion-action-sheet-md:before', 'background-image: url("'+linkAvatarImagex30+'")');
+    }
+  }
+
+  showExperienceProfile(data){
+    var se = this;
+    se.gf.setParams(data, 'experienceProfile');
+    se.navCtrl.navigateForward('/experienceprofile');
+  }
+
+  async showExperienceFilter(){
+    var se = this;
+    const modal: HTMLIonModalElement =
+    await this.modalCtrl.create({
+      component: ExperienceFilterPage
+    });
+    modal.present();
+
+    modal.onDidDismiss().then((data: OverlayEventDetail) => {
+      if (data.data) {
+        se.zone.run(() => {
+        
+        })
+      }
+    })
+  }
+
+  showExperienceSearch(){
+    var se = this;
+    se.navCtrl.navigateForward('/experiencesearch');
+  }
+ 
+}

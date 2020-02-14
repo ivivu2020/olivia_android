@@ -1,0 +1,180 @@
+<!--
+  Generated template for the RoomadddetailsEanPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+    <ion-toolbar style="min-height: 0px;text-align: center">
+        <ion-row>
+          <ion-col style="text-align: center;height: 48px;">
+            <div style="align-self: center" >
+              <div style="position: absolute;height: 48px;width: 48px;top: 8px;" >
+                  <ion-icon (click)="goback()" color="dark-tint" style="font-size: 2em;" name="arrow-back" class="card-title"></ion-icon>
+              </div>
+              
+              <div style="padding-top: 6px;font-size: 20px;font-weight: bold;"><label class="text-title">Thông tin khách</label></div>
+            </div>
+          </ion-col>
+        </ion-row>
+        </ion-toolbar>
+  </ion-header>
+<ion-content padding>
+    <img src="./assets/step/step_2.svg">
+  <div *ngIf="roomnumber==1">
+    <div style="margin-top: 10px">
+      <ion-label class="text">
+        Khách nhận phòng
+      </ion-label>
+    </div>
+    <div style="margin-left: -5px">
+      <ion-row>
+        <ion-col size="6">
+          <ion-item style="--padding-start: 0px"> 
+            <ion-label position="stacked">Họ</ion-label>
+            <ion-input [(ngModel)]="ho" type="text"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col size="6">
+          <ion-item style="--padding-start: 0px">
+            <ion-label position="stacked">Tên</ion-label>
+            <ion-input [(ngModel)]="ten" type="text"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item style="--padding-start: 0px">
+            <ion-label position="stacked">Điện thoại</ion-label>
+            <ion-input [(ngModel)]="phone" maxlength=10  type="tel"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row *ngIf="arrbed.length>1" style="margin-top: 10px" >
+        <ion-radio-group>
+              <ion-col (click)="itemrd(item.text,itemindex)" *ngFor="let item of arrbed; let itemindex = index"  size="6">
+                  <ion-radio color="secondary" value={{item.text.description}} class="rd-departure" checked="{{item.ischeck}}"></ion-radio>
+                  <label class="rd-text" style="margin-left: 5px" (click)="itemrd(item.text,itemindex)">{{item.text.description}}</label>
+                </ion-col>
+          </ion-radio-group>
+        
+      </ion-row>
+      <ion-row *ngIf="textbed" style="margin-top: 10px;margin-left: 5px" >
+          <label class="rd-text">Loại gường: </label>
+            <label class="rd-text" style="font-weight: bold">{{textbed}}</label>
+        </ion-row>
+    </div>
+    <div style="margin-top: 15px">
+      <ion-label  class="text">
+        Thông tin yêu cầu khác
+      </ion-label>
+      <textarea style="margin-top: 15px" [(ngModel)]="note" style="width: 100%;margin-top: 15px"></textarea>
+    </div>
+  </div>
+  <div style="margin-top: 10px" *ngIf="roomnumber>1">
+
+    <div *ngFor="let m of arr;let i=index">
+      <div style="margin-top: 15px">
+        <ion-label class="text">
+          {{m.text}}
+        </ion-label>
+      </div>
+      <ion-row style="margin-left: -5px">
+        <ion-col size="6">
+          <ion-item  style="--padding-start: 0px">
+            <ion-label position="stacked">Họ</ion-label>
+            <ion-input [(ngModel)]="m.lastname" type="text"></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col size="6">
+          <ion-item  style="--padding-start: 0px">
+            <ion-label position="stacked">Tên</ion-label>
+            <ion-input [(ngModel)]="m.fristname" type="text"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row *ngIf="i==0" style="margin-left: -5px">
+        <ion-col size="12">
+          <ion-item  style="--padding-start: 0px">
+            <ion-label position="stacked">Điện thoại</ion-label>
+            <ion-input [(ngModel)]="m.phone" maxlength=10 type="tel"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      
+      <ion-row *ngIf="m.arrbed.length>1" style="margin-top: 10px;" >
+          <ion-radio-group>
+              <ion-col *ngFor="let item of m.arrbed; let itemindex = index"  size="6">
+                  <ion-radio value={{item.text.description}}  color="secondary" class="rd-departure" (click)="itemrd(item,i)"></ion-radio>
+                  <label class="rd-text" style="margin-left: 5px" (click)="itemrd(item,i)">{{item.text.description}}</label>
+                </ion-col>
+            </ion-radio-group>
+        
+      </ion-row>
+      <ion-row *ngIf="textbed" style="margin-top: 10px" >
+          <label class="rd-text">Loại gường: </label>
+            <label class="rd-text" style="font-weight: bold">{{textbed}}</label>
+        </ion-row>
+    </div>
+    <div style="margin-top: 15px">
+      <ion-label class="text">
+        Thông tin yêu cầu khác
+      </ion-label>
+      <textarea style="margin-top: 15px" [(ngModel)]="note" style="width: 100%; margin-top: 15px"></textarea>
+    </div>
+  </div>
+  <ion-row style="margin-top: 20px">
+      <ion-checkbox (ionChange)="edit(0)" [(ngModel)]="ischeck" color="secondary"></ion-checkbox>
+      <ion-label style="margin: 1px 10px">Xuất hóa đơn</ion-label>
+      <!-- <button *ngIf="ishide" slot="end" (click)="edit(1)" ion-button round outline class="button button4">Sửa</button> -->
+    </ion-row>
+  <div *ngIf="ishide&&ischeck">
+    <p style="color: #666" text-wrap>
+      <img class="image-card1" src="./assets/ic_facility/ic_address.svg"> {{companyname}}
+      <p>
+        <p style="color: #666" text-wrap>
+          <img class="image-card1" src="./assets/ic_facility/ic_tax.svg"> {{tax}}
+          <p>
+            <p style="color: #666" text-wrap>
+              <img class="image-card1" src="./assets/ic_facility/ic_mail.svg"> {{addressorder}}
+              <p>
+  </div>
+  <div *ngIf="ishide==false">
+    <div *ngIf="ischeck">
+      <ion-row style="margin-left: -5px">
+        <ion-col size="12">
+          <ion-item style="--padding-start: 0px">
+            <ion-label position="floating">Tên công ty</ion-label>
+            <ion-input [(ngModel)]="companyname" type="text" required></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col size="12">
+          <ion-item style="--padding-start: 0px">
+            <ion-label position="floating">Địa chỉ</ion-label>
+            <ion-input [(ngModel)]="address" type="text" required></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col size="12">
+          <ion-item style="--padding-start: 0px">
+            <ion-label position="floating">Mã số thuế</ion-label>
+            <ion-input [(ngModel)]="tax" type="text" required></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col size="12">
+          <ion-item style="--padding-start: 0px">
+            <ion-label position="floating">Địa chỉ nhận hóa đơn</ion-label>
+            <ion-input [(ngModel)]="addressorder" type="text" required></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+    </div>
+  </div>
+</ion-content>
+<ion-footer>
+    <div *ngIf="priceshow>0||ischeckbtn==true" style="background-color: #ffffff; text-align: center">
+        <button (click)="next()" ion-button round outline class="button button2">Tiếp tục</button>
+      </div>
+      <div *ngIf="priceshow==0" style="background-color: #ffffff; text-align: center">
+        <button (click)="next1()" ion-button round outline class="button button2">Hoàn thành đặt phòng</button>
+      </div>
+</ion-footer>

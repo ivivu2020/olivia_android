@@ -1,0 +1,113 @@
+<ion-header>
+    <ion-toolbar style="text-align: center;height: 56px;">
+      <ion-title>Số lượng đặt phòng</ion-title>
+      <ion-buttons start>
+        <button routerDirection="root" class="btn-close" (click)="closeModal()">
+          <!-- <span ion-text color="primary" showWhen="ios">Hủy</span> -->
+          <!-- <ion-icon name="md-close" showWhen="android,windows"></ion-icon> -->
+          <img style="max-width: 150%" src="./assets/ic_close.svg">
+        </button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <div style="margin-left: -15px">
+      <ion-list>
+        <ion-item>
+          <ion-row style="width: 100%">
+            <ion-col size="8" text-left>
+              <p style="color: #26bed6;padding: 5px;">
+                <label style="font-weight: bold;padding-left: 4px;">{{adults}}</label>
+                <label style="color: #000000;padding-left: 4px">người lớn</label>
+                <p>
+            </ion-col>
+            <ion-col size="2" text-center class="t-center">
+              <div align="left">
+                <img *ngIf="ischeckadults==true" (click)="minusadults()" src="./assets/ic_facility/ic_minus.svg">
+                <img *ngIf="ischeckadults==false" (click)="minusadults()" src="./assets/ic_facility/ic_minus_in.svg">
+              </div>
+            </ion-col>
+            <ion-col size="2" text-right  class="t-center">
+              <img (click)="plusadults()" src="./assets/ic_facility/ic_plus.svg">
+            </ion-col>
+          </ion-row>
+  
+        </ion-item>
+        <ion-item>
+          <ion-row style="width: 100%">
+            <ion-col text-left size="8">
+              <p style="color: #26bed6;padding: 5px 5px;">
+                <label style="font-weight: bold;padding-left: 4px;">{{child}}</label>
+                <label style="color: #000000;padding-left: 4px">trẻ em</label>
+                <p>
+            </ion-col>
+            <ion-col size="2" text-center  class="t-center">
+              <div align="left" >
+                <img *ngIf="ischeckchild==true" (click)="minuschild()" src="./assets/ic_facility/ic_minus.svg">
+                <img *ngIf="ischeckchild==false" (click)="minuschild()" src="./assets/ic_facility/ic_minus_in.svg">
+              </div>
+            </ion-col>
+            <ion-col size="2" text-right  class="t-center">
+              <img (click)="pluschild()" src="./assets/ic_facility/ic_plus.svg">
+  
+            </ion-col>
+          </ion-row>
+        </ion-item>
+        <ion-item>
+          <ion-row style="width: 100%">
+            <ion-col size="8" text-left>
+              <p style="color: #26bed6;padding: 5px 5px;">
+                <label style="font-weight: bold;padding-left: 4px;">{{room}}</label>
+                <label style="color: #000000;padding-left: 4px">phòng</label>
+                <p>
+            </ion-col>
+            <ion-col size="2" text-center  class="t-center">
+              <div align="left">
+                <img *ngIf="ischeckroom==true" (click)="minusroom()" src="./assets/ic_facility/ic_minus.svg">
+                <img *ngIf="ischeckroom==false" (click)="minusroom()" src="./assets/ic_facility/ic_minus_in.svg">
+              </div>
+            </ion-col>
+            <ion-col size="2" text-right class="t-center">
+              <img (click)="plusroom()" src="./assets/ic_facility/ic_plus.svg">
+            </ion-col>
+          </ion-row>
+        </ion-item>
+      </ion-list>
+    </div>
+  
+    <div style="margin-left: 16px">
+      <label *ngIf="arrchild && arrchild.length >0" style="font-size: 14px;font-weight: bold">
+        Tuổi trẻ em
+      </label>
+      <ion-list *ngFor="let msg of arrchild">
+        <ion-item style="margin-left: -15px">
+          <ion-label>{{msg.text}}</ion-label>
+          <ion-select cancelText="Thoát" style="color: #26bed6" [(ngModel)]="msg.numage" interface="action-sheet">
+            <ion-select-option (ionSelect)="selectclick($event,msg.text)" value="<1"><1</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=1" (ionSelect)="selectclick($event,msg.text)" value="1">1</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=2" (ionSelect)="selectclick($event,msg.text)" value="2">2</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=3" (ionSelect)="selectclick($event,msg.text)" value="3">3</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=4" (ionSelect)="selectclick($event,msg.text)" value="4">4</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=5" (ionSelect)="selectclick($event,msg.text)" value="5">5</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=6" (ionSelect)="selectclick($event,msg.text)" value="6">6</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=7" (ionSelect)="selectclick($event,msg.text)" value="7">7</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=8" (ionSelect)="selectclick($event,msg.text)" value="8">8</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=9" (ionSelect)="selectclick($event,msg.text)" value="9">9</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=10" (ionSelect)="selectclick($event,msg.text)" value="10">10</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=11" (ionSelect)="selectclick($event,msg.text)" value="11">11</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=12" (ionSelect)="selectclick($event,msg.text)" value="12">12</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=13" (ionSelect)="selectclick($event,msg.text)" value="13">13</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=14" (ionSelect)="selectclick($event,msg.text)" value="14">14</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=15" (ionSelect)="selectclick($event,msg.text)" value="15">15</ion-select-option>
+            <ion-select-option *ngIf="ChildAgeTo >=16" (ionSelect)="selectclick($event,msg.text)" value="16">16</ion-select-option>
+          </ion-select>
+        </ion-item>
+  
+      </ion-list>
+    </div>
+  </ion-content>
+  <ion-footer>
+    <div style="background-color: #ffffff; text-align: center">
+      <button (click)="data()" ion-button round outline class="button">Xác nhận</button>
+    </div>
+  </ion-footer>

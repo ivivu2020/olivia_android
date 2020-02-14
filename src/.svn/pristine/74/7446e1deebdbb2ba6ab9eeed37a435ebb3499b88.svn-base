@@ -1,0 +1,18 @@
+<ion-header>
+  <ion-toolbar style="text-align: center;height: 56px;">
+    <ion-buttons start>
+      <button routerDirection="root" class="btn-close" (click)="closeModal()">
+        <!-- <span ion-text color="primary" showWhen="ios">Hủy</span> -->
+        <!-- <ion-icon name="md-close" showWhen="android,windows"></ion-icon> -->
+        <img style="max-width: 150%;margin-top: 10px" src="./assets/ic_close.svg">
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-slides style="margin-top: 200px"   #mySlider>
+    <ion-slide  *ngFor="let slide of arrimgreview">
+      <img class="img1" [src]="slide.ImageUrl" />
+    </ion-slide>
+  </ion-slides>
+</ion-content>

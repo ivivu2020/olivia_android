@@ -1,0 +1,143 @@
+<ion-header class="searchexperienceregion-header">
+  <ion-row>
+      <ion-col class="no-padding col-item">
+        <div class="div-search">
+          <div class="item-float-img f-center"  (click)="goback()"><img class="img-vector-left" src="../../assets/imgs/vector_left.svg"></div>
+          <!-- <ion-input class="input-search" placeholder="Ăn gì, chơi gì, ở đâu..."></ion-input> -->
+          <ion-searchbar #inputSearchbar class="input-search-experiencesearch-region" placeholder="Địa điểm, khu vực, số nhà..." searchIcon="false" autocomplete="on" autocorrect="true" debounce="300" (ionChange)="getItems($event)" (ionClear)="cancelInput()"
+          style="-webkit-padding-start: 0; 
+          padding-inline-start: 0; 
+          -webkit-padding-end: 0; 
+          padding-inline-end: 0;
+          padding-top: 0;
+          padding-bottom: 0;
+          height: 40px !important;"
+          ></ion-searchbar>
+        </div>
+      </ion-col>
+  </ion-row>
+</ion-header>
+<ion-content padding>
+<div class="searchexperienceregion-content">
+<div (click)="getDeviceLocation()">
+    <ion-row  class="cls-row-width">
+        <ion-col text-left style="padding:16px 0px">
+            <ion-label class="label-item-search label-target">
+              <img class="img-my-location" src="./assets/img_musttry/mylocation.svg"><span class="text-my-location">Gần tôi</span>
+            </ion-label>
+        </ion-col>
+      </ion-row>
+  </div>
+<div *ngIf="ischecklist">
+  <div (click)="itemclick(item)" *ngFor="let item of itemsDisplay">
+    <ion-row *ngIf="item.show" class="cls-row-width">
+      <ion-col text-left [ngClass]="(item.tagsJson && item.tagsJson.length>0) ? 'p-8' : 'p-16'">
+        <ion-label *ngIf="item.hotelName && !item.placeId&& !item.code" class="label-item-search">
+          
+          <img class="img-search-region" src="./assets/ic_facility/ic_hotel.svg">
+          <div class="text-search-region-name">
+              <div><span class="text-search-region-name-main">{{item.hotelName}}</span></div>
+              <div><span class="text-search-region-name-sub">{{item.name}}, {{item.regionName}}</span></div>
+          </div>
+        </ion-label>
+        <ion-label *ngIf="item.name && item.placeId && item.tagsJson && item.tagsJson.length>0" class="label-item-search">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_food.svg" *ngIf="item.tagsJson.length>0 && item.tagsJson[0].id == 3">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_eye.svg" *ngIf="item.tagsJson.length>0 && item.tagsJson[0].id == 6">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_celebrate.svg" *ngIf="item.tagsJson.length>0 && item.tagsJson[0].id == 7">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_home.svg" *ngIf="item.tagsJson.length>0 && item.tagsJson[0].id == 4">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_camera.svg" *ngIf="item.tagsJson.length>0 && item.tagsJson[0].id == 9">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_airplane.svg" *ngIf="item.tagsJson.length>0 && item.tagsJson[0].id == 8">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_celebrate.svg" *ngIf="item.tagsJson.length>0 && '3,4,6,7,8,9'.indexOf(item.tagsJson[0].id.toString()) == -1">
+          <div class="text-search-region-name">
+              <div><span class="text-search-region-name-main">{{item.name}}</span></div>
+              <div><span class="text-search-region-name-sub">{{item.address}}</span></div>
+          </div>
+        </ion-label>
+        <ion-label *ngIf="item.name && !item.hotelName && item.regionCode && item.subRegionCode && !item.placeId" class="label-item-search">
+          <img class="img-search-region" src="./assets/ic_facility/Group.svg">
+          <div class="text-search-region-name">
+            <div><span class="text-search-region-name-main">{{item.name}}</span></div>
+            <div><span class="text-search-region-name-sub">{{item.regionName}}</span></div>
+          </div>
+        </ion-label>
+        <ion-label *ngIf="item.name && !item.hotelName && item.regionCode && !item.subRegionCode && item.regionId && item.type==2" class="label-item-search">
+          <img class="img-search-region" src="./assets/ic_facility/Group.svg"><span class="text-search-region">{{item.name}}</span>
+        </ion-label>
+      </ion-col>
+    </ion-row>
+  </div>
+</div>
+<div *ngIf="recent && recent.length >0 &&!ischecklist">
+  <div class="title-item-search">
+    Gần đây
+  </div>
+  <div *ngFor="let msg of recent">
+    <ion-row class="cls-row-width" (click)="nextRecent(msg)">
+      <ion-col size="12" text-left [ngClass]="(msg.tag) ? 'p-8' : 'p-16'">
+        <ion-label *ngIf="msg.hotelName && !msg.placeId && !msg.code" class="label-item-search">
+          
+            <img class="img-search-region" src="./assets/ic_facility/ic_hotel.svg">
+            <div class="text-search-region-name">
+                <div><span class="text-search-region-name-main">{{msg.hotelName}}</span></div>
+                <div><span class="text-search-region-name-sub">{{msg.name}}, {{msg.regionName}}</span></div>
+            </div>
+          </ion-label>
+          <ion-label *ngIf="msg.name && msg.placeId && msg.tag" class="label-item-search">
+            <!-- <img class="img-search-region" src="./assets/ic_facility/Group.svg"> -->
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_food.svg" *ngIf="msg && msg.tag == 3">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_eye.svg" *ngIf="msg && msg.tag == 6">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_celebrate.svg" *ngIf="msg && msg.tag == 7">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_home.svg" *ngIf="msg && msg.tag == 4">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_camera.svg" *ngIf="msg && msg.tag == 9">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_airplane.svg" *ngIf="msg && msg.tag == 8">
+          <img class="img-search-region-tag" src="./assets/img_musttry/icon_celebrate.svg" *ngIf="msg && '3,4,6,7,8,9'.indexOf(msg.tag) == -1">
+            <div class="text-search-region-name">
+                <div><span class="text-search-region-name-main">{{msg.name}}</span></div>
+                <div><span class="text-search-region-name-sub">{{msg.address}}</span></div>
+            </div>
+          </ion-label>
+        <ion-label *ngIf="msg.name && msg.code" class="label-item-search">
+          <img class="img-search-region" src="./assets/ic_facility/Group.svg"><span class="text-search-region">{{msg.name}}</span>
+        </ion-label>
+        <ion-label *ngIf="msg.name && !msg.hotelName && msg.regionCode && msg.subRegionCode && !msg.placeId" class="label-item-search">
+          <img class="img-search-region" src="./assets/ic_facility/Group.svg">
+          <div class="text-search-region-name">
+            <div><span class="text-search-region-name-main">{{msg.name}}</span></div>
+            <div><span class="text-search-region-name-sub">{{msg.regionName}}</span></div>
+          </div>
+        </ion-label>
+        <ion-label *ngIf="msg.name && !msg.hotelName && msg.regionCode && !msg.subRegionCode && msg.regionId && msg.type==2" class="label-item-search">
+          <img class="img-search-region" src="./assets/ic_facility/Group.svg"><span class="text-search-region">{{msg.name}}</span>
+        </ion-label>
+      </ion-col>
+    </ion-row>
+  </div>
+</div>
+<hr *ngIf="recent" style="margin-top: -15px">
+<div *ngIf="!ischecklist">
+  <div class="title-item-search">
+    Phổ biến
+  </div>
+  <div *ngFor="let msg of items; let i = index">
+    <ion-row class="cls-row-width" (click)="nextPopular(msg,i)">
+      <ion-col size="6" text-left style="padding:16px 0px">
+        
+        <ion-label *ngIf="msg.name" class="label-item-search">
+          <img class="img-search-region" src="./assets/ic_facility/Group.svg"><span class="text-search-region">{{msg.name}}</span>
+        </ion-label>
+      </ion-col>
+      <ion-col size="6" text-right style="padding:16px 0px">
+        <ion-label style="color: #26bed6;min-width: 145px;">
+            <span class="text-search-place">{{msg.totalPlace}} địa điểm</span>
+        </ion-label>
+      </ion-col>
+    </ion-row>
+  </div>
+</div>
+</div>
+<div style="margin-top: 20px">
+  <label *ngIf="ischecktext">Không tìm thấy kết quả tìm kiếm.Vui lòng nhập lại!</label>
+</div>
+
+
+</ion-content>

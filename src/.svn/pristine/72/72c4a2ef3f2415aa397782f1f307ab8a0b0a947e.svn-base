@@ -1,0 +1,26 @@
+
+    .text-title{
+        font-size: 18px;
+        font-weight: bold
+    }
+    ::ng-deep{
+        img {
+            max-width: 100% !important;
+            border: 0;
+            height: auto;
+        }
+        p{
+            line-height: 1.5;
+            text-align: justify;
+        }
+        .img-item
+        {
+            margin-bottom: 10px;
+
+        }
+        .divcss{
+            line-height: 1.5;
+            text-align: justify;
+        }
+    }
+    

@@ -1,0 +1,81 @@
+.text-title{
+    font-size: 18px;
+    font-weight: bold
+}
+.combo-img{
+    height: 40px;
+    width: 40px;
+}
+
+.div-flight-label{
+    font-size: 14px;
+    color: #4f4f4f;
+  }
+  .div-airline-label{
+    font-size: 14px;
+    color: #4f4f4f;
+    font-weight: normal;
+  }
+  .combo-departure-time{
+    font-size: 14px;
+      font-weight: bold;
+      padding-top: 4px;
+  }
+  
+  .combo-flight-price-label-down{
+    font-size: 14px;
+    color: #003c71;
+  }
+  
+  .combo-flight-price-label-up{
+    font-size: 14px;
+    color: #ec971f;
+  }
+  .flight-price{
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .div-split{
+    position: absolute;
+    height: 20px;
+    border-right: solid 1px #ccc;
+    top: 20px;
+    margin-left: 10px;
+  }
+  @media (min-width:287px) and (max-width: 359px) {
+    .div-flight-label{
+        font-size: 14px;
+        color: #4f4f4f;
+        margin-left: 0px;
+      }
+      .div-airline-label{
+        font-size: 14px;
+        color: #4f4f4f;
+        margin-left: 0px;
+        font-weight: normal;
+      }
+
+    .combo-flight-price-label-up {
+        font-size: 13px;
+        color: #ec971f;
+    }
+    .combo-flight-price-label-down{
+        font-size: 13px;
+        color: #003c71;
+      }
+  }
+  ::ng-deep {
+    .select-icon {
+      display: none !important;
+    }
+  }
+  .selectclass
+  {
+    color: #26bed6;
+    top: 10px;
+    position: absolute;
+    right: 0;right: 16px;
+    width: 90%;
+    height: 48px;
+  }
+   

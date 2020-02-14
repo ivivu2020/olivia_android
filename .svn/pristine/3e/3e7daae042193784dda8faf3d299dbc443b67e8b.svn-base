@@ -1,0 +1,24 @@
+import { Injectable } from '@angular/core';
+import { FirebaseAnalytics } from '@ionic-native/firebase-analytics/ngx';
+import { Platform } from 'ionic-angular';
+import { C } from '../providers/constants';
+
+@Injectable({
+    providedIn: 'root'  // <- ADD THIS
+})
+export class GlobalFunction{
+
+    constructor(public platform: Platform,public fba: FirebaseAnalytics){
+
+    }
+    
+    public googleAnalytion(viewName,action,label ){
+        if(C.ENV == "prod"){
+            this.platform.ready().then(() => {
+              this.fba.logEvent(action, { page:viewName })
+              .then((res: any) => {console.log(res);})
+              .catch((error: any) => console.error(error));
+        })
+      }
+    }
+}

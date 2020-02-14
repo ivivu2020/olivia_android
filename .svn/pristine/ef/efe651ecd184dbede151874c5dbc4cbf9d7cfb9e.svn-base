@@ -1,0 +1,56 @@
+
+<ion-header>
+  <ion-list>
+    <ion-item>
+      <ion-label class="text-title">
+        Lịch khởi hành
+      </ion-label>
+      <ion-note (click)="close()" item-end>
+        <ion-icon name="close" class="icon-close"></ion-icon>
+      </ion-note>
+    </ion-item>
+  </ion-list>
+</ion-header>
+
+<ion-content padding>
+    <ion-row ><ion-col class="text-left good-price">*Ngày có màu xanh lá: không phụ thu</ion-col></ion-row>
+    <ion-row ><ion-col class="text-left not-good-price">Ngày có màu cam: có phụ thu ngày cao điểm</ion-col></ion-row>
+    <ion-row class="p-bottom-16"><ion-col class="text-left text-normal">Nhấp vào ngày bạn muốn đi để gửi yêu cầu tư vấn cho iVIVU</ion-col></ion-row>
+  <hr>
+  <div class="calendar-header">
+    <ion-row class="calendar-month">
+      <ion-col col-2 (click)="goToLastMonth()"><ion-icon name="arrow-back"></ion-icon></ion-col>
+      <ion-col col-8>Tháng {{currentMonth}}, {{currentYear}}</ion-col>
+      <ion-col col-2 (click)="goToNextMonth()"><ion-icon name="arrow-forward"></ion-icon></ion-col>
+    </ion-row>
+  </div>
+  
+  <div class="calendar-body">
+    <ion-grid>
+      <ion-row class="calendar-weekday">
+        <ion-col class="col-weekend">CN</ion-col>
+        <ion-col>T2</ion-col>
+        <ion-col>T3</ion-col>
+        <ion-col>T4</ion-col>
+        <ion-col>T5</ion-col>
+        <ion-col>T6</ion-col>
+        <ion-col class="col-weekend">T7</ion-col>
+      </ion-row>
+      <ion-row class="calendar-date">
+        <ion-col col-1 *ngFor="let lastDay of daysInLastMonth" class="last-month" (click)="changeDateCombo(lastDay)">
+          <span *ngIf="lastDay.price" [ngClass]="lastDay.price >0 ? 'cls-orange' : 'cls-green' ">{{lastDay.dateDisplay}}</span>
+          <span *ngIf="!lastDay.price" class="no-price">{{lastDay.dateDisplay}}</span>
+        </ion-col>
+        <ion-col col-1 *ngFor="let day of daysInThisMonth"  (click)="changeDateCombo(day)" [ngClass]="currentDay == day.dateDisplay ? 'div-current-date': ''">
+          <span class="currentDate" *ngIf="day.price && currentDate === day.day;" [ngClass]="day.price >0 ? 'cls-orange' : 'cls-green' ">{{day.dateDisplay}}</span>
+          <span class="currentDate no-price" *ngIf="!day.price && currentDate === day.day;">{{day.dateDisplay}}</span>
+          <span *ngIf="day.price && currentDate !== day.day;" [ngClass]="day.price >0 ? 'cls-orange' : 'cls-green' ">{{day.dateDisplay}}</span>
+          <span *ngIf="!day.price && currentDate !== day.day;" class=" no-price">{{day.dateDisplay}}</span>
+          <!-- <ng-template #otherDate class="otherDate" [ngClass]="day.price >0 ? 'cls-orange' : 'cls-green' ">{{day.dateDisplay}}</ng-template> -->
+        </ion-col>
+        <ion-col col-1 *ngFor="let nextDay of daysInNextMonth" class="next-month" (click)="changeDateCombo(nextDay)">{{nextDay.dateDisplay}}</ion-col>
+      </ion-row>
+      
+    </ion-grid>
+  </div>
+</ion-content>

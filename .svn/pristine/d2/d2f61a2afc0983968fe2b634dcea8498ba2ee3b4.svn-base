@@ -1,0 +1,538 @@
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["login-login-module"],{
+
+/***/ "./node_modules/jwt-decode/lib/atob.js":
+/*!*********************************************!*\
+  !*** ./node_modules/jwt-decode/lib/atob.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/**
+ * The code was extracted from:
+ * https://github.com/davidchambers/Base64.js
+ */
+
+var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+
+function InvalidCharacterError(message) {
+  this.message = message;
+}
+
+InvalidCharacterError.prototype = new Error();
+InvalidCharacterError.prototype.name = 'InvalidCharacterError';
+
+function polyfill (input) {
+  var str = String(input).replace(/=+$/, '');
+  if (str.length % 4 == 1) {
+    throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
+  }
+  for (
+    // initialize result and counters
+    var bc = 0, bs, buffer, idx = 0, output = '';
+    // get next character
+    buffer = str.charAt(idx++);
+    // character found in table? initialize bit storage and add its ascii value;
+    ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer,
+      // and if not first of each 4 characters,
+      // convert the first 8 bits to one ascii character
+      bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
+  ) {
+    // try to find character in table (0-63, not found => -1)
+    buffer = chars.indexOf(buffer);
+  }
+  return output;
+}
+
+
+module.exports = typeof window !== 'undefined' && window.atob && window.atob.bind(window) || polyfill;
+
+
+/***/ }),
+
+/***/ "./node_modules/jwt-decode/lib/base64_url_decode.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/jwt-decode/lib/base64_url_decode.js ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var atob = __webpack_require__(/*! ./atob */ "./node_modules/jwt-decode/lib/atob.js");
+
+function b64DecodeUnicode(str) {
+  return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
+    var code = p.charCodeAt(0).toString(16).toUpperCase();
+    if (code.length < 2) {
+      code = '0' + code;
+    }
+    return '%' + code;
+  }));
+}
+
+module.exports = function(str) {
+  var output = str.replace(/-/g, "+").replace(/_/g, "/");
+  switch (output.length % 4) {
+    case 0:
+      break;
+    case 2:
+      output += "==";
+      break;
+    case 3:
+      output += "=";
+      break;
+    default:
+      throw "Illegal base64url string!";
+  }
+
+  try{
+    return b64DecodeUnicode(output);
+  } catch (err) {
+    return atob(output);
+  }
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/jwt-decode/lib/index.js":
+/*!**********************************************!*\
+  !*** ./node_modules/jwt-decode/lib/index.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var base64_url_decode = __webpack_require__(/*! ./base64_url_decode */ "./node_modules/jwt-decode/lib/base64_url_decode.js");
+
+function InvalidTokenError(message) {
+  this.message = message;
+}
+
+InvalidTokenError.prototype = new Error();
+InvalidTokenError.prototype.name = 'InvalidTokenError';
+
+module.exports = function (token,options) {
+  if (typeof token !== 'string') {
+    throw new InvalidTokenError('Invalid token specified');
+  }
+
+  options = options || {};
+  var pos = options.header === true ? 0 : 1;
+  try {
+    return JSON.parse(base64_url_decode(token.split('.')[pos]));
+  } catch (e) {
+    throw new InvalidTokenError('Invalid token specified: ' + e.message);
+  }
+};
+
+module.exports.InvalidTokenError = InvalidTokenError;
+
+
+/***/ }),
+
+/***/ "./src/app/login/login.html":
+/*!**********************************!*\
+  !*** ./src/app/login/login.html ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "<ion-content class=\"background center\" padding=\"true\">\n\n  <!-- <form [formGroup]=\"loginData\" (ngSubmit)=\"logintk()\" *ngIf=\"!showRoleSelection\">\n            <ion-item>\n              <ion-label floating>Email đăng nhập</ion-label>\n              <ion-input clearInput type=\"text\" formControlName=\"email\"></ion-input>\n            </ion-item>\n            <ion-item>\n              <ion-label floating>Mật khẩu</ion-label>\n              <ion-input clearInput type=\"password\" formControlName=\"password\"></ion-input>\n            </ion-item>\n           \n          </form> -->\n  <div class=\"center\">\n    <ion-card-title style=\"text-align: center\">\n      <img style=\"height: 90px;\" src=\"./assets/logo/logo.svg\" />\n    </ion-card-title>\n    <div class=\"div-go-back\" (click)=\"goback()\">\n        <ion-icon style=\"font-size: 3.7em;float: left;\" name=\"ios-arrow-round-back-outline\" class=\"card-title\">\n        </ion-icon>\n     </div>\n    <div style=\"margin-top: 60px\">\n\n      <button ion-button round (click)=\"loginfb()\" class=\"text-button button-fb\">\n        Đăng nhập bằng Facebook\n      </button>\n      <!-- <div style=\"text-align:center;margin-top: 10px\">\n        <button ion-button round color=\"danger\" (click)=\"logingg()\"  class=\"text-button button-gg\">\n          Đăng nhập bằng Google\n        </button>\n      </div> -->\n      <div style=\"text-align:center;margin-top: 10px\">\n        <button ion-button round outline color=\"light\" (click)=\"logintk()\"  class=\"text-button\">Đăng\n          nhập bằng tài khoản iVIVU</button>\n      </div>\n      <!-- <div style=\"text-align:center;margin-top: 10px\">\n          <button ion-button round outline color=\"light\" (click)=\"bypasslogin()\" style=\"text-align:center;width: 100%\">Bỏ qua đăng\n            nhập</button>\n        </div> -->\n    </div>\n    <div class=\"row-line\">\n      <ion-row>\n        <ion-col size=\"3.5\" class=\"no-padding-left text-line\"><hr class=\"hr-register\"></ion-col>\n        <ion-col size=\"5\" style=\"text-align: center;padding-left: 0px;\"><div class=\"text-line-inlinetext\"><label>Chưa có tài khoản?</label></div></ion-col>\n        <ion-col size=\"3.5\" class=\"no-padding-right  text-line\"><hr class=\"hr-register\"></ion-col>\n      </ion-row>\n      \n      \n    </div>\n    <div class=\"row-register\">\n      <div style=\"text-align:center;margin-top: 10px\">\n        <button ion-button round outline color=\"light\" (click)=\"register()\"  class=\"text-button\">Đăng ký tài khoản</button>\n      </div>\n    </div>\n  </div>\n</ion-content>"
+
+/***/ }),
+
+/***/ "./src/app/login/login.module.ts":
+/*!***************************************!*\
+  !*** ./src/app/login/login.module.ts ***!
+  \***************************************/
+/*! exports provided: LoginPageModule */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoginPageModule", function() { return LoginPageModule; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/fesm2015/common.js");
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @ionic/angular */ "./node_modules/@ionic/angular/dist/fesm5.js");
+/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/fesm2015/forms.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm2015/router.js");
+/* harmony import */ var _login__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./login */ "./src/app/login/login.ts");
+
+
+
+
+
+
+
+let LoginPageModule = class LoginPageModule {
+};
+LoginPageModule = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"])({
+        declarations: [
+            _login__WEBPACK_IMPORTED_MODULE_6__["LoginPage"],
+        ],
+        imports: [
+            _angular_common__WEBPACK_IMPORTED_MODULE_2__["CommonModule"],
+            _angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormsModule"],
+            _ionic_angular__WEBPACK_IMPORTED_MODULE_3__["IonicModule"],
+            _angular_router__WEBPACK_IMPORTED_MODULE_5__["RouterModule"].forChild([
+                {
+                    path: '',
+                    component: _login__WEBPACK_IMPORTED_MODULE_6__["LoginPage"]
+                }
+            ])
+        ],
+    })
+], LoginPageModule);
+
+
+
+/***/ }),
+
+/***/ "./src/app/login/login.scss":
+/*!**********************************!*\
+  !*** ./src/app/login/login.scss ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = ".background {\n  background-image: url('background.png');\n}\n\n.center {\n  padding: 57px 0 0 0;\n  text-align: center;\n  height: 100%;\n}\n\n.div-go-back {\n  position: absolute;\n  top: 16px;\n  color: #ffffff;\n  width: 48px;\n  height: 48px;\n}\n\n.button-md, .button-ios {\n  text-transform: none !important;\n  font-weight: normal !important;\n  height: 48px;\n}\n\n.hr-register {\n  margin-top: 31px;\n  z-index: 1;\n  background-color: #fff;\n  opacity: 0.3;\n}\n\n.text-line-inlinetext {\n  position: absolute;\n  color: #fff;\n  text-align: center;\n  width: 100%;\n  margin: 0 auto;\n  z-index: 2;\n  background-color: 255, 255, 255, 0.3;\n  margin-top: 22px;\n  font-size: 14px;\n}\n\n.row-line {\n  position: fixed;\n  width: 92%;\n  bottom: 90px;\n}\n\n.row-register {\n  position: fixed;\n  bottom: 0;\n  text-align: center;\n  width: 92%;\n  padding: 20px 0px;\n}\n\n.text-button {\n  text-align: center;\n  width: 100%;\n  font-size: 16px;\n}\n\n.button-fb {\n  background: #3b5998;\n}\n\n.button-gg {\n  background: #db4639;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvbG9naW4vRTpcXERBVEFcXGl2aXZ1bW9iaWxlYXBwXFxvbGl2aWFcXE9saXZpYV9BcHAvc3JjXFxhcHBcXGxvZ2luXFxsb2dpbi5zY3NzIiwic3JjL2FwcC9sb2dpbi9sb2dpbi5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFJO0VBQ0ksdUNBQUE7QUNDUjs7QURDQztFQUNDLG1CQUFBO0VBQ0Esa0JBQUE7RUFDQSxZQUFBO0FDRUY7O0FEQUM7RUFDTyxrQkFBQTtFQUNBLFNBQUE7RUFDTixjQUFBO0VBQ0EsV0FBQTtFQUNHLFlBQUE7QUNHTDs7QURDQztFQUNDLCtCQUFBO0VBQ0EsOEJBQUE7RUFDQSxZQUFBO0FDRUY7O0FEQUM7RUFDQyxnQkFBQTtFQUNBLFVBQUE7RUFDQSxzQkFBQTtFQUNHLFlBQUE7QUNHTDs7QUREQztFQUNDLGtCQUFBO0VBQ0EsV0FBQTtFQUNBLGtCQUFBO0VBQ0EsV0FBQTtFQUNBLGNBQUE7RUFDQSxVQUFBO0VBQ0Esb0NBQUE7RUFDQSxnQkFBQTtFQUNBLGVBQUE7QUNJRjs7QUREQztFQUNDLGVBQUE7RUFDQSxVQUFBO0VBQ0EsWUFBQTtBQ0lGOztBREZDO0VBQ0MsZUFBQTtFQUNBLFNBQUE7RUFDQSxrQkFBQTtFQUNBLFVBQUE7RUFDQSxpQkFBQTtBQ0tGOztBREhDO0VBQ0Msa0JBQUE7RUFDQSxXQUFBO0VBQ0EsZUFBQTtBQ01GOztBREpDO0VBQ0MsbUJBQUE7QUNPRjs7QURMQztFQUNDLG1CQUFBO0FDUUYiLCJmaWxlIjoic3JjL2FwcC9sb2dpbi9sb2dpbi5zY3NzIiwic291cmNlc0NvbnRlbnQiOlsiICAgIC5iYWNrZ3JvdW5ke1xuICAgICAgICBiYWNrZ3JvdW5kLWltYWdlOiB1cmwoJy4uLy4uL2Fzc2V0cy9iYWNrZ3JvdW5kLnBuZycpXG4gICAgfVxuXHQuY2VudGVyIHtcblx0XHRwYWRkaW5nOiA1N3B4IDAgMCAwO1xuXHRcdHRleHQtYWxpZ246IGNlbnRlcjtcblx0XHRoZWlnaHQ6IDEwMCU7XG5cdH1cblx0LmRpdi1nby1iYWNre1xuICAgICAgICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gICAgICAgIHRvcDogMTZweDtcblx0XHRjb2xvcjogI2ZmZmZmZjtcblx0XHR3aWR0aDogNDhweDtcbiAgICBcdGhlaWdodDogNDhweDtcblx0fVxuXHRcblxuXHQuYnV0dG9uLW1kLC5idXR0b24taW9zIHtcblx0XHR0ZXh0LXRyYW5zZm9ybTogbm9uZSAhaW1wb3J0YW50O1xuXHRcdGZvbnQtd2VpZ2h0OiBub3JtYWwgIWltcG9ydGFudDtcblx0XHRoZWlnaHQ6IDQ4cHg7XG5cdH1cblx0LmhyLXJlZ2lzdGVye1xuXHRcdG1hcmdpbi10b3A6IDMxcHg7XG5cdFx0ei1pbmRleDogMTtcblx0XHRiYWNrZ3JvdW5kLWNvbG9yOiAjZmZmO1xuICAgIFx0b3BhY2l0eTogMC4zO1xuXHR9XG5cdC50ZXh0LWxpbmUtaW5saW5ldGV4dHtcblx0XHRwb3NpdGlvbjogYWJzb2x1dGU7XG5cdFx0Y29sb3I6ICNmZmY7XG5cdFx0dGV4dC1hbGlnbjogY2VudGVyO1xuXHRcdHdpZHRoOiAxMDAlO1xuXHRcdG1hcmdpbjogMCBhdXRvO1xuXHRcdHotaW5kZXg6IDI7XG5cdFx0YmFja2dyb3VuZC1jb2xvcjogKDI1NSwyNTUsMjU1LCAwLjMpO1xuXHRcdG1hcmdpbi10b3A6IDIycHg7XG5cdFx0Zm9udC1zaXplOiAxNHB4O1xuXHR9XG5cblx0LnJvdy1saW5le1xuXHRcdHBvc2l0aW9uOiBmaXhlZDtcblx0XHR3aWR0aDogOTIlO1xuXHRcdGJvdHRvbTogOTBweDtcblx0fVxuXHQucm93LXJlZ2lzdGVye1xuXHRcdHBvc2l0aW9uOiBmaXhlZDtcblx0XHRib3R0b206IDA7XG5cdFx0dGV4dC1hbGlnbjogY2VudGVyO1xuXHRcdHdpZHRoOiA5MiU7XG5cdFx0cGFkZGluZzogMjBweCAwcHg7XG5cdH1cblx0LnRleHQtYnV0dG9ue1xuXHRcdHRleHQtYWxpZ246Y2VudGVyO1xuXHRcdHdpZHRoOiAxMDAlO1xuXHRcdGZvbnQtc2l6ZTogMTZweDtcblx0fVxuXHQuYnV0dG9uLWZie1xuXHRcdGJhY2tncm91bmQ6ICMzYjU5OTg7XG5cdH1cblx0LmJ1dHRvbi1nZ3tcblx0XHRiYWNrZ3JvdW5kOiAjZGI0NjM5O1xuXHR9XG5cblx0XG4iLCIuYmFja2dyb3VuZCB7XG4gIGJhY2tncm91bmQtaW1hZ2U6IHVybChcIi4uLy4uL2Fzc2V0cy9iYWNrZ3JvdW5kLnBuZ1wiKTtcbn1cblxuLmNlbnRlciB7XG4gIHBhZGRpbmc6IDU3cHggMCAwIDA7XG4gIHRleHQtYWxpZ246IGNlbnRlcjtcbiAgaGVpZ2h0OiAxMDAlO1xufVxuXG4uZGl2LWdvLWJhY2sge1xuICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gIHRvcDogMTZweDtcbiAgY29sb3I6ICNmZmZmZmY7XG4gIHdpZHRoOiA0OHB4O1xuICBoZWlnaHQ6IDQ4cHg7XG59XG5cbi5idXR0b24tbWQsIC5idXR0b24taW9zIHtcbiAgdGV4dC10cmFuc2Zvcm06IG5vbmUgIWltcG9ydGFudDtcbiAgZm9udC13ZWlnaHQ6IG5vcm1hbCAhaW1wb3J0YW50O1xuICBoZWlnaHQ6IDQ4cHg7XG59XG5cbi5oci1yZWdpc3RlciB7XG4gIG1hcmdpbi10b3A6IDMxcHg7XG4gIHotaW5kZXg6IDE7XG4gIGJhY2tncm91bmQtY29sb3I6ICNmZmY7XG4gIG9wYWNpdHk6IDAuMztcbn1cblxuLnRleHQtbGluZS1pbmxpbmV0ZXh0IHtcbiAgcG9zaXRpb246IGFic29sdXRlO1xuICBjb2xvcjogI2ZmZjtcbiAgdGV4dC1hbGlnbjogY2VudGVyO1xuICB3aWR0aDogMTAwJTtcbiAgbWFyZ2luOiAwIGF1dG87XG4gIHotaW5kZXg6IDI7XG4gIGJhY2tncm91bmQtY29sb3I6IDI1NSwgMjU1LCAyNTUsIDAuMztcbiAgbWFyZ2luLXRvcDogMjJweDtcbiAgZm9udC1zaXplOiAxNHB4O1xufVxuXG4ucm93LWxpbmUge1xuICBwb3NpdGlvbjogZml4ZWQ7XG4gIHdpZHRoOiA5MiU7XG4gIGJvdHRvbTogOTBweDtcbn1cblxuLnJvdy1yZWdpc3RlciB7XG4gIHBvc2l0aW9uOiBmaXhlZDtcbiAgYm90dG9tOiAwO1xuICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gIHdpZHRoOiA5MiU7XG4gIHBhZGRpbmc6IDIwcHggMHB4O1xufVxuXG4udGV4dC1idXR0b24ge1xuICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gIHdpZHRoOiAxMDAlO1xuICBmb250LXNpemU6IDE2cHg7XG59XG5cbi5idXR0b24tZmIge1xuICBiYWNrZ3JvdW5kOiAjM2I1OTk4O1xufVxuXG4uYnV0dG9uLWdnIHtcbiAgYmFja2dyb3VuZDogI2RiNDYzOTtcbn0iXX0= */"
+
+/***/ }),
+
+/***/ "./src/app/login/login.ts":
+/*!********************************!*\
+  !*** ./src/app/login/login.ts ***!
+  \********************************/
+/*! exports provided: LoginPage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoginPage", function() { return LoginPage; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @ionic/angular */ "./node_modules/@ionic/angular/dist/fesm5.js");
+/* harmony import */ var _providers_auth_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./../providers/auth-service */ "./src/app/providers/auth-service.ts");
+/* harmony import */ var _ionic_native_facebook_ngx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @ionic-native/facebook/ngx */ "./node_modules/@ionic-native/facebook/ngx/index.js");
+/* harmony import */ var _ionic_native_google_plus_ngx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @ionic-native/google-plus/ngx */ "./node_modules/@ionic-native/google-plus/ngx/index.js");
+/* harmony import */ var _ionic_storage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @ionic/storage */ "./node_modules/@ionic/storage/fesm2015/ionic-storage.js");
+/* harmony import */ var ionic_angular__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ionic-angular */ "./node_modules/ionic-angular/es2015/index.js");
+/* harmony import */ var _providers_constants__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./../providers/constants */ "./src/app/providers/constants.ts");
+/* harmony import */ var requestretry__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! requestretry */ "./node_modules/requestretry/index.js");
+/* harmony import */ var requestretry__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(requestretry__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var jwt_decode__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! jwt-decode */ "./node_modules/jwt-decode/lib/index.js");
+/* harmony import */ var jwt_decode__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(jwt_decode__WEBPACK_IMPORTED_MODULE_10__);
+/* harmony import */ var _providers_globalfunction__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./../providers/globalfunction */ "./src/app/providers/globalfunction.ts");
+
+
+
+
+
+
+
+
+
+
+
+
+
+let LoginPage = class LoginPage {
+    constructor(navCtrl, authService, platform, fb, storage, googlePlus, alertCtrl, toastCtrl, loadingCtrl, gf) {
+        this.navCtrl = navCtrl;
+        this.authService = authService;
+        this.platform = platform;
+        this.fb = fb;
+        this.storage = storage;
+        this.googlePlus = googlePlus;
+        this.alertCtrl = alertCtrl;
+        this.toastCtrl = toastCtrl;
+        this.loadingCtrl = loadingCtrl;
+        this.gf = gf;
+        this.isLoggedIn = false;
+        this.loader = this.loadingCtrl.create({
+            message: "Đang đăng nhập...",
+            duration: 4000
+        });
+        platform.registerBackButtonAction(() => {
+        });
+        gf.googleAnalytion('login', 'load', '');
+    }
+    ngOnInit() {
+    }
+    ionViewWillEnter() {
+        this.platform.registerBackButtonAction(() => {
+        });
+    }
+    ionViewDidLoad() {
+        let elements = document.querySelectorAll(".tabbar");
+        if (elements != null) {
+            Object.keys(elements).map((key) => {
+                elements[key].style.display = 'none';
+            });
+        }
+        this.platform.registerBackButtonAction(() => {
+        });
+    }
+    loginfb() {
+        var se = this;
+        this.fb.login(['email', 'public_profile']).then((response) => {
+            this.fb.api('me?fields=id,name,email,first_name,gender,picture.width(720).height(720).as(picture_large)', []).then(profile => {
+                this.fb.getLoginStatus().then(response => {
+                    var test = JSON.stringify(response.authResponse.accessToken);
+                    this.userData = { accessToken: test, id: profile['id'], email: profile['email'], UserName: profile['first_name'], picture: profile['picture_large']['data']['url'], username: profile['name'], phone: profile['phone'], gender: profile['gender'] };
+                    if (this.userData.email) {
+                        this.postDatafb();
+                    }
+                    else {
+                        se.checknomail();
+                    }
+                });
+            });
+        });
+        this.gf.googleAnalytion('login', 'loginfacebook', '');
+    }
+    postDatafb() {
+        var se = this;
+        var options = {
+            method: 'POST',
+            url: _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].urls.baseUrl.urlMobile + '/api/account/socialLogin',
+            timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+            headers: {
+                'cache-control': 'no-cache',
+                'content-type': 'application/json'
+            },
+            body: {
+                userData: {
+                    email: this.userData.email,
+                    name: this.userData.username,
+                    id: this.userData.id,
+                    image: this.userData.picture,
+                    provider: 'facebook',
+                    token: '',
+                    idToken: this.userData.accessToken
+                }
+            },
+            json: true
+        };
+        requestretry__WEBPACK_IMPORTED_MODULE_9__(options, function (error, response, body) {
+            if (error) {
+                error.page = "login";
+                error.func = "postDataFb";
+                _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(error);
+            }
+            ;
+            if (response.statusCode != 200) {
+                var objError = {
+                    page: "login",
+                    func: "postDataFb",
+                    message: response.statusMessage,
+                    content: response.body,
+                    type: "warning"
+                };
+                _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(objError);
+            }
+            if (body.result) {
+                var decoded = jwt_decode__WEBPACK_IMPORTED_MODULE_10___default()(body.auth_token);
+                se.storage.set("email", decoded.email);
+                se.storage.set("auth_token", body.auth_token);
+                se.storage.set("username", decoded.fullname);
+                if (Array.isArray(decoded.jti)) {
+                    se.storage.set("jti", decoded.jti[0]);
+                }
+                else {
+                    se.storage.set("jti", decoded.jti);
+                }
+                se.storage.set("point", decoded.point);
+                var text = "Bearer " + body.auth_token;
+                var options = {
+                    method: 'GET',
+                    url: _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].urls.baseUrl.urlMobile + '/api/Dashboard/GetUserInfo',
+                    headers: {
+                        'cache-control': 'no-cache',
+                        'content-type': 'application/json',
+                        authorization: text
+                    }
+                };
+                requestretry__WEBPACK_IMPORTED_MODULE_9__(options, function (error, response, body) {
+                    if (error) {
+                        error.page = "blank";
+                        error.func = "postDataFb";
+                        _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(error);
+                    }
+                    ;
+                    if (response.statusCode != 200) {
+                        var objError = {
+                            page: "blank",
+                            func: "postDataFb",
+                            message: response.statusMessage,
+                            content: response.body,
+                            type: "warning"
+                        };
+                        _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(objError);
+                    }
+                });
+            }
+        });
+    }
+    checknomail() {
+        var se = this;
+        var options = {
+            method: 'POST',
+            url: _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].urls.baseUrl.urlMobile + '/api/account/CheckSocialNoEmail',
+            timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+            headers: {
+                'cache-control': 'no-cache',
+                'content-type': 'application/json'
+            },
+            body: {
+                userData: {
+                    id: this.userData.id,
+                    idToken: '',
+                    image: this.userData.picture,
+                    name: this.userData.username,
+                    provider: 'facebook',
+                    token: this.userData.accessToken
+                }
+            },
+            json: true
+        };
+        requestretry__WEBPACK_IMPORTED_MODULE_9__(options, function (error, response, body) {
+            if (error) {
+                error.page = "login";
+                error.func = "checknomail";
+                _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(error);
+            }
+            ;
+            if (response.statusCode != 200) {
+                var objError = {
+                    page: "login",
+                    func: "checknomail",
+                    message: response.statusMessage,
+                    content: response.body,
+                    type: "warning"
+                };
+                _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(objError);
+            }
+            if (body.result) {
+                se.postDatafb();
+            }
+            else {
+                se.presentPrompt();
+            }
+        });
+    }
+    validateEmail(email) {
+        var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+    logingg() {
+        this.userData = { btn: ['2'] };
+        this.navCtrl.navigateForward('/blank');
+        this.gf.googleAnalytion('login', 'logingoogle', '');
+    }
+    logout() {
+        this.fb.logout()
+            .then(res => this.isLoggedIn = false)
+            .catch(e => {
+            console.log('Error logout from Facebook', e);
+            if (e) {
+                e.page = "login";
+                e.func = "logout";
+                _providers_constants__WEBPACK_IMPORTED_MODULE_8__["C"].writeErrorLog(e);
+            }
+            ;
+        });
+        this.gf.googleAnalytion('login', 'logout', '');
+    }
+    logintk() {
+        this.gf.googleAnalytion('login', 'logintk', '');
+    }
+    bypasslogin() {
+        this.gf.googleAnalytion('login', 'bypasslogin', '');
+    }
+    presentToast() {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function* () {
+            let toast = yield this.toastCtrl.create({
+                message: "Email hoặc mật khẩu không đúng.",
+                duration: 3000,
+                position: 'top'
+            });
+            toast.present();
+        });
+    }
+    openPage(page) {
+    }
+    goback() {
+    }
+    presentPrompt() {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function* () {
+            let alert = yield this.alertCtrl.create({
+                subHeader: 'Tài khoản của bạn không có email hoặc không để ở chế độ công khai. Vui lòng cung cấp email để iVIVU có thể xác định và bảo mật tài khoản của bạn:',
+                inputs: [
+                    {
+                        name: 'email',
+                        placeholder: 'Nhập email'
+                    }
+                ],
+                buttons: [
+                    {
+                        text: 'Bỏ qua',
+                        role: 'cancel',
+                        handler: data => {
+                        }
+                    },
+                    {
+                        text: 'Xác nhận',
+                        handler: data => {
+                            if (data.email) {
+                                this.userData.email = data.email;
+                                var test = this.validateEmail(data.email);
+                                if (test == true) {
+                                    this.postDatafb();
+                                }
+                                else {
+                                    this.presentToastemail();
+                                }
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+                    }
+                ]
+            });
+            yield alert.present();
+        });
+    }
+    presentToastemail() {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function* () {
+            let toast = yield this.toastCtrl.create({
+                message: "Định dạng email không đúng",
+                duration: 3000,
+                position: 'top'
+            });
+            toast.present();
+        });
+    }
+    register() {
+    }
+};
+LoginPage = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
+        selector: 'app-login',
+        template: __webpack_require__(/*! ./login.html */ "./src/app/login/login.html"),
+        styles: [__webpack_require__(/*! ./login.scss */ "./src/app/login/login.scss")]
+    }),
+    tslib__WEBPACK_IMPORTED_MODULE_0__["__metadata"]("design:paramtypes", [_ionic_angular__WEBPACK_IMPORTED_MODULE_2__["NavController"], _providers_auth_service__WEBPACK_IMPORTED_MODULE_3__["AuthService"], ionic_angular__WEBPACK_IMPORTED_MODULE_7__["Platform"], _ionic_native_facebook_ngx__WEBPACK_IMPORTED_MODULE_4__["Facebook"], _ionic_storage__WEBPACK_IMPORTED_MODULE_6__["Storage"],
+        _ionic_native_google_plus_ngx__WEBPACK_IMPORTED_MODULE_5__["GooglePlus"], _ionic_angular__WEBPACK_IMPORTED_MODULE_2__["AlertController"], _ionic_angular__WEBPACK_IMPORTED_MODULE_2__["ToastController"], _ionic_angular__WEBPACK_IMPORTED_MODULE_2__["LoadingController"], _providers_globalfunction__WEBPACK_IMPORTED_MODULE_11__["GlobalFunction"]])
+], LoginPage);
+
+
+
+/***/ })
+
+}]);
+//# sourceMappingURL=login-login-module.js.map

@@ -1,0 +1,496 @@
+import { Component, ViewChildren, QueryList } from '@angular/core';
+import { Platform, IonRouterOutlet, ModalController, PopoverController, ActionSheetController, ToastController, NavController, Events } from '@ionic/angular';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+import { Router } from '@angular/router';
+import { SearchHotel,Booking, ValueGlobal } from'./providers/book-service';
+import { GlobalFunction } from'./providers/globalfunction';
+import { C } from './providers/constants';
+import { Network } from '@ionic-native/network/ngx';
+import { FCM } from '@ionic-native/fcm/ngx';
+import { Storage } from '@ionic/storage';
+import { FirebaseDynamicLinks } from '@ionic-native/firebase-dynamic-links/ngx';
+import * as request from 'requestretry';
+import { AppVersion } from '@ionic-native/app-version/ngx';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: 'app.component.html'
+})
+export class AppComponent {
+  // set up hardware back button event.
+  lastTimeBackPress = 0;
+  timePeriodToExit = 2000;
+  disconnectSubscription:any;
+  connectSubscription:any;
+  @ViewChildren(IonRouterOutlet) routerOutlets: QueryList<IonRouterOutlet>;
+  email: any;
+  appversion: string;
+  phone: any;
+  constructor(
+    private platform: Platform,
+    private splashScreen: SplashScreen,
+    private statusBar: StatusBar,
+    public modalCtrl: ModalController,
+    private popoverCtrl: PopoverController,
+    private actionSheetCtrl: ActionSheetController,
+    private router: Router,
+    private toast: ToastController,
+    private navCtrl: NavController,
+    public searchhotel: SearchHotel,
+    public gf: GlobalFunction,
+    public booking: Booking,
+    public network: Network,
+    public fcm: FCM,
+    private storage: Storage,
+    public valueGlobal: ValueGlobal,
+    private firebaseDynamicLinks: FirebaseDynamicLinks,
+    private toastCrl: ToastController,
+    private appVersion: AppVersion
+  ) {
+    this.initializeApp();
+
+    //this.backButtonEvent();
+  }
+  
+  ionViewDidEnter() {
+    const preloadArea: HTMLElement = document.getElementById('preload');
+    preloadArea.appendChild(document.createElement('ion-content'));
+    preloadArea.appendChild(document.createElement('ion-row'));
+    preloadArea.appendChild(document.createElement('ion-col'));
+    preloadArea.appendChild(document.createElement('ion-label'));
+    preloadArea.appendChild(document.createElement('ion-grid'));
+    preloadArea.appendChild(document.createElement('ion-list'));
+    preloadArea.appendChild(document.createElement('ion-item-group'));
+    preloadArea.appendChild(document.createElement('ion-item'));
+    preloadArea.appendChild(document.createElement('ion-radio'));
+    preloadArea.appendChild(document.createElement('ion-skeleton-text'));
+  }
+
+
+  initializeApp() {
+    this.platform.ready().then(() => {
+      this.statusBar.show();
+      this.statusBar.styleLightContent();
+      //phone
+      this.storage.get('phone').then(data =>{
+        if(data){
+          this.phone = data;
+        }
+      })
+      //get email
+      this.storage.get('email').then(e =>{
+        if(e){
+          this.email = e;
+        }
+      })
+      //Lấy app version
+      this.appVersion.getVersionNumber().then(version => {
+        this.appversion=version;
+      })
+      //Start log with UXCam 
+      //UXCam.startWithKey(C.UXCam_Key);
+      this.disconnectSubscription = this.network.onDisconnect().subscribe(() => {
+        //this.presentAlert(); //some alert msg that netwk has gone 
+        this.gf.setNetworkStatus(false);
+        this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      });
+  
+      this.connectSubscription = this.network.onConnect().subscribe(() => {
+        
+        setTimeout(() => {
+          if (this.network.type) {
+            this.gf.setNetworkStatus(true);
+          }
+        }, 3000);
+      });
+      //Dynamiclink
+      this.firebaseDynamicLinks.onDynamicLink().subscribe((res:any)=>{
+        if(res && res.deepLink){
+          var arrLink = res.deepLink.split('?');
+          if(arrLink && arrLink.length >1){
+            var id = arrLink[1];
+            this.navCtrl.navigateForward('/hoteldetail/' + id);
+          }
+        }
+      })
+      
+      //PDANH 19/07/2019: Push memberid & devicetoken
+       this.storage.get('auth_token').then(auth_token =>{
+        if(auth_token){
+          //Notification
+            this.fcm.onNotification().subscribe( (data:any)=>{
+              if(data.wasTapped){
+                setTimeout(()=>{
+                  this.showNotification(data);
+                  //update lại trạng thái bkg
+                  //this.loadNotificationAndUpdateState(data.BookingCode);
+                },3000)
+              } else {
+                this.valueGlobal.countNotifi++;
+                this.showActionSheetNoti(data);
+              };
+              
+              this.fcm.onTokenRefresh().subscribe(token =>{
+                //PDANH 19/07/2019: Push memberid & devicetoken
+                  if(auth_token){
+                    this.gf.pushTokenAndMemberID(auth_token, token, this.appversion);
+                  }
+              })
+            })
+          }
+          })
+      //clear cache khi start app
+      this.storage.remove('blogtripdefault');
+      this.storage.remove('listblogdefault');
+      this.storage.remove('listtopdealdefault');
+      this.storage.remove('regionnamesuggest');
+      this.storage.remove('deviceToken');
+      this.storage.remove('listexeperienceregion');
+      this.valueGlobal.countNotifi=0;
+
+      //this.handlerBackButton();
+    });
+    
+  }
+  showNotification(data){
+    //chuyển qua tab mytrip
+    if(data && data.BookingCode && data.notifyAction != "cancel"){
+      if(data.notifyAction == "sharereviewofhotel"){
+        this.navCtrl.navigateForward(['/app/tabs/tab3']);
+        this.gf.setParams(data.BookingCode,'notifiBookingCode');
+        this.gf.setParams(2,'selectedTab3');
+      }
+      else if(data.NotifyType == "blog" && data.notifyAction == "blogofmytrip"){
+        this.valueGlobal.backValue = "tab4";
+        this.navCtrl.navigateForward("/blog/" + data.BookingCode);
+      }
+      else if(data.NotifyType == "fly" && data.notifyAction == "flychangeinfo"){
+        this.navCtrl.navigateForward(['/app/tabs/tab3']);
+        this.gf.setParams(data.BookingCode,'notifiBookingCode');
+        this.gf.setParams(data.switchObj,'notifiSwitchObj');
+      }
+      else{
+        this.gf.setParams(data.BookingCode,'notifiBookingCode');
+        this.navCtrl.navigateForward(['/app/tabs/tab3']);
+      }
+    }else{
+      //show notifi
+      this.showToast(data.message);
+    }
+    //this.loadNotificationAndUpdateState(data.BookingCode)
+  }
+
+  async showActionSheetNoti(data){
+    var se = this;
+    var iconStr='ic_home';
+    var subClass = '';
+    if(data.NotifyType == 'bookingbegoingcombotransfer'){
+      iconStr = 'ic_bus2';
+    }else if(data.NotifyType == 'blog')
+    {
+      iconStr = 'ic_message';
+    }
+    else if(data.notifyAction == 'bookingbegoingcombofly' || data.notifyAction == 'flychangeinfo')
+    {
+      iconStr = 'ic_paper';
+    }
+    if(data.notifyAction == 'waitingconfirmtopayment'){
+      subClass = 'fixheight-90';
+    }
+    if(data.notifyAction == 'cancel'){
+      subClass = 'fixheight-76';
+    }
+    if(data.notifyAction == 'flychangeinfo' || data.notifyAction == 'blogofmytrip'){
+      subClass = 'fixheight-36';
+    }
+    let actionSheet = await se.actionSheetCtrl.create({
+      cssClass: 'action-sheets-notification '+iconStr+' '+subClass,
+      header: data.title,
+      animated: true,
+      backdropDismiss: true,
+      buttons: [
+        {
+          text: data.message,
+          handler: () => {
+            se.showNotification(data);
+          }
+        }
+      ]
+    });
+    actionSheet.present();
+    setTimeout(()=>{
+        actionSheet.dismiss(); 
+    },5000)
+  }
+
+  async showToast(msg){
+    let toast = await this.toastCrl.create({
+        message: msg,
+        position: 'top',
+        duration: 5000
+    })
+
+    toast.present();
+  }
+
+  /**
+   * Hàm show cảnh báo
+   */
+  async presentToastNotifi(msg) {
+    const toast = await this.toast.create({
+      message: msg,
+      duration: 3000,
+      position: 'top',
+    });
+    toast.present();
+  }
+
+  handlerBackButton(){
+    //handler backbutton
+    document.addEventListener("backbutton", async () => {
+      console.log(this.router.url);
+      if (this.router.url.indexOf("tab1") != -1) {
+        const element = await this.modalCtrl.getTop();
+        if (element) {
+          element.dismiss();
+        } else {
+          navigator['app'].exitApp();
+        }
+      } else {
+        if (this.router.url.indexOf("hotellist") != -1 || this.router.url.indexOf("searchhotel") != -1) {
+          this.searchhotel.arrlocalcheck = [];
+          this.navCtrl.navigateBack('/');
+          
+        }
+        else if (this.router.url.indexOf("roompaymentdone") != -1) {
+          this.navCtrl.navigateBack('/');
+          
+        }
+        else if (this.router.url.indexOf("roompaymentdoneean") != -1) {
+          this.navCtrl.navigateBack('/');
+          
+        }
+        else if(this.router.url.indexOf("login") != -1)
+        {
+          this.navCtrl.back();
+        }
+        else if (this.router.url.indexOf("hoteldetail") != -1) {
+          
+          const element = await this.modalCtrl.getTop();
+          if (element) {
+            element.dismiss();
+          } else {
+            if (this.searchhotel.rootPage == "mainpage" || this.searchhotel.rootPage == "topdeal") {
+              this.navCtrl.navigateBack('/');
+            }
+            else if(this.searchhotel.rootPage == "likepage"){
+              this.navCtrl.navigateBack(['/app/tabs/tab2/']);
+            }
+            
+            else {
+              if (this.searchhotel.rootPage == "listpage") {
+                this.navCtrl.navigateBack(['/app/tabs/hotellist/false']);
+              } else if(this.searchhotel.rootPage == "combolist"){
+                this.navCtrl.navigateBack(['/app/tabs/combolist']);
+              } else if(this.searchhotel.rootPage == "topdeallist"){
+                this.navCtrl.navigateBack(['/topdeallist']);
+              } else if (this.searchhotel.rootPage == "listmood") {
+                let hotellistmoodparams = this.gf.getParams('hotellistmood')
+                if (hotellistmoodparams) {
+                  //this.navCtrl.navigateBack('/hotellistmood/' + hotellistmoodparams.moodid + '/' + hotellistmoodparams.title);
+                  this.navCtrl.navigateBack(['/app/tabs/hotellistmood/' + hotellistmoodparams.moodid + '/' + hotellistmoodparams.title]);
+                } else {
+                  this.navCtrl.back();
+                }
+
+              } else {
+                console.log(this.searchhotel.rootPage +'_'+ element ? 'true' : 'false');
+                this.navCtrl.navigateBack('/');
+              }
+            }
+          }
+        } else if (this.router.url.indexOf("hotelreviews") != -1
+          || this.router.url.indexOf("hoteldescription") != -1
+          || this.router.url.indexOf("policy") != -1
+          || this.router.url.indexOf("facilities") != -1
+          || this.router.url.indexOf("hotelroomdetail") != -1
+          || this.router.url.indexOf("occupancy") != -1 || this.router.url.indexOf("loginusername") != -1 || this.router.url.indexOf("register") != -1){
+            this.navCtrl.back();
+          
+        }
+        else if (this.router.url.indexOf("mytripbookingdetail") != -1){
+          this.navCtrl.navigateBack(['/app/tabs/tab3/']);
+        }
+        else if (this.router.url.indexOf("tripweather") != -1
+        || this.router.url.indexOf("hotelnotes") != -1
+        || this.router.url.indexOf("hotelexpsnotes") != -1
+        || this.router.url.indexOf("tripweather") != -1
+        ) {
+            this.navCtrl.back();
+          
+        }else if(this.router.url.indexOf("tab2") != -1
+        || this.router.url.indexOf("tab3") != -1
+        || this.router.url.indexOf("tab4") != -1
+        || this.router.url.indexOf("tab5") != -1){
+          this.navCtrl.navigateBack('/');
+        }else if (this.router.url.indexOf("roomadddetails") != -1 ) {
+            this.navCtrl.navigateBack('roomdetailreview');
+        }
+        else if(this.router.url.indexOf("userprofile") != -1
+        || this.router.url.indexOf("userreviews") != -1
+        || this.router.url.indexOf("userreward") != -1
+        || this.router.url.indexOf("cuspoints") != -1
+        || this.router.url.indexOf("usertravelhobby") != -1)
+        {
+          this.navCtrl.navigateBack(['app/tabs/tab5/']);
+        }
+        
+        else if (this.router.url.indexOf("roomadddetails-ean") != -1 ) {
+          this.navCtrl.navigateBack('roomdetailreview');
+          
+      }
+        else if(this.router.url.indexOf("roompaymentselect") != -1)
+        {
+          if (this.searchhotel.backPage=="roompaymentselect-ean") {
+            this.navCtrl.navigateBack('roomadddetails-ean');
+            
+          } else {
+            this.navCtrl.navigateBack('roomadddetails');
+            
+          }
+     
+        }
+        else if(this.router.url.indexOf("roompaymentlive") != -1)
+        {
+          if (this.searchhotel.backPage=="roompaymentselect-ean") {
+            this.navCtrl.navigateBack('roompaymentselect-ean');
+            
+          } else {
+            this.navCtrl.navigateBack('roompaymentselect');
+            
+          }
+        }
+        else if(this.router.url.indexOf("flightcomboreviews") != -1){
+          const element = await this.modalCtrl.getTop();
+          if (element) {
+            element.dismiss();
+          } else {
+          //this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+          this.navCtrl.navigateBack('/hoteldetail/'+ this.booking.HotelId);
+          }
+        }
+        else if(this.router.url.indexOf("carcombo") != -1){
+          const element = await this.modalCtrl.getTop();
+          if (element) {
+            element.dismiss();
+          } else {
+          //this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+          this.navCtrl.navigateBack('/hoteldetail/'+ this.booking.HotelId);
+          }
+        }
+        else if(this.router.url.indexOf("flightcomboadddetails") != -1){
+          this.navCtrl.back();
+        }
+        else if(this.router.url.indexOf("comboadddetails") != -1){
+          this.navCtrl.back();
+        }
+        else if(this.router.url.indexOf("combocarbank") != -1){
+          this.navCtrl.back();
+        }
+        else if(this.router.url.indexOf("combocarlive") != -1){
+          this.navCtrl.back();
+        }
+        else if(this.router.url.indexOf("combopayment") != -1){
+          this.navCtrl.back();
+        }
+        else if(this.router.url.indexOf("flightcombopaymentdone") != -1){
+          this.navCtrl.navigateBack('/');
+        }
+        else if(this.router.url.indexOf("roompaymentbank") != -1)
+        {
+          if (this.searchhotel.backPage=="roompaymentselect-ean") {
+            this.navCtrl.navigateBack('roompaymentselect-ean');
+            
+          } else {
+            this.navCtrl.navigateBack('roompaymentselect');
+            
+          }
+        }
+
+        else if(this.router.url.indexOf("roompaymentatm") != -1)
+        {
+          if (this.searchhotel.backPage=="roompaymentselect-ean") {
+            this.navCtrl.navigateBack('roompaymentselect-ean');
+            
+          } else {
+            this.navCtrl.navigateBack('roompaymentselect');
+            
+          }
+        }
+        
+        else if (this.router.url.indexOf("roomdetailreview") != -1) {
+          //this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+          //this.navCtrl.navigateBack(['/app/tabs/hoteldetail/'+ this.booking.HotelId]);
+          if(this.valueGlobal.backValue == 'hotelroomdetail'){
+            this.navCtrl.navigateBack('/hotelroomdetail/' + this.booking.HotelId);
+          }else{
+            this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+          }
+        }
+        else if (this.router.url.indexOf("onepay") != -1) {
+          //this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+          this.navCtrl.navigateBack('/hoteldetail/'+ this.booking.HotelId);
+        }
+        else if(this.router.url.indexOf('roomcancel') != -1){
+          if(this.searchhotel.backPage == "roomdetailreview"){
+            this.navCtrl.navigateBack('/roomdetailreview');
+            
+          }else if(this.searchhotel.backPage == "roompaymentselect"){
+            this.navCtrl.navigateBack('/roompaymentselect');
+            
+          }
+          else if(this.searchhotel.backPage == "roompaymentselect-ean"){
+            this.navCtrl.navigateBack('/roompaymentselect-ean');
+            
+          }else if(this.searchhotel.backPage ="mytripbookingdetail"){
+            this.navCtrl.navigateBack('/mytripbookingdetail');
+          }
+        }
+        else if(this.router.url.indexOf("roompaymentbreakdow") != -1){
+          if(this.searchhotel.backPage == "roomdetailreview"){
+            this.navCtrl.navigateBack('/roomdetailreview');
+            
+          }else if(this.searchhotel.backPage == "roompaymentselect"){
+            this.navCtrl.navigateBack('/roompaymentselect');
+            
+          }
+          else if(this.searchhotel.backPage == "roompaymentselect-ean"){
+            this.navCtrl.navigateBack('/roompaymentselect-ean');
+            
+          }
+        }
+        else if(this.router.url.indexOf("topdeallist") != -1){
+          this.navCtrl.navigateBack('/');
+        }
+        else if(this.router.url.indexOf("experiencesearch") != -1){
+          const element = await this.modalCtrl.getTop();
+            if (element) {
+              element.dismiss();
+            }else{
+              this.navCtrl.navigateBack('/');
+            }
+          
+        }
+        else if(this.router.url.indexOf("searchexperienceregion") != -1){
+          this.navCtrl.navigateBack('/experiencesearch');
+        }
+        else {
+          this.navCtrl.navigateBack('/');
+        }
+
+      }
+        
+    })
+  }
+}

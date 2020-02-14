@@ -1,0 +1,53 @@
+{
+  "_from": "@ionic-native/in-app-browser",
+  "_id": "@ionic-native/in-app-browser@5.3.0",
+  "_inBundle": false,
+  "_integrity": "sha512-CXxBpngCnm45aekCxTPzECFd1aRdOh4nHszVU39xazvHD+O7vdeSu1NpZ7dnyNs4LxVjK1kBbGszmpO24Y+Bmg==",
+  "_location": "/@ionic-native/in-app-browser",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@ionic-native/in-app-browser",
+    "name": "@ionic-native/in-app-browser",
+    "escapedName": "@ionic-native%2fin-app-browser",
+    "scope": "@ionic-native",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@ionic-native/in-app-browser/-/in-app-browser-5.3.0.tgz",
+  "_shasum": "9e3e3ac12c18a8ebd1052ab35c05f16f090124fb",
+  "_spec": "@ionic-native/in-app-browser",
+  "_where": "D:\\Ionic Project\\Olivia_App",
+  "author": {
+    "name": "ionic"
+  },
+  "bugs": {
+    "url": "https://github.com/ionic-team/ionic-native/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "@types/cordova": "latest"
+  },
+  "deprecated": false,
+  "description": "Ionic Native - Native plugins for ionic apps",
+  "homepage": "https://github.com/ionic-team/ionic-native#readme",
+  "license": "MIT",
+  "module": "index.js",
+  "name": "@ionic-native/in-app-browser",
+  "peerDependencies": {
+    "rxjs": "^6.3.0",
+    "@ionic-native/core": "^5.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ionic-team/ionic-native.git"
+  },
+  "typings": "index.d.ts",
+  "version": "5.3.0"
+}

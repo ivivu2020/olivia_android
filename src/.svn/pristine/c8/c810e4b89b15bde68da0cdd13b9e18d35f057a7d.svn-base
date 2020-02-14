@@ -1,0 +1,53 @@
+
+    .text-title{
+        font-size: 18px;
+        font-weight: bold
+    }
+    ::ng-deep{
+        img {
+            max-width: 100%;
+            border: 0;
+            height: auto;
+        }
+        p{
+            line-height: 1.5;
+            text-align: justify;
+        }
+        .img-item
+        {
+            margin-bottom: 10px;
+
+        }
+        .divcss{
+            line-height: 1.5;
+            text-align: justify;
+        }
+    }
+    
+.link-morepost{
+    text-decoration: none;
+    color: #003c71;
+    cursor: pointer;
+}
+a:hover{    
+    color: #26bed6;
+}
+.row-item-hotellist{
+    padding: 11px 11px 8px 11px;
+  }
+  .col-img-hotellist{
+    height: 109px;
+  }
+  .img-radius
+  {
+    position: relative;
+      border-radius: 5px;
+      width: 104px !important;
+      height: 104px !important;
+  }
+  .title-blog
+  {
+    font-size: 14px;
+    color: #333333;
+    white-space: normal
+  }

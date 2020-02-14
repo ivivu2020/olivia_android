@@ -1,0 +1,53 @@
+{
+  "_from": "@ionic-native/google-plus",
+  "_id": "@ionic-native/google-plus@5.4.0",
+  "_inBundle": false,
+  "_integrity": "sha512-YrRSYoBA+U5NTASYZLGwU4xMYSN3Lt/ejzPzwNadAqZuxFoBZsp5iRFiPEXXNuAZ1mecLrLmtV1cSfwBFzDXwA==",
+  "_location": "/@ionic-native/google-plus",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@ionic-native/google-plus",
+    "name": "@ionic-native/google-plus",
+    "escapedName": "@ionic-native%2fgoogle-plus",
+    "scope": "@ionic-native",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@ionic-native/google-plus/-/google-plus-5.4.0.tgz",
+  "_shasum": "8fe073f2509f406275781b2c31589351b2072ad2",
+  "_spec": "@ionic-native/google-plus",
+  "_where": "E:\\DATA\\ivivumobileapp\\olivia\\Olivia_App",
+  "author": {
+    "name": "ionic"
+  },
+  "bugs": {
+    "url": "https://github.com/ionic-team/ionic-native/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "@types/cordova": "latest"
+  },
+  "deprecated": false,
+  "description": "Ionic Native - Native plugins for ionic apps",
+  "homepage": "https://github.com/ionic-team/ionic-native#readme",
+  "license": "MIT",
+  "module": "index.js",
+  "name": "@ionic-native/google-plus",
+  "peerDependencies": {
+    "rxjs": "^6.3.0",
+    "@ionic-native/core": "^5.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ionic-team/ionic-native.git"
+  },
+  "typings": "index.d.ts",
+  "version": "5.4.0"
+}

@@ -1,0 +1,51 @@
+import { Component, OnInit } from '@angular/core';
+import { NavController,Platform } from '@ionic/angular';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+/**
+ * Generated class for the InboxPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-tab4',
+  templateUrl: 'tab4.page.html',
+  styleUrls: ['./tab4.page.scss'],
+})
+export class Tab4Page implements OnInit{
+
+  constructor(public platform: Platform,public navCtrl: NavController,public gf: GlobalFunction) {
+    //google analytic
+    gf.googleAnalytion('inbox','load','');
+  }
+
+  ngOnInit(){
+
+  }
+
+  ionViewDidLoad() {
+    console.log('ionViewDidLoad InboxPage');
+  }
+
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      if (error) {
+        error.page = "inbox";
+        error.func = "handleSplashScreen";
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+    }
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+
+  }
+}

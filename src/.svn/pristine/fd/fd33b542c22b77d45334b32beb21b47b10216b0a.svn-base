@@ -1,0 +1,31 @@
+<ion-header class="experiencefilter-header">
+    <ion-row>
+        <ion-col class="col-header"><ion-title class="text-title">Lọc</ion-title></ion-col>
+          <img class="img-close" style="max-width: 150%" src="./assets/ic_close.svg" (click) = "close()">
+    </ion-row>
+</ion-header>
+
+<ion-content class="experiencefilter-content" padding style="--padding-top:0">
+  <!-- Khu vực -->
+  <div class="cls-experiencefilter-local cls-padding-top" *ngIf="dataLocal && dataLocal.length >0">
+      <ion-label class="text-title">
+        Khu vực
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemLocal of dataLocal; let i = index" name="item.Name" id="{{itemLocal.id}}" class="cls-col-border style-item-{{itemLocal.id}}" (click)="localClick($event,'style')" >{{ itemLocal.Name }}</div>
+        </div>
+  </div>
+   <!-- Phong cách yêu thích -->
+   <div class="cls-order-style cls-padding-top" *ngIf="dataStyle && dataStyle.length >0">
+      <ion-label class="text-title">
+        Phong cách
+        </ion-label>
+        <div class="item-style p-top">
+            <div *ngFor="let itemStyle of dataStyle; let i = index" name="item.Name" id="{{itemStyle.id}}" class="cls-col-border style-item-{{itemStyle.id}}" (click)="localClick($event,'style')" >{{ itemStyle.Name }}</div>
+        </div>
+  </div>
+  <div class="group-button">
+      <button ion-button round outline class="button btncancel" [class.click]=" ischeckbtnreset==true " [class.none]=" ischeckbtn==true " (click)="clickCancel()">Xóa lọc</button>
+      <button ion-button round outline class="button btnok" [class.click]=" ischeckbtn==true " [class.none]=" ischeckbtnreset==true " (click)="clickOk('local',1)">Xem</button>
+  </div>
+</ion-content>

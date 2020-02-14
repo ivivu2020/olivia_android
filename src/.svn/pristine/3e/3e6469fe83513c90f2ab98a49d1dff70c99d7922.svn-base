@@ -1,0 +1,64 @@
+import { Component, OnInit } from '@angular/core';
+import { NavController,Platform } from '@ionic/angular';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Badge } from '@ionic-native/badge/ngx';
+
+/**
+ * Generated class for the InboxPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-tab4',
+  templateUrl: 'tab4.page.html',
+  styleUrls: ['./tab4.page.scss'],
+})
+export class Tab4Page implements OnInit{
+  // items= [
+  //   {id:1, title: 'Cập nhật trạng thái booking', message: 'iVIVU đã kiểm tra tình trạng phòng của Booking IVIVU123456 tại Swiss-Belresort Tuyền Lâm - Đà Lạt và đã gửi thông tin thanh toán cho Quý khách.',date: '1 giờ trước', status: 0},
+  //   {id:2, title: 'Chia sẻ nhận xét về khách sạn', message: 'Quý khách hãy đánh giá khách sạn Imperial Vũng Tàu để nhận đến 10 điểm tích luỹ và giúp mọi người hiểu hơn về khách sạn nhé!',date: '12/10/2018', status: 0},
+  //   {id:3, title: 'Chuẩn bị khởi hành đi Imperial Vũng Tàu', message: 'Xe sẽ khởi hành đi Imperial Vũng Tàu tại số 1 Lê Duẩn, Q1 - Cổng Thảo Cầm Viên lúc 10 giờ. Quý khách vui lòng có mặt tại điểm đón trước 20 phút',date: '10/10/2018', status: 0},
+  //   {id:4, title: '6 điểm check-in giải nhiệt nắng hè đẹp tựa trời Tây ở Vũng Tàu', message: 'Những ngày đầu hè nắng nóng, bạn hãy tìm cho mình điểm đến giải nhiệt hiệu quả. Vũng Tàu là một trong những gợi ý phù hợp dành cho bạn.',date: '10/10/2018', status: 0},
+  //   {id:5, title: 'Thay đổi thông tin chuyến bay', message: 'Booking IVIVU888888 có số hiệu chuyến bay BL678 thay đỗi sang (Số hiệu chuyến bay BL888, 10 giờ, thứ 6, ngày 02, tháng 07)',date: '01/10/2018', status: 0},
+
+  // ]
+  items=[];
+  constructor(public platform: Platform,public navCtrl: NavController,public gf: GlobalFunction,private badge: Badge) {
+    //google analytic
+    gf.googleAnalytion('inbox','load','');
+  }
+
+  ngOnInit(){
+
+  }
+
+  ionViewWillEnter() {
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    
+  }
+
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      if (error) {
+        error.page = "inbox";
+        error.func = "handleSplashScreen";
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+    }
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+
+  }
+}

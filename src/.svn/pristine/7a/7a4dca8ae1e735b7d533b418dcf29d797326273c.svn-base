@@ -1,0 +1,499 @@
+import { ValueGlobal } from './../providers/book-service';
+import { Component,NgZone,OnInit } from '@angular/core';
+import { NavController,AlertController, ModalController,Platform } from '@ionic/angular';
+import { Storage } from '@ionic/storage';
+import * as request from 'requestretry';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Subscription } from 'rxjs/Subscription';
+import { NavigationEnd, Router } from '@angular/router';
+import { Network } from '@ionic-native/network/ngx';
+import { NetworkProvider } from '../network-provider.service';
+
+/**
+ * Generated class for the TabPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+//@IonicPage()
+@Component({
+  selector: 'app-tab5',
+  templateUrl: 'tab5.page.html',
+  styleUrls: ['./tab5.page.scss'],
+})
+
+export class Tab5Page implements OnInit{
+  loginuser = null;
+  username = null;
+  listSupport = [];
+  isShowConfirm = false;
+  point=0;
+  private subscription: Subscription;
+  public isConnected:boolean= true;
+  constructor(public platform: Platform,public navCtrl: NavController, public storage: Storage,public modalCtrl: ModalController,
+    public valueGlobal:ValueGlobal,public zone : NgZone,public alertCtrl: AlertController,public gf: GlobalFunction,private router: Router,
+    public network: Network,
+    public networkProvider: NetworkProvider){
+    storage.get('auth_token').then(auth_token => {
+      this.loginuser = auth_token;
+     });
+     storage.get('username').then(username => {
+      this.username = username;
+     });
+     this.storage.get('point').then(point => {
+      this.point = point;
+      });
+     this.handleSplashScreen();
+     
+     setInterval(()=>{
+      this.refreshUserName();
+    },20000);
+    //google analytic
+    gf.googleAnalytion('show-more','Search','');
+    //Kiểm tra mạng trước khi loaddata
+    //this.networkProvider.getNetworkStatus().subscribe((connected: boolean) => {
+      //this.isConnected = connected;
+      //if (this.isConnected) {
+      if (this.networkProvider.isOnline()) {
+        this.isConnected = true;
+        this.networkProvider.setNetworkStatus(true);
+        this.gf.setNetworkStatus(true);
+        setTimeout(()=>{
+          //Lấy danh sách nhân viên hỗ trợ
+          this.loadEmployeeSupport();
+        },300)
+      }else{
+        this.isConnected = false;
+        this.networkProvider.setNetworkStatus(false);
+        this.gf.setNetworkStatus(false);
+        this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      }
+    //});
+
+    // if(this.gf.getNetworkStatus()){
+    //   setTimeout(()=>{
+    //     this.loadEmployeeSupport();
+    //   },100)
+    // }
+  }
+
+  ngOnInit(){
+    var se = this;
+    se.subscription = se.router.events.subscribe((event) => {
+        se.storage.get('auth_token').then(auth_token => {
+        se.loginuser = auth_token;
+       });
+       //Lấy danh sách nhân viên hỗ trợ
+       
+       se.refreshUserName();
+    });
+  }
+
+  refreshUserName(){
+    this.storage.get('username').then(username => {
+      this.username = username;
+     });
+  }
+
+  loadEmployeeSupport(){
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile+ '/mobile/OliviaApis/BookingMemberDetailByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            //'postman-token': '89692e55-6555-1572-db28-4becc311f0ba',
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "show-more";
+            error.func = "loadEmployeeSupport";
+            error.param =  JSON.stringify(options);
+            C.writeErrorLog(error);
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.listSupport = JSON.parse(body);
+             });
+            }else{
+              if(response.statusCode == 400 || response.statusCode == 401){
+                if(se.isShowConfirm) return;
+                se.showConfirm("Phiên đăng nhập hết hạn. Xin vui lòng đăng nhập lại để sử dụng chức năng này.");
+                se.isShowConfirm = true;
+                return;
+              }else{
+                se.listSupport = [];
+              }
+
+            }
+            
+          }
+          
+        });
+      }
+    });
+  }
+
+  enabledTabbar(){
+    let elements = document.querySelectorAll(".tabbar");
+
+    if (elements != null) {
+      Object.keys(elements).map((key) => {
+        elements[key].style.display = 'flex';
+      });
+    }
+  }
+  
+  ionViewDidLoad() {
+    this.enabledTabbar();
+    //Xử lý nút back của dt
+    this.platform.ready().then(() => {
+      this.platform.backButton.subscribe(() => {
+        // code that is executed when the user pressed the back button
+        this.navCtrl.navigateRoot('/');
+      })
+     })
+  }
+  ionViewWillEnter(){
+    var se = this;
+    se.point = 0;
+    if (this.networkProvider.isOnline()) {
+      this.isConnected = true;
+      this.networkProvider.setNetworkStatus(true);
+      this.gf.setNetworkStatus(true);
+      setTimeout(()=>{
+        //Lấy danh sách nhân viên hỗ trợ
+        this.loadEmployeeSupport();
+      },300)
+    }else{
+      this.isConnected = false;
+      this.networkProvider.setNetworkStatus(false);
+      this.gf.setNetworkStatus(false);
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+    }
+        setTimeout(()=>{
+          se.zone.run(()=>{
+           se.refreshUserName();
+           se.storage.get('point').then(point => {
+            se.point = point;
+            });
+          })
+        },100)
+        if(document.querySelector(".tabbar")){
+          document.querySelector(".tabbar")['style'].display = 'flex';
+        }
+    }
+
+    ionViewDidEnter(){
+      var se = this;
+      se.storage.get('username').then(username => {
+        se.username = username;
+       });
+    }
+
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      if (error) {
+        error.page = "show-more";
+        error.func = "handleSplashScreen";
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+    }
+    const splash = document.getElementById('splash-screen');
+    if(splash){
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+    
+  }
+  goToLogin(){
+    this.storage.get('auth_token').then(auth_token => {
+      if (!auth_token) {
+        this.valueGlobal.logingoback='TabPage';
+        this.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  goToLogout(){
+    this.storage.get('auth_token').then(id_token => {
+      if (id_token !== null) {
+        this.showConfirmLogout('Bạn có chắc chắn muốn đăng xuất?');
+      }
+    });
+  }
+  /***
+     * Gọi tổng đài hỗ trợ
+     * PDANH 26/02/2019
+     */
+    async makeCallSupport(value){
+      try {
+        let tel = "19001870";
+        if(value == 1){
+          tel = "19002045";
+        }else if(value==2){
+          tel = "19001870";
+        }
+        else{
+          tel = "19002087";
+        }
+        setTimeout(() => {
+          window.open(`tel:${tel}`, '_system');
+        },100);
+      }
+      catch (error) {
+        if (error) {
+          error.page = "show-more";
+          error.func = "makeCallSupport";
+          C.writeErrorLog(error);
+        };
+      }
+      //google analytic
+    this.gf.googleAnalytion('show-more','callsupport','');
+    }
+
+    
+    public async showConfirm(msg){
+        let alert = await this.alertCtrl.create({
+          message: msg,
+          buttons: [
+          {
+            text: 'Để sau',
+            handler: () => {
+              this.storage.remove('auth_token');
+              this.storage.remove('email');
+              this.storage.remove('username');
+              this.storage.remove('jti');
+              this.storage.remove('userInfoData');
+              this.storage.remove('userRewardData');
+              this.storage.remove('point');
+              this.point = 0;
+              this.isShowConfirm = false;
+              this.gf.reLoad = true;
+              this.navCtrl.navigateBack('/');
+            }
+          },
+          {
+            text: 'Đăng nhập ngay',
+            role: 'OK',
+            handler: () => {
+              this.storage.remove('auth_token');
+              this.storage.remove('email');
+              this.storage.remove('username');
+              this.storage.remove('jti');
+              this.storage.remove('userInfoData');
+              this.storage.remove('userRewardData');
+              this.storage.remove('point');
+              this.point = 0;
+              this.isShowConfirm = false;
+              this.valueGlobal.logingoback = "MainPage";
+              this.gf.reLoad = true;
+              this.navCtrl.navigateForward('/login');
+            }
+          }
+        ]
+      });
+      alert.present();
+
+      alert.onDidDismiss().then((data)=>{
+              this.storage.remove('auth_token');
+              this.storage.remove('email');
+              this.storage.remove('username');
+              this.storage.remove('jti');
+              this.storage.remove('userInfoData');
+              this.storage.remove('userRewardData');
+              this.storage.remove('point');
+              this.point = 0;
+              this.isShowConfirm = false;
+              this.gf.reLoad = true;
+              this.navCtrl.navigateBack('/');
+      })
+    }
+
+    public async showConfirmLogin(msg){
+      let alert = await this.alertCtrl.create({
+        message: msg,
+        buttons: [
+        {
+          text: 'Để sau',
+          handler: () => {
+            this.storage.remove('auth_token');
+            this.storage.remove('email');
+            this.storage.remove('username');
+            this.storage.remove('jti');
+            this.storage.remove('userInfoData');
+            this.storage.remove('userRewardData');
+            this.storage.remove('point');
+            this.point = 0;
+            this.isShowConfirm = false;
+            this.gf.reLoad = true;
+            this.navCtrl.navigateBack('/');
+          }
+        },
+        {
+          text: 'Đăng nhập ngay',
+          role: 'OK',
+          handler: () => {
+            this.storage.remove('auth_token');
+            this.storage.remove('email');
+            this.storage.remove('username');
+            this.storage.remove('jti');
+            this.storage.remove('userInfoData');
+            this.storage.remove('userRewardData');
+            this.storage.remove('point');
+            this.point = 0;
+            this.isShowConfirm = false;
+            this.valueGlobal.logingoback = "MainPage";
+            this.gf.reLoad = true;
+            this.navCtrl.navigateForward('/login');
+          }
+        }
+      ]
+    });
+    alert.present();
+    alert.onDidDismiss().then((data)=>{
+      this.isShowConfirm = false;
+    })
+  }
+
+    public async showConfirmLogout(msg){
+      let alert = await this.alertCtrl.create({
+        message: msg,
+        cssClass: "cls-alert-showmore",
+        buttons: [{
+          text: 'Có',
+          role: 'OK',
+          handler: () => {
+            this.storage.remove('auth_token');
+                this.storage.remove('email');
+                this.storage.remove('username');
+                this.storage.remove('jti');
+                this.storage.remove('userInfoData');
+                this.storage.remove('userRewardData');
+                this.storage.remove('weatherInfo');
+                this.storage.remove('point');
+                this.storage.remove('infocus');
+                this.point = 0;
+                this.loginuser = null;
+                this.username= "";
+                this.navCtrl.navigateForward('/login');
+                this.isShowConfirm = false;
+                this.gf.reLoad = true;
+          }
+        },
+        {
+          text: 'Không',
+          handler: () => {
+            
+          }
+        }
+      ]
+    });
+    alert.present();
+  }
+
+    showUserReward(){
+      var se = this;
+      se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+          // let modal = this.modalCtrl.create("UserRewardPage");
+          // modal.present();
+          this.navCtrl.navigateForward('/userreward');
+        }else{
+          if(se.isShowConfirm) return;
+          se.showConfirmLogin("Bạn cần đăng nhập để sử dụng chức năng này.");
+          se.isShowConfirm = true;
+        }
+      });
+      //google analytic
+      se.gf.googleAnalytion('show-more','Search','userreward');
+    }
+
+    showUserProfile(){
+      var se = this;
+      se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+          // let modal = se.modalCtrl.create("UserProfilePage");
+          // modal.present();
+          this.navCtrl.navigateForward('/userprofile');
+        }else{
+          if(se.isShowConfirm) return;
+          se.showConfirmLogin("Bạn cần đăng nhập để sử dụng chức năng này.");
+          se.isShowConfirm = true;
+        }
+      });
+     //google analytic
+     se.gf.googleAnalytion('show-more','Search','userprofile');
+    }
+    
+    Point()
+    {
+      var se = this;
+      se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+          //se.app.getActiveNav().push('CuspointsPage');
+          this.navCtrl.navigateForward('/cuspoints');
+        }else{
+          if(se.isShowConfirm) return;
+          se.showConfirmLogin("Bạn cần đăng nhập để sử dụng chức năng này.");
+          se.isShowConfirm = true;
+        }
+      });
+      //google analytic
+      se.gf.googleAnalytion('show-more','Search','userpoint');
+    }
+
+    showUserReviews(){
+      var se = this;
+      se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+          // let modal = se.modalCtrl.create("UserReviewsPage");
+          // modal.present();
+          this.navCtrl.navigateForward('/userreviews');
+        }else{
+          if(se.isShowConfirm) return;
+          se.showConfirmLogin("Bạn cần đăng nhập để sử dụng chức năng này.");
+          se.isShowConfirm = true;
+        }
+      });
+      //google analytic
+      se.gf.googleAnalytion('show-more','Search','userreviews');
+    }
+
+    clearClonePage(pagename) {
+      //Xóa clone do push page
+      let elements = [];
+      elements = Array.from(document.querySelectorAll(pagename));
+      if (elements != null && elements.length > 0) {
+        elements.forEach(el => {
+  
+          if (el && el != null) {
+            //if (el != null && el.length > 0) {
+            el.remove();
+          }
+        });
+      }
+    }
+
+    sendSMSSupport(){
+      var se = this;
+      // let modal =se.modalCtrl.create("SendSmsPage");
+      // modal.present();
+      this.navCtrl.navigateForward('/sendsms');
+    }
+
+    
+}

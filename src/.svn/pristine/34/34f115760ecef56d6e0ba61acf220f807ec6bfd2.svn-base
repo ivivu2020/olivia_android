@@ -1,0 +1,335 @@
+import { Bookcombo } from './../providers/book-service';
+import { Component, NgZone, OnInit } from '@angular/core';
+import {  NavController, ModalController, LoadingController,Platform } from '@ionic/angular';
+import { Booking, RoomInfo, SearchHotel } from '../providers/book-service';
+import { AuthService } from '../providers/auth-service';
+import * as request from 'requestretry';
+import { InAppBrowserOptions } from '@ionic-native/in-app-browser';
+import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
+import { C } from '../providers/constants';
+import { Storage } from '@ionic/storage';
+import { GlobalFunction } from '../providers/globalfunction';
+import jwt_decode from 'jwt-decode';
+import { Router } from '@angular/router';
+import * as moment from 'moment';
+@Component({
+  selector: 'app-combopayment',
+  templateUrl: './combopayment.page.html',
+  styleUrls: ['./combopayment.page.scss'],
+})
+export class CombopaymentPage implements OnInit {
+  departtime;
+  timestamp;
+  Avatar; Name; Address; cin; cout; dur; room; nameroom; jsonroom; textage = "";arrchild;
+  roomnumber; adults; children; breakfast; PriceAvgPlusTAStr;priceshow
+  imgroom; roomtype; indexme; indexroom; cin1; cout1;checkpayment;book;roomcancel;hotelid
+  pricetemp;public loader:any;titlecombo;  departTicketSale; departTicketSaleshow; loadpricedone = false;
+  returnTicketSale; returnTicketSaleshow; checkdiscountdepart; checkdiscountreturn; departObject; returnObject;
+  departDateTimeStr: string;
+  returnDateTimeStr: string;
+  departTimeStr: string;
+  returnTimeStr: string;
+  departVehicleStr: any;
+  returnVehicleStr: any;listcars;fromPlace
+  constructor(public platform: Platform,public searchhotel:SearchHotel,public navCtrl: NavController,
+    public storage: Storage, public Roomif: RoomInfo, private iab: InAppBrowser, public booking1: Booking, 
+    public booking: Booking, public authService: AuthService,public modalCtrl: ModalController, public loadingCtrl: LoadingController,
+    public gf: GlobalFunction, public zone: NgZone,private router: Router,private bookCombo:Bookcombo) {
+      this.listcars = this.gf.getParams('carscombo');
+      
+      this.priceshow=this.listcars.HotelBooking.TotalPrices.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+      this.Avatar = Roomif.imgHotel;
+      this.Name = booking.HotelName;
+      this.Address = Roomif.Address;
+      this.cin = booking.CheckInDate;
+      this.cout = booking.CheckOutDate;
+      this.dur = moment(this.cout).diff(moment(this.cin), 'days');
+      this.roomnumber = this.searchhotel.roomnumber;
+      this.adults = booking.Adults;
+      this.children = booking.Child;
+      this.roomtype = Roomif.roomtype;
+      this.jsonroom = Roomif.jsonroom;
+      this.room = Roomif.arrroom;
+      var chuoicin = this.cin.split('-');
+      var chuoicout = this.cout.split('-');
+      this.cin = chuoicin[2] + "-" + chuoicin[1] + "-" + chuoicin[0];
+      this.cout = chuoicout[2] + "-" + chuoicout[1] + "-" + chuoicout[0];
+      this.nameroom = this.room[0].ClassName;
+      this.breakfast = (this.bookCombo.MealTypeCode == 'CUS' ? 'Ăn 3 bữa' : this.bookCombo.MealTypeName);
+      this.titlecombo = this.bookCombo.ComboTitle;
+      this.arrchild = this.searchhotel.arrchild;
+      this.departObject=this.bookCombo.departObjectCar;
+      this.returnObject=this.bookCombo.returnObjectCar;
+      this.departTicketSale = this.bookCombo.ComboDetail.comboDetail.departTicketSale;
+      this.returnTicketSale = this.bookCombo.ComboDetail.comboDetail.returnTicketSale;
+      this.fromPlace=this.bookCombo.ComboDetail.comboDetail.departurePlace;
+      if (this.arrchild) {
+        for (let i = 0; i < this.arrchild.length; i++) {
+          if (i == this.arrchild.length - 1) {
+            this.textage = this.textage + this.arrchild[i].numage;
+          } else {
+            this.textage = this.textage + this.arrchild[i].numage + ",";
+          
+          }
+        }
+        if (this.textage) {
+          this.textage = "(" + this.textage + ")";
+        }
+      }
+    this.searchhotel.backPage="roompaymentselect";
+    this.searchhotel.rootPage="roompaymentselect-ean";
+    this.checkpayment=Roomif.payment;
+    this.loadTransferInfo();
+    //google analytic
+    gf.googleAnalytion('roompaymentselect','load','');
+    
+  }
+  ngOnInit() {
+  }
+  roompaymentbank() {
+    clearInterval(this.Roomif.setInter);
+    this.clearClonePage('page-roompaymentbank');
+    this.navCtrl.navigateForward("/combocarbank");
+    //google analytic
+    this.gf.googleAnalytion('roompaymentselect','roompaymentbankselect','');
+  }
+  roompaymentlive() {
+    clearInterval(this.Roomif.setInter);
+    this.clearClonePage('page-roompaymentlive');
+    this.navCtrl.navigateForward("/combocarlive");
+    //google analytic
+    this.gf.googleAnalytion('roompaymentselect','roompaymentliveselect','');
+  }
+  roompaymentatm() {
+    this.navCtrl.navigateForward("/combochoosebank")
+    //google analytic
+    this.gf.googleAnalytion('combopayment','combopayment','');
+  }
+  roompaymentvisa() {
+    this.presentLoading();
+    this.timestamp = Date.now();
+    var se = this;
+    var form = this.listcars;
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlContracting+'/api/ToolsAPI/CreateComboTransferBooking',
+      headers:
+      {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      form
+    };
+    request(options, function (error, response, body) {
+      var obj = JSON.parse(body);
+      var options = {
+        method: 'POST',
+        url: C.urls.baseUrl.urlContracting+'/api/ToolsAPI/CreateTransactionIDComboTransfer',
+        headers:
+          {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+        form:
+        {
+          BookingCode: obj.Code,
+          DepartATCode: obj.TransferReserveCode.DepartReserveCode,
+          ReturnATCode: obj.TransferReserveCode.ReturnReserveCode,
+          FromPlaceCode: se.listcars.TransferBooking.fromPlaceCode
+        }
+      };
+      request(options, function (error, response, body) {
+        if (error) throw new Error(error);
+        se.loader.dismiss();
+        var json=JSON.parse(body);
+        if (json.Error==0) {
+          //se.navCtrl.navigateForward('/combodone/'+obj.Code);
+          se.book = {
+            code: obj.Code,
+            timestamp: se.timestamp,
+            cost: se.priceshow,
+            paymentType:"0",
+            DepartATCode:obj.TransferReserveCode.DepartReserveCode,
+            ReturnATCode:obj.TransferReserveCode.ReturnReserveCode
+          }
+           var url = C.urls.baseUrl.urlPayment+"/Home/PaymentAppCombo?info=" + JSON.stringify(se.book);
+           se.openWebpage(url);
+        }
+      });
+    })
+  }
+  openWebpage(url: string) {
+    var se=this;
+    const options: InAppBrowserOptions = {
+      zoom: 'no',
+      location: 'yes',
+      toolbar: 'yes',
+      hideurlbar: 'yes',
+      closebuttoncaption: 'Đóng'
+    };
+    const browser = this.iab.create(url, '_self', options);
+    browser.on('exit').subscribe(() => {
+      var options = {
+        method: 'GET',
+        url: C.urls.baseUrl.urlPost + '/mCheckBooking',
+        qs: { code:  se.book.code },
+        headers:
+        {
+        }
+      };
+      request(options, function (error, response, body) {
+        if(response.statusCode != 200){
+          var objError ={
+              page: "roompaymentselect",
+              func: "roompaymentatm-mCheckBooking",
+              message : response.statusMessage,
+              content : response.body,
+              type: "warning",
+              para:  JSON.stringify(options)
+            };
+          C.writeErrorLog(objError,response);
+        }
+        if (error) {
+          error.page="roompaymentselect";
+          error.func="roompaymentatm-mCheckBooking";
+          error.param =  JSON.stringify(options);
+          C.writeErrorLog(error,response);
+        };
+        var rs = JSON.parse(body);
+        if (rs.StatusBooking == 3) {
+         var  id= rs.BookingCode;
+         var total= se.priceshow;
+         se.Roomif.priceshowtt=se.priceshow;
+         var ischeck='0' ;
+          se.clearClonePage('page-roompaymentdone');
+          se.loader.dismiss();
+          se.navCtrl.navigateForward('/combodoneprepay/'+id+'/'+total+'/'+ischeck)
+        }
+        else
+        {
+          se.loader.dismiss();
+          se.searchhotel.backPage = "roompaymentselect";
+          alert("Hiện tại, giao dịch của bạn hết hiệu lực, xin vui lòng quay lại trang Thông tin Khách Sạn!");
+          se.navCtrl.navigateBack(['/app/tabs/hoteldetail/'+se.booking.HotelId]);
+        }
+      });
+    })
+   
+    browser.show();
+  }
+  goback(){
+    if (this.book) {
+      if (this.book.code) {
+        this.clearClonePage('page-hoteldetail');
+        clearInterval(this.Roomif.setInter);
+        this.searchhotel.backPage="roompaymentselect";
+        // this.navCtrl.push("HoteldetailPage").then(()=>{this.view.dismiss()});
+        this.navCtrl.navigateBack(['/app/tabs/hoteldetail/'+this.booking.HotelId]);
+      }
+      else
+      {
+        this.navCtrl.back();
+      }
+    }
+    else
+    {
+      this.navCtrl.back();
+    }
+  }
+
+  
+  roompaymentbreakdow() {
+    var dur = this.dur;
+    var roomnumber = this.roomnumber;
+    this.clearClonePage("page-roompaymentbreakdown");
+    this.navCtrl.navigateForward('/roompaymentbreakdown/' + dur + '/' + roomnumber);
+    
+  }
+  clearClonePage(pagename) {
+    //Xóa clone do push page
+    let elements = [];
+    elements = Array.from(document.querySelectorAll(pagename));
+    if (elements != null && elements.length > 0) {
+      elements.forEach(el => {
+        if (el != null && el.length > 0) {
+          el.remove();
+        }
+      });
+    }
+  }
+  // openRoomCancel(){
+  //   let modal = this.modalCtrl.create('RoomcanceldatPage',{roomInfo: this.roomcancel});
+  //   modal.present();
+  // }
+  async presentLoading() {
+    this.loader = await this.loadingCtrl.create({
+    });
+    this.loader.present();
+  }
+  openRoomCancel(){
+    this.gf.setParams(this.roomcancel,'roomInfo')
+    this.searchhotel.backPage ="roompaymentselect";
+    this.navCtrl.navigateForward('/roomcancel');
+  }
+  loadTransferInfo() {
+    var se = this;
+    //bind thông tin chiều đi
+
+      let de_date = this.departObject.route.departure_date;
+      se.departDateTimeStr = 'Đi ' + se.getDayOfWeek(de_date) + ', ' + moment(de_date).format('DD-MM-YYYY');
+      se.departTimeStr = this.listcars.departTransfer.DepartTime + ' → ' + this.listcars.departTransfer.ArrivalTime ;
+      se.departVehicleStr = this.departObject.company.name;
+      this.departTicketSaleshow = this.departObject.route.schedules[0].fare.price - this.departTicketSale;
+      if (this.departTicketSaleshow <= 0) {
+        this.checkdiscountdepart = true;
+        this.departTicketSaleshow = Math.abs(this.departTicketSaleshow);
+      }
+      else {
+        this.checkdiscountdepart = false;
+      }
+      this.departTicketSaleshow = this.departTicketSaleshow.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+    
+
+    //bind thông tin chiều về
+
+      let re_date = this.returnObject.route.departure_date;
+      se.returnDateTimeStr = 'Về ' + se.getDayOfWeek(re_date) + ', ' + moment(re_date).format('DD-MM-YYYY');
+      se.returnTimeStr = this.listcars.returnTransfer.DepartTime + ' → ' + this.listcars.returnTransfer.ArrivalTime ;
+      se.returnVehicleStr = this.returnObject.company.name;
+      this.returnTicketSaleshow = this.returnObject.route.schedules[0].fare.price - this.returnTicketSale;
+      if (this.returnTicketSaleshow <= 0) {
+        this.checkdiscountreturn = true;
+        this.returnTicketSaleshow = Math.abs(this.returnTicketSaleshow);
+      }
+      else {
+        this.checkdiscountreturn = false;
+      }
+      this.returnTicketSaleshow = this.returnTicketSaleshow.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+    
+  }
+  getDayOfWeek(date): string {
+    let coutthu = moment(date).format('dddd');
+    switch (coutthu) {
+      case "Monday":
+        coutthu = "thứ 2"
+        break;
+      case "Tuesday":
+        coutthu = "thứ 3"
+        break;
+      case "Wednesday":
+        coutthu = "thứ 4"
+        break;
+      case "Thursday":
+        coutthu = "thứ 5"
+        break;
+      case "Friday":
+        coutthu = "thứ 6"
+        break;
+      case "Saturday":
+        coutthu = "thứ 7"
+        break;
+      default:
+        coutthu = "Chủ nhật"
+        break;
+    }
+    return coutthu;
+  }
+}

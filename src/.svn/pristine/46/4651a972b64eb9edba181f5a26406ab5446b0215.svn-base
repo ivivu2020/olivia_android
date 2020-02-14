@@ -1,0 +1,12 @@
+.div-padding-bottom{
+    padding-bottom: 8px;
+}
+
+.button2
+{
+    border-color: #F79221;
+    background-color: #F79221;
+    color: #ffffff;
+    width: 90%;
+    height: 48px;
+}

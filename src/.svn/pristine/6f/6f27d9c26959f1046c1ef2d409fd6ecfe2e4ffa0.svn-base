@@ -1,0 +1,35 @@
+import { Bookcombo } from './../providers/book-service';
+import { Component, OnInit } from '@angular/core';
+import { ModalController } from '@ionic/angular';
+
+@Component({
+  selector: 'app-combocarchangeplace',
+  templateUrl: './combocarchangeplace.page.html',
+  styleUrls: ['./combocarchangeplace.page.scss'],
+})
+export class CombocarchangeplacePage implements OnInit {
+  depPlace; retPlace
+  public tabplace: string = "placed";
+  arrplacedepd = [];
+  arrplacedept = [];
+  arrplaceretd = [];
+  arrplacerett = [];
+  constructor(public bookCombo: Bookcombo, public modalCtrl: ModalController) {
+    console.log('test');
+    this.depPlace = this.bookCombo.ComboDetail.comboDetail.departurePlace;
+    this.retPlace = this.bookCombo.ComboDetail.arrivalName;
+    this.arrplacedepd = this.bookCombo.arrplacedepd;
+    this.arrplacedept = this.bookCombo.arrplacedept;
+    this.arrplaceretd = this.bookCombo.arrplaceretd;
+    for (var i = 0; i < this.arrplaceretd.length; i++) {
+
+    }
+    this.arrplacerett = this.bookCombo.arrplacerett;
+  }
+
+  ngOnInit() {
+  }
+  goback() {
+    this.modalCtrl.dismiss();
+  }
+}

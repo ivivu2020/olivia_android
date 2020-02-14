@@ -1,0 +1,49 @@
+
+    .hotel-room-detail-content{
+        padding: 0 16px;
+    }
+    .room-class-name{
+        margin-top:8px;
+        color: #26bed6;
+    }
+    .icon-detail-fix{
+        width: 18px;
+        opacity: 0.6;
+    }
+    
+    .p-top-8{
+        padding-top: 8px;
+    }
+    .label-md {
+        margin: 0;
+    }
+    .row-title{
+        padding: 10px 0px;
+    }
+    .room-class-icon{
+        opacity: 0.6;
+        text-align: right;
+    }
+    .p-left-28{
+        padding-left: 28px;
+    }
+    .btn-cancel{
+        width: 90%;
+        border:none;
+        color: #ffffff;
+        background-color: #F79221;
+        border-color: #F79221;
+        height: 48px;
+    }
+    .div-bedroom-display ion-row:last-child span{
+        display: none;
+    }
+    .text-or{
+        padding-top: 8px;
+    }
+    .text-hotel-description{
+        overflow: auto;
+        text-overflow: inherit;
+        white-space: normal;
+    }
+    

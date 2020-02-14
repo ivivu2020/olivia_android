@@ -1,0 +1,37 @@
+page-userreviews{
+    .header-title{
+        padding-top: 12px;
+        text-align: center;
+        font-size: 20px;
+        right: 6%;
+        font-weight: 500;
+        font-weight: bold;
+    }
+    
+    .title-header{
+        text-align: center;
+      }
+    .header-icon{
+          width: 48px;
+          height: 48px;
+          padding-top: 8px;
+          text-align: center;
+    }
+    .header-arrow{
+        margin: 3px 11px;
+    }
+    .userreviews-content{
+        padding: 16px 16px 16px 16px;
+    }
+    .label-hotel-name{
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .div-img-empty{
+        text-align: center;
+    }
+    .text-reviews-empty{
+        text-align: center;
+        color: #bdbdbd;
+    }
+}

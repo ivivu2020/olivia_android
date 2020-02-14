@@ -1,0 +1,327 @@
+import { Component, OnInit, NgZone } from '@angular/core';
+import { AuthService } from '../providers/auth-service';
+import * as request from 'requestretry';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import * as $ from 'jquery';
+import { NavController, ActionSheetController } from '@ionic/angular';
+import { Bookcombo, Booking, RoomInfo, SearchHotel } from '../providers/book-service';
+import * as moment from 'moment';
+
+@Component({
+  selector: 'app-carcombo',
+  templateUrl: './carcombo.page.html',
+  styleUrls: ['./carcombo.page.scss'],
+})
+export class CarComboPage implements OnInit {
+  username: any;
+  email: any;
+  infant: number;
+  Avatar: string;
+  Name: string;
+  Address: string;
+  cin: string;
+  cout: string;
+  duration: any;
+  TotalNight: any;
+  dur: string;
+  roomnumber: string;
+  adults: any;
+  totalAdult: any;
+  children: any=0;
+  totalChild: any;
+  roomtype: any;
+  jsonroom: string[];
+  room: any;
+  nameroom: any;
+  breakfast: string;
+  titlecombo: string;
+  totalInfant: number = 0;
+  arrchild: any;
+  childrendisplay: any;
+  adulsdisplay: any;
+  textage: any;
+  paxtitle: string;
+  fromPlace = 'Hồ Chí Minh';
+  titlecomboprice: any;
+  PriceAvgPlusTAStr:any;
+  comboId: any;
+  fromId: number;
+  toId: number;
+  listDepartTransfers:any = [];
+  listReturnTransfers:any = [];
+  intervalID: NodeJS.Timeout;
+  listkeys: any=[];
+  departTime: any[];//giờ đón tốt nhất
+  returnTime: any[];//giờ trả tốt nhất
+  departDateTimeStr: string;
+  returnDateTimeStr: string;
+  departTimeStr: string;
+  returnTimeStr: string;
+  departVehicleStr: any;
+  returnVehicleStr: any;
+
+  constructor(private storage: Storage, private zone: NgZone,
+    private navCtrl: NavController,
+    private actionSheetCtrl: ActionSheetController,
+    private gf: GlobalFunction,
+    public bookCombo: Bookcombo,
+    public booking: Booking,
+    public Roomif: RoomInfo,
+    public searchhotel: SearchHotel ) {
+
+      this.storage.get('username').then(name => {
+        if (name !== null) {
+          this.username = name;
+        }
+      })
+      this.storage.get('email').then(e => {
+        if (e !== null) {
+          this.email = e;
+        }
+      })
+      this.booking.ChildAge.forEach(element => {
+        if (element == "<1" || Number(element) < 2) {
+          this.infant += 1;
+        }
+      });
+    this.Avatar = Roomif.imgHotel;
+    this.Name = booking.HotelName;
+    this.Address = Roomif.Address;
+    this.cin = booking.CheckInDate;
+    this.cout = booking.CheckOutDate;
+    this.duration = moment(this.cout).diff(moment(this.cin), 'days');
+    this.TotalNight = this.duration;
+    this.dur = Roomif.dur;
+    this.roomnumber = Roomif.roomnumber;
+    this.adults = booking.Adults;
+    this.totalAdult = booking.Adults;
+    this.children = booking.Child;
+    this.totalChild = booking.Child;
+    this.roomtype = Roomif.roomtype;
+    this.jsonroom = Roomif.jsonroom;
+    this.room = Roomif.arrroom;
+    var chuoicin = this.cin.split('-');
+    var chuoicout = this.cout.split('-');
+    this.cin = chuoicin[2] + "-" + chuoicin[1] + "-" + chuoicin[0];
+    this.cout = chuoicout[2] + "-" + chuoicout[1] + "-" + chuoicout[0];
+    this.nameroom = this.room[0].ClassName;
+    this.breakfast = (this.bookCombo.MealTypeCode == 'CUS' ? 'Ăn 3 bữa' : this.bookCombo.MealTypeName);
+    this.titlecombo = this.bookCombo.ComboTitle;
+    this.titlecomboprice = this.bookCombo.ComboRoomPrice.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+    this.totalInfant = this.infant;
+    this.totalChild = this.children - this.infant;
+    this.arrchild = this.searchhotel.arrchild;
+    this.childrendisplay = this.children;
+    this.adulsdisplay = this.booking.Adults;
+    this.PriceAvgPlusTAStr = this.Roomif.objMealType.PriceAvgPlusTAStr.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+    this.comboId = this.bookCombo.ComboDetail.Id;
+
+    if (this.arrchild) {
+      for (let i = 0; i < this.arrchild.length; i++) {
+        if (i == this.arrchild.length - 1) {
+          this.textage = this.textage + this.arrchild[i].numage;
+        } else {
+          this.textage = this.textage + this.arrchild[i].numage + ",";
+        }
+        //PDANH 10/06/2019: Check tuổi trẻ em >=12 tuổi tính giá vé = người lớn
+        if (this.arrchild[i].numage >= 12) {
+          this.children--;
+          this.totalChild--;
+          this.adults++;
+          this.totalAdult++;
+        }
+      }
+      if (this.textage) {
+        this.textage = "(" + this.textage + ")";
+      }
+    }
+    if (this.adulsdisplay > 0) {
+      this.paxtitle += this.adulsdisplay + ' người lớn'
+    }
+    if (this.childrendisplay > 0) {
+      this.paxtitle += ', ' + this.childrendisplay + ' trẻ em'
+    }
+    }
+
+  ngOnInit() {
+     //clear cache sau 15p
+     this.intervalID = setInterval(() => {
+      if (this.listkeys.length > 0) {
+        this.listkeys.forEach(key => {
+          this.storage.remove(key);
+        });
+      }
+    }, 60000 * 15);
+  }
+
+  goback(){
+    var se = this;
+    se.navCtrl.back();
+  }
+
+  ionViewWillEnter(){
+    var se = this;
+    
+    se.storage.get('listDepartTransfers_'+se.comboId+'_'+se.cin).then((data)=>{
+      if(data){
+        se.listDepartTransfers = data;
+      }else{
+        se.getTransferData(true);
+      }
+    })
+    
+    se.storage.get('listReturnTransfers_'+se.comboId+'_'+se.cout).then((data)=>{
+      if(data){
+        se.listReturnTransfers = data;
+      }else{
+        //Chưa có list xe về thì mới gọi lại api lấy
+        if(!se.listReturnTransfers || se.listReturnTransfers.length <= 0)
+        se.getTransferData(false);
+      }
+    })
+    
+  }
+
+  loadTransferInfo(departTransfer, returnTransfer){
+    var se = this;
+    //bind thông tin chiều đi
+    if(departTransfer && departTransfer.length >0){
+      let departObject = departTransfer[0];
+      let de_date = departObject.route.departure_date;
+      se.departDateTimeStr = 'Đi '+ se.getDayOfWeek(de_date) +', '+ de_date.toString();
+      se.departTimeStr = departObject.route.pickup_time +' → ' +departObject.route.arrival_time;
+      se.departVehicleStr = departObject.route.vehicle_type;
+    }
+
+    //bind thông tin chiều về
+    if(returnTransfer && returnTransfer.length >0){
+      let returnObject = returnTransfer[0];
+      let re_date = returnObject.route.departure_date;
+      se.returnDateTimeStr = 'Về '+ se.getDayOfWeek(re_date)+', '+ re_date.toString();
+      se.returnTimeStr = returnObject.route.pickup_time +' → ' +returnObject.route.arrival_time;
+      se.returnVehicleStr = returnObject.route.vehicle_type;
+    }
+  }
+
+  async getTransferData(isDepart){
+    var se = this;
+    
+      if(se.bookCombo.ComboDetail.id){
+        se.comboId = se.bookCombo.ComboDetail.id;
+        if(isDepart){
+          se.fromId = 29;
+          se.toId = 76;
+
+          //Lấy danh sách chuyến xe chiều đi
+          var url = C.urls.baseUrl.urlMobile + '/get-transfer-data?cid='+se.comboId+'&from='+se.fromId+'&to='+se.toId+'&date='+se.cin+'&an='+se.totalAdult+'&cn='+se.children;
+          se.gf.RequestApi('GET',url,{},{},'carcombo','get-transfer-data').then( (data:any) =>{
+            if(data && data.length >0){
+              se.listDepartTransfers = data;
+              se.storage.set('listDepartTransfers_'+se.comboId+'_'+se.cin, data);
+              se.listkeys.push('listDepartTransfers_'+se.comboId+'_'+se.cin);
+              se.getBestTransfer(data,1);
+            }
+          });
+        }else{
+          se.fromId = 76;
+          se.toId = 29;
+
+          //Lấy danh sách chuyến xe chiều về
+          var url = C.urls.baseUrl.urlMobile + '/get-transfer-data?cid='+se.comboId+'&from='+se.toId+'&to='+se.fromId+'&date='+se.cin+'&an='+se.totalAdult+'&cn='+se.children;
+          se.gf.RequestApi('GET',url,{},{},'carcombo','get-transfer-data').then( (data:any) =>{
+            if(data && data.length >0){
+              se.listReturnTransfers = data;
+              se.storage.set('listReturnTransfers_'+se.comboId+'_'+se.cin, data);
+              se.listkeys.push('listReturnTransfers_'+se.comboId+'_'+se.cin);
+              se.getBestTransfer(data,0);
+            }
+          });
+        }
+        
+      }
+  }
+
+  /**
+   * Hàm check transfer giá tốt nhất trong khung giờ chấp nhận được
+   * @param list - Danh sách chuyến xe
+   * @param isDepart - biến xác định chiều đi/về (=1 là chiều đi/ =0 là chiều về)
+   */
+  getBestTransfer(list, isDepart) {
+    var Hour; var Minute; var kq;
+    var good = [];
+    var medium = [];
+    var other = [];
+      for (let i = 0; i < list.length; i++) {
+        var time = list[i].route.pickup_time;
+        Hour = time.toString().split(':')[0];
+        Minute = time.toString().split(':')[1];
+        kq = Hour * 60 + Number(Minute);
+
+        if (kq >= 360 && kq <= 960) {
+          if (kq >= 480 && kq <= 660) {
+            good.push(list[i]);
+          }
+          else {
+            medium.push(list[i]);
+          }
+        }
+        else {
+          other.push(list[i]);
+        }
+      }
+      if (medium.length > 0) {
+        if(isDepart){
+          this.departTime = medium;
+        }else{
+          this.returnTime = medium;
+        }
+        
+      }
+      else if (good.length > 0) {
+        if(isDepart){
+          this.departTime = good;
+        }else{
+          this.returnTime = good;
+        }
+      }
+      else if (other.length > 0) {
+        if(isDepart){
+          this.departTime = other;
+        }else{
+          this.returnTime = other;
+        }
+      }
+      
+    this.loadTransferInfo(this.departTime, this.returnTime);
+  }
+
+  getDayOfWeek(date): string {
+    let coutthu = moment(date).format('dddd');
+    switch (coutthu) {
+      case "Monday":
+        coutthu = "thứ 2"
+        break;
+      case "Tuesday":
+        coutthu = "thứ 3"
+        break;
+      case "Wednesday":
+        coutthu = "thứ 4"
+        break;
+      case "Thursday":
+        coutthu = "thứ 5"
+        break;
+      case "Friday":
+        coutthu = "thứ 6"
+        break;
+      case "Saturday":
+        coutthu = "thứ 7"
+        break;
+      default:
+        coutthu = "Chủ nhật"
+        break;
+    }
+    return coutthu;
+  }
+}

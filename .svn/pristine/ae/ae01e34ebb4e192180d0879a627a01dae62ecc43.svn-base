@@ -1,0 +1,243 @@
+import { Component, NgZone } from '@angular/core';
+import { NavController, Platform, ModalController } from '@ionic/angular';
+import { HttpClientModule } from '@angular/common/http';
+import { ComboPrice} from '../providers/comboPrice';
+import { Bookcombo, SearchHotel } from '../providers/book-service';
+import { ViewController } from 'ionic-angular/navigation/view-controller';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import moment from 'moment';
+import { ActivatedRoute } from '@angular/router';
+import * as request from 'requestretry';
+
+@Component({
+  selector: 'app-departurecalendar',
+  templateUrl: 'departurecalendar.html',
+  styleUrls: ['departurecalendar.scss'],
+})
+export class DepartureCalendarPage {
+  date: any;
+  daysInThisMonth: any;
+  daysInLastMonth: any;
+  daysInNextMonth: any;
+  monthNames: string[] = ["1","2","3","4","5","6","7","8","9","10","11","12"];
+  currentMonth: any;
+  currentYear: any;
+  currentDate: any;
+  public listPriceDate;
+  public currentDay;
+  public comboId;
+  public region;
+  constructor(public platform: Platform,public navCtrl: NavController, public comboPrice: ComboPrice,public modalCtrl: ModalController,
+    public bookCombo: Bookcombo,public searchhotel: SearchHotel,private activatedRoute: ActivatedRoute,public zone: NgZone,
+    private gf: GlobalFunction) {
+    //Xử lý nút back của dt
+    platform.ready().then(() => {
+      this.platform.backButton.subscribe(() => {
+        // code that is executed when the user pressed the back button
+        this.modalCtrl.dismiss('closeevent');
+      })
+    })
+    var se = this;
+      let params = se.gf.getParams('departure');
+      se.comboId = params.comboId;
+      se.region = params.fromPlace;
+    if(se.comboId && se.region){
+      //var url = C.urls.baseUrl.urlMobile +"//get-min-price-calendar?comboId="+se.comboId+"&fromPlace="+ se.region;
+      
+      var options = { method: 'GET',
+            url: C.urls.baseUrl.urlMobile +"//get-min-price-calendar?comboId="+se.comboId+"&fromPlace="+ se.region,
+            timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      }
+            request(options, function (error, response, body) {
+              if(response.statusCode != 200){
+                var objError ={
+                    page: "departurecalendar",
+                    func: "ngOnInit",
+                    message : response.statusMessage,
+                    content : response.body,
+                    type: "warning"
+                  };
+                C.writeErrorLog(objError);
+              }
+              if (error) {
+                error.page="departurecalendar";
+                error.func="ngOnInit";
+                C.writeErrorLog(error);
+              };
+              
+              var lstDate = JSON.parse(body);
+              if(lstDate.length >0){
+                se.listPriceDate = [];
+                se.listPriceDate = lstDate;
+                se.date = new Date(se.searchhotel.CheckInDate) || new Date();
+                se.currentDay = se.date.getDate();
+                se.zone.run(()=>{
+                  se.getDaysOfMonth();
+                })
+                
+              }
+            })
+          
+    }
+    //google analytic
+    gf.googleAnalytion('departurecalendar','load','');
+  }
+
+  //ngOnInit(){
+    // this.comboId =this.activatedRoute.snapshot.paramMap.get('comboId');
+    // this.region =this.activatedRoute.snapshot.paramMap.get('region');
+    // var se = this;
+    //   let params = se.navParams.get('otherParameter');
+    //   se.comboId = params.comboId;
+    //   se.region = params.fromPlace;
+    // if(se.comboId && se.region){
+    //   var url = C.urls.baseUrl.urlMobile +"//get-min-price-calendar?comboId="+se.comboId+"&fromPlace="+ se.region;
+      
+    //   var options = { method: 'GET',
+    //         url: C.urls.baseUrl.urlMobile +"//get-min-price-calendar?comboId="+se.comboId+"&fromPlace="+ se.region,
+    //         timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+    //   }
+    //         request(options, function (error, response, body) {
+    //           if(response.statusCode != 200){
+    //             var objError ={
+    //                 page: "departurecalendar",
+    //                 func: "ngOnInit",
+    //                 message : response.statusMessage,
+    //                 content : response.body,
+    //                 type: "warning"
+    //               };
+    //             C.writeErrorLog(objError);
+    //           }
+    //           if (error) {
+    //             error.page="departurecalendar";
+    //             error.func="ngOnInit";
+    //             C.writeErrorLog(error);
+    //           };
+              
+    //           var lstDate = JSON.parse(body);
+    //           if(lstDate.length >0){
+    //             se.listPriceDate = [];
+    //             se.listPriceDate = lstDate;
+    //             se.date = new Date(se.searchhotel.CheckInDate) || new Date();
+    //             se.currentDay = se.date.getDate();
+    //             se.getDaysOfMonth();
+    //           }
+    //         })
+          
+    // }
+  //}
+
+  getDaysOfMonth() {
+    this.daysInThisMonth = new Array();
+    this.daysInLastMonth = new Array();
+    this.daysInNextMonth = new Array();
+    this.currentMonth = this.monthNames[this.date.getMonth()];
+    this.currentYear = this.date.getFullYear();
+    if(this.date.getMonth() === new Date().getMonth()) {
+      this.currentDate = new Date().getDate();
+    } else {
+      this.currentDate = 999;
+    }
+  
+    var firstDayThisMonth = new Date(this.date.getFullYear(), this.date.getMonth(), 1).getDay();
+    var curmonth = new Date(this.date.getFullYear(), this.date.getMonth(), 1).getMonth();
+    var prevNumOfDays = new Date(this.date.getFullYear(), this.date.getMonth(), 0).getDate();
+    for(var i = prevNumOfDays-(firstDayThisMonth-1); i <= prevNumOfDays; i++) {
+      var d = new Date(this.date.getFullYear(), (this.date.getMonth() === new Date().getMonth() ? curmonth : curmonth-1), i);
+      var obj = this.listPriceDate.filter((cp: ComboPrice) => new Date(cp.day).toDateString() == d.toDateString());
+      if(obj.length >0){
+        obj.map((o: ComboPrice) => o.dateDisplay = d.getDate().toString()) ;
+        this.daysInLastMonth.push(obj[0]);
+      }else{
+        var newObj =  {
+              dateDisplay: i,
+              day:d.toLocaleDateString()
+          }
+          this.daysInLastMonth.push(newObj);
+        }
+      }
+  
+    var thisNumOfDays = new Date(this.date.getFullYear(), this.date.getMonth()+1, 0).getDate();
+    for (var i = 0; i < thisNumOfDays; i++) {
+      var d1 = new Date(this.date.getFullYear(), curmonth, i+1);
+      var obj1 = this.listPriceDate.filter((cp: ComboPrice) => new Date(cp.day).toDateString() == d1.toDateString());
+      if(obj1.length >0){
+        obj1.map((o: ComboPrice) => o.dateDisplay = d1.getDate().toString()) ;
+        this.daysInThisMonth.push(obj1[0]);
+      }
+      else{
+        var newObj =  {
+              dateDisplay: i+1,
+              day:d1.toLocaleDateString()
+          }
+          this.daysInThisMonth.push(newObj);
+        }
+      }
+  
+    var lastDayThisMonth = new Date(this.date.getFullYear(), this.date.getMonth()+1, 0).getDay();
+    var nextNumOfDays = new Date(this.date.getFullYear(), this.date.getMonth()+2, 0).getDate();
+    for (var i = 0; i < (6-lastDayThisMonth); i++) {
+      var d2 = new Date(this.date.getFullYear(), this.date.getMonth()+1, i+1);
+      var obj1 = this.listPriceDate.filter((cp: ComboPrice) => new Date(cp.day).toDateString() == d2.toDateString());
+      if(obj1.length >0){
+        obj1.map((o: ComboPrice) => o.dateDisplay = d2.getDate().toString()) ;
+        this.daysInNextMonth.push(obj1[0]);
+      }
+      else{
+        var newObj =  {
+            dateDisplay: i+1,
+            day:d2.toLocaleDateString()
+          }
+          this.daysInNextMonth.push(newObj);
+        }
+      //this.daysInNextMonth.push(i+1);
+    }
+    var totalDays = this.daysInLastMonth.length+this.daysInThisMonth.length+this.daysInNextMonth.length;
+    if(totalDays<36) {
+      for(var i = (7-lastDayThisMonth); i < ((7-lastDayThisMonth)+7); i++) {
+        var d3 = new Date(this.date.getFullYear(), this.date.getMonth()+1, i);
+        var obj1 = this.listPriceDate.filter((cp: ComboPrice) => new Date(cp.day).toDateString() == d3.toDateString());
+        if(obj1.length >0){
+          obj1.map((o: ComboPrice) => o.dateDisplay = d3.getDate().toString()) ;
+          this.daysInNextMonth.push(obj1[0]);
+        }
+        else{
+          var newObj =  {
+              dateDisplay: i,
+              day:d3.toLocaleDateString()
+            }
+            this.daysInNextMonth.push(newObj);
+          }
+        //this.daysInNextMonth.push(i);
+      }
+    }
+  }
+
+  goToLastMonth() {
+    this.date = new Date(this.date.getFullYear(), this.date.getMonth(), 0);
+    this.getDaysOfMonth();
+  }
+  goToNextMonth() {
+    this.date = new Date(this.date.getFullYear(), this.date.getMonth()+2, 0);
+    this.getDaysOfMonth();
+  }
+  
+  changeDateCombo(dateObject){
+    if(dateObject.day){
+      this.bookCombo.CheckInDate = dateObject.day;
+      //fix lỗi đổi ngày checkin trên lịch khởi hành => đổi cả ngày checkout
+      if(this.searchhotel.CheckInDate && this.searchhotel.CheckOutDate){
+        var numday = moment(this.searchhotel.CheckOutDate).diff(moment(this.searchhotel.CheckInDate),'days');
+        var dcin = new Date(this.bookCombo.CheckInDate);
+        var res = dcin.setTime(dcin.getTime() + (numday * 24 * 60 * 60 * 1000));
+        var dcout = new Date(res);
+        this.bookCombo.CheckOutDate = moment(dcout).format('YYYY-MM-DD');
+      }
+      this.modalCtrl.dismiss();
+    }
+  }
+  close(){
+    this.modalCtrl.dismiss('closeevent');
+  }
+}

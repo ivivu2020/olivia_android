@@ -1,0 +1,92 @@
+<!--
+  Generated template for the PolicyPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+  <ion-toolbar style="min-height: 0px;text-align: center">
+    <ion-row>
+      <ion-col style="text-align: center;height: 48px;">
+        <div *ngIf="!ischecksearchbar" style="align-self: center">
+          <div style="position: absolute;height: 48px;width: 48px;align-self: center;" (click)="goback()">
+            <img style="height: 48px; padding: 8px;margin-top: -5px;margin-left:-14px"
+              src="./assets/imgs/ios-arrow-round-back.svg">
+          </div>
+          <div *ngIf="!ischecksearchbar" style="padding-top: 6px;font-size: 20px;font-weight: bold;"><label
+              class="text-title">{{regionnamesuggest}}</label></div>
+        </div>
+        <!-- <ion-searchbar searchIcon="false" autocomplete="on" autocorrect="true" debounce="500" *ngIf="ischecksearchbar"
+          showCancelButton="always" (ionCancel)="iconcancel()" placeholder="Tìm bài viết"></ion-searchbar>
+        <div *ngIf="!ischecksearchbar"
+          style="position: absolute;height: 48px;width: 48px;align-self: center;right: 0;top: 0">
+          <img class="img-heart" (click)="change()" src="./assets/imgs/ic_search.svg"
+            style="width:48px;height:48px;padding: 15px">
+        </div> -->
+      </ion-col>
+    </ion-row>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <div *ngIf="!ischecksearchbar">
+    <ion-list lines="none" *ngFor="let item of blogtrips">
+      <div>
+        <ion-item>
+          <img (click)="itemblogclick(item)" class="img-blog" src={{item.avatar}}>
+        </ion-item>
+        <ion-item (click)="itemblogclick(item)">
+          <p>
+            {{item.title}}
+          </p>
+        </ion-item>
+        <ion-row style="margin-top: -15px;margin-left: 10px;">
+          <ion-col size="9">
+            <label (click)="itemblogclick(item)" style="margin:0"
+              style="color: #828282;font-size: 12px">{{item.date}}</label>
+          </ion-col>
+          <!-- <ion-col size="2">
+            <img (click)="share(item.url)" style="width: 18px" src="./assets/imgs/ic_share_black.svg">
+          </ion-col>
+          <ion-col size="1">
+            <img style="margin-left: -5px"  *ngIf="!item.Like" (click)="likeItemblog(item.id)" src="./assets/imgs/heart-empty-black.svg">
+            <img style="margin-left: -5px"  *ngIf="item.Like" (click)="unlikeItemblog(item.id)" src="./assets/imgs/heart-red.svg">
+          </ion-col> -->
+          <div style="position: absolute;height: 48px;width: 48px;align-self: center;right: 46px"
+            (click)="share(item.url)">
+            <img style="width:48px;height:48px;padding: 15px" src="./assets/imgs/ic_share_black.svg">
+          </div>
+          <div style="position: absolute;height: 48px;width: 48px;align-self: center;right: 0">
+            <img *ngIf="!item.Like" class="img-heart" (click)="likeItemblog(item.id)"
+              src="./assets/imgs/heart-empty-black.svg" style="width:48px;height:48px;padding: 15px">
+            <img *ngIf="item.Like" class="img-heart" (click)="unlikeItemblog(item.id)" src="./assets/imgs/heart-red.svg"
+              style="width:48px;height:48px;padding: 15px">
+          </div>
+        </ion-row>
+      </div>
+    </ion-list>
+  </div>
+  <div style="margin-left: 15px" *ngIf="ischecksearchbar">
+    <ion-row class="cls-row-width">
+      <ion-label class="label-item-search">
+        <img src="./assets/imgs/ic_search.svg"> Điểm danh ngay top điểm sống ảo Đà Lạt mới toanh,Điểm danh ngay top điểm
+        sống ảo Đà Lạt mới toanh,Điểm danh ngay top điểm sống ảo Đà Lạt mới toanh
+      </ion-label>
+      <ion-label class="label-item-search">
+        <img src="./assets/imgs/ic_search.svg"> Điểm danh ngay top điểm sống ảo Đà Lạt mới toanh
+      </ion-label>
+      <ion-label class="label-item-search">
+        <img src="./assets/imgs/ic_search.svg"> Điểm danh ngay top điểm sống ảo Đà Lạt mới toanh
+      </ion-label>
+    </ion-row>
+  </div>
+  <div padding="" *ngIf="!isConnected" style="text-align: center;margin-top: 10px">
+    <img src="./assets/imgs/empty.svg">
+    <div *ngIf="!isConnected">
+      <p class="text-empty">Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng.</p>
+    </div>
+  </div>
+  <ion-infinite-scroll (ionInfinite)="doInfinite($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

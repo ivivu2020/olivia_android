@@ -1,0 +1,100 @@
+import { Component, NgZone, ViewChild, OnInit } from '@angular/core';
+import { NavController, ModalController, AlertController,Platform } from '@ionic/angular';
+import { Booking, ValueGlobal, RoomInfo, Bookcombo } from '../providers/book-service';
+import { Storage } from '@ionic/storage';
+import { C } from '../providers/constants';
+import { GlobalFunction } from '../providers/globalfunction';
+import * as request from 'requestretry';
+import jwt_decode from 'jwt-decode';
+import * as moment from 'moment';
+import {FlightDeparturePage } from '../flightdeparture/flightdeparture';
+import { OverlayEventDetail } from '@ionic/core';
+import { ActivatedRoute } from '@angular/router';
+/**
+ * Generated class for the FacilitiesPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-flightcombopaymentdone',
+  templateUrl: 'flightcombopaymentdone.html',
+  styleUrls: ['flightcombopaymentdone.scss'],
+})
+export class FlightComboPaymentDonePage implements OnInit{
+    code;status;priceshow;
+    constructor(public platform: Platform,public valueGlobal: ValueGlobal, public navCtrl: NavController, private Roomif: RoomInfo, public zone: NgZone,
+        public booking: Booking, public storage: Storage, public alertCtrl: AlertController, public value: ValueGlobal, public modalCtrl: ModalController, public gf: GlobalFunction,
+        public bookCombo: Bookcombo, private activatedRoute: ActivatedRoute) {
+
+            this.priceshow = this.bookCombo.totalprice;
+            let infant=0;
+            this.booking.ChildAge.forEach(element => {
+              if(element == "<1" || Number(element) < 2){
+                infant +=1;
+              }
+            });
+            this.gf.googleAnalytion('flightcombopayment','ecommerce_purchase','comboid:'+this.bookCombo.ComboId+'/combotitle:'+this.bookCombo.ComboTitle+'/cin:'+this.booking.CheckInDate+'/cout:'+this.booking.CheckOutDate+'/departurecode:'+this.bookCombo.ComboDetail.departureCode+'arrivalcode:'+this.bookCombo.arrivalCode+'/adults:'+this.booking.Adults+'/child:'+(this.booking.Child - infant)+'/infant:'+infant+'/roomnumber:'+ this.Roomif.roomnumber+ '/price:'+this.priceshow);
+            this.refreshToken();
+        }
+
+        ngOnInit(){
+            this.code = this.activatedRoute.snapshot.paramMap.get('code');
+            this.status = this.activatedRoute.snapshot.paramMap.get('stt');
+        }
+
+        next(){
+          
+            this.gf.setParams(null,'flightcombo');
+            this.navCtrl.navigateBack('/');
+        }
+
+        refreshToken() {
+            var se = this;
+            se.storage.get('auth_token').then(auth_token => {
+              if (auth_token) {
+                var text = "Bearer " + auth_token;
+                var options = {
+                  method: 'GET',
+                  url: C.urls.baseUrl.urlMobile + '/api/Account/reloadTokenClaims',
+                  headers:
+                  {
+                    'cache-control': 'no-cache',
+                    'content-type': 'application/json',
+                    authorization: text
+                  },
+                }
+                request(options, function (error, response, body) {
+                  if (response.statusCode != 200) {
+                    var objError = {
+                      page: "userprofile",
+                      func: "refreshToken",
+                      message: response.statusMessage,
+                      content: response.body,
+                      type: "warning",
+                      param: JSON.stringify(options)
+                    };
+                    C.writeErrorLog(objError);
+                  }
+                  if (error) {
+                    error.page = "userprofile";
+                    error.func = "refreshToken";
+                    error.param =  JSON.stringify(options);
+                    C.writeErrorLog(error);
+                  } else {
+                    var au = JSON.parse(body);
+                    se.zone.run(() => {
+                      se.storage.remove('auth_token');
+                      se.storage.set('auth_token', au.auth_token);
+                      var decoded = jwt_decode(au.auth_token);
+                      se.storage.remove('point');
+                      se.storage.set('point', decoded.point);
+                   
+                    })
+                  }
+                })
+              }
+            })
+          }
+}

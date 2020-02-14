@@ -1,0 +1,39 @@
+
+    .text-title{
+        font-size: 18px;
+        font-weight: bold
+    }
+    ::ng-deep{
+        img {
+            max-width: 100%;
+            border: 0;
+            height: auto;
+        }
+        p{
+            line-height: 1.5;
+            text-align: justify;
+        }
+        .img-item
+        {
+            margin-bottom: 10px;
+
+        }
+        .divcss{
+            line-height: 1.5;
+            text-align: justify;
+        }
+    }
+    .img-blog
+    { 
+        border-radius: 5px;
+        width: 100% !important;
+        height: 180px !important;
+        object-fit: cover;
+    }
+    .float-info{
+        position: absolute;
+        bottom: 10px;
+        left: 16px;
+        z-index: 11;
+    }
+    

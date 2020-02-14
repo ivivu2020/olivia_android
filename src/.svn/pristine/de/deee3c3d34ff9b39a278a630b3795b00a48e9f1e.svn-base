@@ -1,0 +1,39 @@
+<ion-header>
+  <ion-toolbar style="min-height: 0px;text-align: center">
+    <ion-row>
+      <ion-col style="text-align: center;height: 48px;">
+        <div style="align-self: center">
+          <div style="position: absolute;height: 48px;width: 48px;align-self: center;" (click)="goback()">
+            <img style="height: auto; padding: 14px;margin-left:-14px" src="./assets/imgs/ic_arrow_w.svg">
+          </div>
+        </div>
+      </ion-col>
+      <ion-col size="11">
+        <div style="text-align: left">
+          <ion-label style="font-size:12px;color: whitesmoke">
+            {{cusnamereview}}
+          </ion-label>
+        </div>
+        <div style="text-align: left">
+          <ion-label style="font-size:12px;color: whitesmoke">
+            {{datereview}}
+          </ion-label>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+<div class="center">
+    <ion-slides  pager="true" #mySlider>
+        <ion-slide *ngFor="let slide of arrimgreview">
+          <!-- <div style="height:300px;width:100%"> -->
+          <img style="height: 350px;width: 100%;object-fit: cover" [src]="slide.ImageUrl" />
+          <!-- </!--> -->
+    
+        </ion-slide>
+      </ion-slides>
+</div>
+
+
+</ion-content>

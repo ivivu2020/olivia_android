@@ -1,0 +1,158 @@
+import { CombocarchangeplacePageModule } from './combocarchangeplace/combocarchangeplace.module';
+import { CardeparturePageModule } from './cardeparture/cardeparture.module';
+import { ConfirmotpPageModule } from './confirmotp/confirmotp.module';
+import { HotelreviewsimagePageModule } from './hotelreviewsimage/hotelreviewsimage.module';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouteReuseStrategy } from '@angular/router';
+
+import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+
+import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
+import { Validators, FormBuilder, FormControl,FormGroup, FormsModule,ReactiveFormsModule  } from '@angular/forms';
+
+import { Platform,IonContent } from '@ionic/angular';
+import { Component, NgZone, Input, ViewChild } from '@angular/core';
+import { NavController, NavParams, ModalController,ToastController,LoadingController } from '@ionic/angular';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { InAppBrowserOptions } from '@ionic-native/in-app-browser';
+import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
+import { DateTime } from 'ionic-angular';
+import { FirebaseAnalytics } from '@ionic-native/firebase-analytics/ngx';
+import { IonicStorageModule } from '@ionic/storage';
+import { HttpClientModule,HttpClient } from '@angular/common/http';
+import { AuthService } from './providers/auth-service';
+import { SearchHotel, ValueGlobal,Bookcombo,RoomInfo, DeviceLocation } from './providers/book-service';
+import { ComboPrice} from './providers/comboPrice';
+import { C } from './providers/constants';
+import { GlobalFunction, ActivityService } from './providers/globalfunction';
+import { DepartureCalendarPageModule} from './departurecalendar/departurecalendar.module';
+import { PickupCalendarPageModule} from './pickup-calendar/pickup-calendar.module';
+import { RequestComboPageModule} from './requestcombo/requestcombo.module';
+import { RequestCombo1PageModule} from './requestcombo1/requestcombo1.module';
+import { OccupancyPageModule} from './occupancy/occupancy.module';
+import { SocialSharing } from '@ionic-native/social-sharing/ngx';
+import { Facebook, FacebookLoginResponse } from '@ionic-native/facebook/ngx';
+import { GooglePlus } from '@ionic-native/google-plus/ngx';
+import { Camera } from '@ionic-native/camera/ngx';
+import { HttpModule } from '@angular/http';
+import { Keyboard } from '@ionic-native/keyboard/ngx';
+import { FlightDeparturePageModule } from './flightdeparture/flightdeparture.module';
+import { Network } from '@ionic-native/network/ngx';
+import { NetworkProvider } from './network-provider.service';
+import { SearchHotelFilterAndSortPageModule} from './search-hotel-filter-and-sort/search-hotel-filter-and-sort.module';
+import { UserReviewsPageModule} from './userreviews/userreviews.module';
+import { AppVersion } from '@ionic-native/app-version/ngx';
+import { AppUpdate } from '@ionic-native/app-update/ngx';
+import { LaunchReview } from '@ionic-native/launch-review/ngx';
+import { FCM } from '@ionic-native/fcm/ngx';
+import { Badge } from '@ionic-native/badge/ngx';
+import { ImagePicker } from '@ionic-native/image-picker/ngx';
+import { Crop } from '@ionic-native/crop/ngx';
+import { FileTransfer } from '@ionic-native/file-transfer/ngx';
+import { File } from '@ionic-native/file/ngx';
+import { HTTP } from '@ionic-native/http/ngx';
+import { PhotoViewer } from '@ionic-native/photo-viewer/ngx';
+import { UserFeedBackPageModule } from './userfeedback/userfeedback.module';
+import { FirebaseDynamicLinks } from '@ionic-native/firebase-dynamic-links/ngx';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
+import { ExperienceFilterPageModule } from './experiencefilter/experiencefilter.module';
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { ExperienceDetailPageModule } from './experiencedetail/experiencedetail.module';
+import { IonBottomDrawerModule } from 'ion-bottom-drawer';
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+import { LocationAccuracy } from '@ionic-native/location-accuracy/ngx';
+import { NativeGeocoder, NativeGeocoderResult, NativeGeocoderOptions } from '@ionic-native/native-geocoder/ngx';
+import { InsurrancehistorypopoverPageModule } from './insurrancehistorypopover/insurrancehistorypopover.module';
+import { InsurrancepopoverPageModule } from './insurrancepopover/insurrancepopover.module';
+import { InsurrancedetailPageModule } from './insurrancedetail/insurrancedetail.module';
+
+import { SearchBlogModalPageModule } from './searchblogmodal/searchblogmodal.module';
+import { BlogModalPageModule } from './blogmodal/blogmodal.module';
+import { Market } from '@ionic-native/market/ngx';
+import * as filereader from 'filereader';
+
+@NgModule({
+  declarations: [AppComponent],
+  entryComponents: [],
+  imports: [BrowserModule,HttpClientModule, IonicModule.forRoot(),IonicStorageModule.forRoot(), 
+    AppRoutingModule,
+    DepartureCalendarPageModule,
+    PickupCalendarPageModule,
+    RequestComboPageModule,
+    RequestCombo1PageModule,
+    FlightDeparturePageModule,
+    SearchHotelFilterAndSortPageModule,
+    OccupancyPageModule,
+    HotelreviewsimagePageModule,
+    UserReviewsPageModule,
+    UserFeedBackPageModule,
+    ExperienceFilterPageModule,
+    ConfirmotpPageModule,
+    ExperienceDetailPageModule,
+    IonBottomDrawerModule,
+    CardeparturePageModule,
+    SearchBlogModalPageModule,
+    BlogModalPageModule,
+    InsurrancehistorypopoverPageModule,
+    InsurrancepopoverPageModule,
+    CombocarchangeplacePageModule,
+    InsurrancedetailPageModule,
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })],
+  providers: [
+    StatusBar,
+    SplashScreen,
+    InAppBrowser,
+    AuthService,
+    SearchHotel,
+    ValueGlobal,
+    Bookcombo,
+    RoomInfo,
+    ComboPrice,
+    GlobalFunction,
+    ActivityService,
+    C,
+    FormsModule, ReactiveFormsModule ,
+    HttpClientModule ,
+    HttpClient,
+    LoadingController,
+    FirebaseAnalytics,
+    Platform,
+    ToastController,FormBuilder,HttpModule,
+    IonContent,
+    SocialSharing,
+    Facebook,
+    GooglePlus,
+    Camera,
+    Keyboard,
+    Network,
+    NetworkProvider,
+    AppVersion,
+    AppUpdate,
+    LaunchReview,
+    FCM,
+    Badge,
+    ImagePicker,
+    Crop,
+    FileTransfer,
+    File,
+    HTTP,
+    PhotoViewer,
+    FirebaseDynamicLinks,
+    Geolocation,
+    AndroidPermissions,
+    LocationAccuracy,
+    NativeGeocoder,
+    //GoogleMap,
+    Market,
+    DeviceLocation,
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}

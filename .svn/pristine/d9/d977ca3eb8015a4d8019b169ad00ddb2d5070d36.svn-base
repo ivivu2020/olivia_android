@@ -1,0 +1,80 @@
+import { ActivatedRoute } from '@angular/router';
+import { SearchHotel } from '../providers/book-service';
+import { Component } from '@angular/core';
+import { NavController } from '@ionic/angular';
+import { RoomInfo } from '../providers/book-service';
+import { GlobalFunction } from '../providers/globalfunction';
+import { Platform } from 'ionic-angular';
+/**
+ * Generated class for the RoompaymentbreakdownPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+@Component({
+  selector: 'app-roompaymentbreakdown',
+  templateUrl: 'roompaymentbreakdown.html',
+  styleUrls: ['roompaymentbreakdown.scss'],
+})
+export class RoompaymentbreakdownPage {
+  Name; room; imgroom; breakfast; dur; price; PriceAvgMinPriceStr; roomnumber
+  PriceAvgPlusOTAStr; roomtype; ExtraBedAndGalaDinerList; phuthu; PriceOTA; total; arr = []
+  constructor(public platform: Platform, public activatedRoute: ActivatedRoute, public navCtrl: NavController, public searchHotel: SearchHotel, public Roomif: RoomInfo, public gf: GlobalFunction) {
+    this.room = this.Roomif.arrroom;
+    this.dur = this.activatedRoute.snapshot.paramMap.get('dur');
+    this.roomnumber = this.activatedRoute.snapshot.paramMap.get('roomnumber');
+    this.roomtype = this.Roomif.roomtype
+    this.total = this.roomtype.PriceAvgPlusTAStr;
+    this.imgroom = this.Roomif.imgRoom;
+    var str = this.imgroom;
+    if (str) {
+      var res = str.substr(0, 4);
+      if (res != "http") {
+        this.imgroom = 'https:' + this.imgroom;
+      }
+    }
+    else {
+      this.imgroom = 'https://cdn1.ivivu.com/img/noimage.jpg';
+    }
+    this.Name = this.room[0].ClassName;
+    this.breakfast = this.roomtype.Name;
+
+    this.ExtraBedAndGalaDinerList = this.roomtype.ExtraBedAndGalaDinerList
+
+    if (this.ExtraBedAndGalaDinerList.length > 0) {
+      this.phuthu = this.ExtraBedAndGalaDinerList[0].NameDisplay;
+      //this.PriceOTA=this.ExtraBedAndGalaDinerList[0].PriceOTA*this.dur;
+      this.PriceAvgMinPriceStr = this.roomtype.PriceAvgDefaultTA;
+      this.PriceAvgPlusOTAStr = this.PriceAvgMinPriceStr * this.dur * this.roomnumber;
+      // this.total= (this.PriceAvgPlusOTAStr+ this.PriceOTA).toLocaleString();
+      this.PriceAvgMinPriceStr = this.PriceAvgMinPriceStr.toLocaleString();
+      this.PriceAvgPlusOTAStr = this.PriceAvgPlusOTAStr.toLocaleString();
+      for (let i = 0; i < this.ExtraBedAndGalaDinerList.length; i++) {
+        var price = (this.ExtraBedAndGalaDinerList[i].PriceOTA * this.dur * Number(this.searchHotel.child)).toLocaleString();
+        var item = { text: this.ExtraBedAndGalaDinerList[i].NameDisplay, price: price };
+        this.arr.push(item);
+      }
+    }
+    else {
+      this.PriceAvgMinPriceStr = this.roomtype.PriceAvgMinPriceStr;
+      this.PriceAvgPlusOTAStr = Number(this.roomtype.PriceAvgPlusTAStr) * this.roomnumber;
+      this.PriceAvgPlusOTAStr = this.roomtype.PriceAvgPlusTAStr.toLocaleString();
+    }
+
+
+    //Xử lý nút back của dt
+    this.platform.ready().then(() => {
+      this.platform.registerBackButtonAction(() => {
+        this.navCtrl.pop();
+      })
+    })
+    //google analytic
+    gf.googleAnalytion('roompaymentbreakdown', 'load', '');
+  }
+  ngOnInit() {
+
+  }
+  goback() {
+    this.navCtrl.pop();
+  }
+}

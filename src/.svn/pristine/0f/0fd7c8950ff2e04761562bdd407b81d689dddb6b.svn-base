@@ -1,0 +1,318 @@
+import { audit } from 'rxjs/operators';
+import { json } from 'body-parser';
+import { Component, NgZone, ViewChild, OnInit } from '@angular/core';
+import { NavController, Platform} from '@ionic/angular';
+import * as request from 'requestretry';
+import { AuthService } from '../providers/auth-service';
+import * as moment from 'moment';
+import { SearchHotel } from '../providers/book-service';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Network } from '@ionic-native/network/ngx';
+import { NetworkProvider } from './../network-provider.service';
+import { Storage } from '@ionic/storage';
+import { Keyboard } from '@ionic-native/keyboard/ngx';
+import * as $ from 'jquery';
+
+@Component({
+  selector: 'app-searchexperienceregion',
+  templateUrl: './searchexperienceregion.page.html',
+  styleUrls: ['./searchexperienceregion.page.scss'],
+})
+export class SearchExperienceRegionPage implements OnInit {
+  showpopup = false;
+  ischeckadults = true;
+  ischeckchild = false;
+  ischeckroom = false;
+  public room1 = 1; public room = 1; gbitem; gbmsg;
+  items = []; ischecklist = false; isenabled = true;
+  co = 0; recent; index
+  setInter;ischecktext=false;
+  public isConnected:boolean;
+  json: any;
+  @ViewChild('inputSearchbar') input;
+  constructor(public platform: Platform,
+    public navCtrl: NavController, 
+    public authService: AuthService, 
+    public zone: NgZone, 
+    public searchHotel: SearchHotel,
+    public gf: GlobalFunction,
+    public networkProvider: NetworkProvider,
+    public storage: Storage,
+    public keyboard: Keyboard) { 
+    this.isConnected = this.networkProvider.isOnline();
+      if (this.isConnected) {
+        setTimeout(()=>{
+          this.storage.get('listexeperienceregion').then((data:any)=>{
+            if(data){
+              this.items = data;
+            }else{
+              this.getdata();
+            }
+          })
+        },100)
+      }else{
+        this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      }
+  }
+
+  ngOnInit() {
+  }
+
+  ionViewDidEnter(){
+    setTimeout(() => {
+      this.input.setFocus();
+    }, 150);
+    this.keyboard.show();
+  }
+
+  goback(){
+    this.navCtrl.back();
+  }
+
+  cancelInput(){
+
+  }
+
+  getItems(ev: any) {
+    var se = this;
+    if(ev.detail.value){
+      const val = ev.detail.value;
+      let url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?Name='+val+'&SubRegions=0&paging.pageNumber=0&paging.pageSize=200';
+          se.gf.RequestApi('GET',url,{},{},'SearchExperienceRegionPage', 'getItems').then((data:any)=>{
+            if(data && data.data.length>0){
+              se.ischecklist= true;
+              if(se.items.length ==0){
+                data.data.forEach(element => {
+                  element.show = true;
+                  element.searchType=1;// place
+                })
+                se.items.push(...data.data);
+              }else{
+                se.items.forEach(e => {
+                  e.show = false;
+                })
+
+                data.data.forEach(element => {
+                  let check = se.items.filter((i)=>{ return i.id == element.id });
+                  element.searchType=1;//place
+                  if(check && check.length == 0)
+                  {
+                    element.show = true;
+                    se.items.push(element);
+                  }else{
+                    check[0].show = true;
+                  }
+                })
+              }
+            }else{
+              se.loadDataHotel(val);
+            }
+          })
+    }else{
+      se.ischecklist = false;
+      se.ischecktext=false;
+      se.items.forEach(element => {
+          element.show = false;
+      });
+    }
+  }
+
+  loadDataHotel(val){
+    var se = this;
+      var options = {
+        method: 'GET',
+        url: 'https://www.ivivu.com/GListSuggestion',
+        timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+        qs: { key: val },
+        headers:
+        {
+        }
+      };
+
+      request(options, function (error, response, body) {
+        if (error) {
+          error.page = "SearchExperienceRegionPage";
+          error.func = "loadDataHotel";
+          error.param =  JSON.stringify(options);
+          C.writeErrorLog(error);
+        };
+        se.zone.run(() => {
+          let lstitems = JSON.parse(body);
+          
+          if(lstitems.length && lstitems.length >0){
+            se.ischecklist= true;
+              if(se.items.length ==0){
+                lstitems.forEach(element => {
+                  element.show = true;
+                  element.searchType=2;//hotel, region
+                  se.bindItemName(element);
+                })
+                se.items.push(...lstitems);
+              }else{
+                se.items.forEach(e => {
+                  e.show = false;
+                })
+
+                lstitems.forEach(element => {
+                  element.searchType=2;//hotel, region
+                  se.bindItemName(element);
+                  let check = se.items.filter((i)=>{ return i.id == element.id });
+                  if(check && check.length == 0)
+                  {
+                    element.show = true;
+                    se.items.push(element);
+                  }else{
+                    check[0].show = true;
+                  }
+                })
+              }
+          }
+          else{
+            se.items.forEach(element => {
+              element.show = false;
+            });
+            se.ischecktext=true;
+          }
+        });
+      })
+  }
+
+  bindItemName(item){
+    var se = this;
+    se.zone.run(()=>{
+      if(item.searchType == 2 && item.Type ==1){
+        item.name = item.HotelName;
+        item.id = item.HotelId;
+        let arr = item.HotelUrl.split('/');
+        item.searchHotelName = arr[arr.length - 1].toString().replace('khach-san-','');
+        item.searchRegionCode = arr[arr.length - 2].toString().replace('khach-san-','');
+      }else if(item.searchType == 2 && item.Type ==2){
+        item.name = item.RegionName;
+        item.code = item.RegionCode;
+        item.id = item.RegionId;
+      }
+    })
+    return item;
+  }
+
+  getdata(){
+    var se = this;
+    let url = C.urls.baseUrl.urlMobile + '/api/Data/GetRegionSearch';
+    se.gf.RequestApi('GET',url, {}, {}, 'SearchExperienceRegionPage', 'GetRegionSearch').then((data:any)=>{
+      let lstitems = data.listRegion;
+          if(lstitems && lstitems.length >0){
+            se.storage.set('listexeperienceregion',lstitems);
+            se.ischecktext=false;
+            se.ischecklist = false;
+            se.recent = se.searchHotel.ItemExperienceRegionRecent;
+              if(se.items.length ==0){
+                lstitems.forEach(element => {
+                  element.show = true;
+                })
+                se.items.push(...lstitems);
+              }else{
+                se.items.forEach(e => {
+                  e.show = false;
+                })
+
+                lstitems.forEach(element => {
+                  let check = se.items.filter((i)=>{ return i.id == element.id });
+                  if(check && check.length == 0)
+                  {
+                    element.show = true;
+                    se.items.push(element);
+                  }else{
+                    check[0].show = true;
+                  }
+                })
+              }
+            
+          }else{
+            se.items.forEach(element => {
+              element.show = false;
+            });
+            se.ischecktext=true;
+          }
+        //});
+    })
+  }
+
+  nextRecent(item){
+    var se = this;
+    this.searchHotel.inputExperienceRegionCode= item.code;
+    this.searchHotel.inputExperienceText = item.name;
+    this.searchHotel.inputExperienceItem = item;
+    //se.searchHotel.ItemExperienceRegionRecent.push(item);
+    if(se.searchHotel.inputExperienceItem.searchHotelName && se.searchHotel.inputExperienceItem.searchType == 2){
+      se.searchHotel.inputExperienceRegionCode = se.searchHotel.inputExperienceItem.searchRegionCode;
+      $.get('https://nominatim.openstreetmap.org/search?format=json&q='+se.searchHotel.inputExperienceItem.searchHotelName, function(data){
+        if(data && data.length>0){
+          var element = data[0];
+          se.searchHotel.inputExperienceItem.latitude = element.lat;
+          se.searchHotel.inputExperienceItem.longitude = element.lon;
+          se.navCtrl.back();
+        }
+      });
+    }else{
+      this.navCtrl.back();
+    }
+    
+  }
+
+  nextPopular(item, index){
+    var se = this;
+    se.searchHotel.inputExperienceRegionCode= item.code;
+    se.searchHotel.inputExperienceText = item.name;
+    se.searchHotel.inputExperienceItem = item;
+    if(se.searchHotel.ItemExperienceRegionRecent && se.searchHotel.ItemExperienceRegionRecent.length >0){
+      if(!se.gf.checkExistsItemInArray(se.searchHotel.ItemExperienceRegionRecent,item,'experiencesearch')){
+        //Trên 3 item thì lấy 2 item gần nhất và push thêm item được click
+        if(se.searchHotel.ItemExperienceRegionRecent.length >2){
+          se.searchHotel.ItemExperienceRegionRecent = se.searchHotel.ItemExperienceRegionRecent.slice(1,3);
+          se.searchHotel.ItemExperienceRegionRecent.push(item);
+        }else{//Nếu chưa quá 3 item thì push vào mảng
+          se.searchHotel.ItemExperienceRegionRecent.push(item);
+        }
+      }
+      
+    }else{//Chưa có item nào thì push vào mảng
+      se.searchHotel.ItemExperienceRegionRecent.push(item);
+    }
+    
+    se.navCtrl.back();
+  }
+
+  itemclick(item) {
+    var se = this;
+    se.searchHotel.inputExperienceRegionCode= item.code;
+    se.searchHotel.inputExperienceText = item.name;
+    se.searchHotel.inputExperienceItem = item;
+    if(se.searchHotel.ItemExperienceRegionRecent && se.searchHotel.ItemExperienceRegionRecent.length >0){
+      if(!se.gf.checkExistsItemInArray(se.searchHotel.ItemExperienceRegionRecent,item,'experiencesearch')){
+        //Trên 3 item thì lấy 2 item gần nhất và push thêm item được click
+        if(se.searchHotel.ItemExperienceRegionRecent.length >2){
+          se.searchHotel.ItemExperienceRegionRecent = se.searchHotel.ItemExperienceRegionRecent.slice(1,3);
+          se.searchHotel.ItemExperienceRegionRecent.push(item);
+        }else{//Nếu chưa quá 3 item thì push vào mảng
+          se.searchHotel.ItemExperienceRegionRecent.push(item);
+        }
+      }
+    }else{//Chưa có item nào thì push vào mảng
+      se.searchHotel.ItemExperienceRegionRecent.push(item);
+    }
+    if(se.searchHotel.inputExperienceItem.searchHotelName && se.searchHotel.inputExperienceItem.searchType == 2){
+      se.searchHotel.inputExperienceRegionCode = se.searchHotel.inputExperienceItem.searchRegionCode;
+      $.get('https://nominatim.openstreetmap.org/search?format=json&q='+se.searchHotel.inputExperienceItem.searchHotelName, function(data){
+        if(data && data.length>0){
+          var element = data[0];
+          se.searchHotel.inputExperienceItem.latitude = element.lat;
+          se.searchHotel.inputExperienceItem.longitude = element.lon;
+          se.navCtrl.back();
+        }
+      });
+    }else{
+      se.navCtrl.back();
+    }
+  }
+}

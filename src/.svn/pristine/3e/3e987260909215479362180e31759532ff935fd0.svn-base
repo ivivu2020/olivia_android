@@ -1,0 +1,32 @@
+
+   .div-go-back{
+    position: absolute;
+    top: 16px;
+    color: #ffffff;
+    width: 48px;
+    height: 48px;
+  }
+    .center {
+		padding: 57px 0 0 0;
+		height: 100%;
+		background-image: url('../../assets/backgroundnew.png')
+    }
+    ion-item{
+        --background: initial;
+        --border-color: #fff;
+    }
+    .text-button{
+		text-align:center;
+		width: 60%;
+		font-size: 16px;
+		color: #ffffff
+	}
+	.button-outline {
+		--border-color:#ffffff;
+		--border-width: 1px;
+		--border-style: solid;
+
+	}
+    
+  
+

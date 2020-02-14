@@ -1,0 +1,29 @@
+import { NavController } from '@ionic/angular';
+import { ActivatedRoute } from '@angular/router';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-combodone',
+  templateUrl: './combodone.page.html',
+  styleUrls: ['./combodone.page.scss'],
+})
+export class CombodonePage implements OnInit {
+  code;priceshow;text;listcars;loccation
+  constructor(public gf: GlobalFunction,public activatedRoute: ActivatedRoute, public navCtrl: NavController) {
+    this.listcars = this.gf.getParams('carscombo');
+    this.loccation=this.listcars.TransferBooking.toPlaceName;
+    this.priceshow=this.listcars.HotelBooking.TotalPrices.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+   }
+
+   ngOnInit() {
+    this.code = this.activatedRoute.snapshot.paramMap.get('code');
+  }
+  next()
+  {
+    var value=1;
+    this.gf.setParams(value, 'seemoreblog');
+    //this.valueGlobal.backValue = 'blog';
+    this.navCtrl.navigateForward('/bloglist');
+  }
+}

@@ -1,0 +1,361 @@
+import { Component, OnInit, NgZone, ViewChild } from '@angular/core';
+import { NavController, Platform, LoadingController, IonContent } from '@ionic/angular';
+import { C } from '../providers/constants';
+import { GlobalFunction } from '../providers/globalfunction';
+import { ActivatedRoute } from '@angular/router';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { SocialSharing } from '@ionic-native/social-sharing/ngx';
+import { ValueGlobal } from '../providers/book-service';
+import { Storage } from '@ionic/storage';
+/**
+ * Generated class for the PolicyPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-blog',
+  templateUrl: 'blog.html',
+  styleUrls: ['blog.scss'],
+})
+export class BlogPage implements OnInit {
+  @ViewChild(IonContent) ioncontent: IonContent;
+  blog; date; title; content; arrblog = []
+  blogID; urlblog; Liked = false;
+  postLatest = [];
+  loader;
+  constructor(public valueGlobal: ValueGlobal, public storage: Storage, public platform: Platform, public navCtrl: NavController, public value: ValueGlobal, public gf: GlobalFunction, private activatedRoute: ActivatedRoute, public zone: NgZone, private socialSharing: SocialSharing, private loadingCtrl: LoadingController) {
+    this.blogID = this.activatedRoute.snapshot.paramMap.get('id');
+    this.getdata(null, 0);
+    //Xử lý nút back của dt
+
+    //google analytic
+    gf.googleAnalytion('blog', 'load', '');
+  }
+
+  ngOnInit() {
+
+  }
+
+  async presentLoadingData() {
+    this.loader = await this.loadingCtrl.create({
+    });
+    this.loader.present();
+  }
+
+  getdata(id, value) {
+    var se = this;
+    if (value == 1) {
+      se.blogID = id
+    }
+    se.presentLoadingData();
+    var options = {
+      method: 'GET',
+      url: 'http://svc3.ivivu.com/GetBlogById',
+      qs: { postid: id ? id : this.blogID },
+      headers:
+      {
+      }
+    };
+
+    request(options, function (error, response, body) {
+      if (error) throw new Error(error);
+      se.zone.run(() => {
+        se.blog = JSON.parse(body);
+        se.title = se.blog.post.post_title;
+        se.date = moment(se.blog.post.post_date).format('HH:ss DD/MM/YYYY');
+        se.content = se.blog.post.post_content;
+        se.postLatest = se.blog.postLatest;
+        se.value.urlblog=se.blog.post.guid;
+        for (let i = 0; i < se.postLatest.length; i++) {
+          se.postLatest[i].Date = moment(se.postLatest[i].Date).format('HH:ss DD/MM/YYYY');
+          se.postLatest[i].Like = false;
+        }
+        if (se.loader) {
+          se.loader.dismiss();
+        }
+        se.getblog();
+        se.ioncontent.scrollToTop(200);
+      })
+    });
+  }
+  getblog() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/GetFavouriteBlogByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "blog";
+            error.func = "getblog";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+            throw new Error(error)
+          }
+          se.zone.run(() => {
+            se.arrblog = JSON.parse(body);
+            se.Liked = false;
+            if (se.arrblog && se.arrblog.length > 0) {
+              for (let i = 0; i < se.arrblog.length; i++) {
+                if (se.arrblog[i].id == se.blogID) {
+                  se.Liked = true;
+                  break;
+                }
+              }
+              for (let i = 0; i < se.postLatest.length; i++) {
+                for (let j = 0; j < se.arrblog.length; j++) {
+                  if (se.arrblog[j].id == se.postLatest[i].id) {
+                    se.postLatest[i].Like = true;
+                    break;
+                  }
+                }
+              }
+            }
+          });
+        });
+      }
+    });
+  }
+
+
+
+  goback() {
+    //this.navCtrl.navigateBack('/hoteldetail/'+this.HotelID);
+    this.navCtrl.back();
+  }
+  share() {
+    this.socialSharing.share(null, null, null, this.value.urlblog).then(() => {
+      // Success!
+    }).catch(() => {
+      // Error!
+    });
+  }
+  shareitem(url) {
+    this.socialSharing.share(null, null, null, url).then(() => {
+      // Success!
+    }).catch(() => {
+      // Error!
+    });
+  }
+  likeItem() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        se.zone.run(() => se.setItemLikeStatus());
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          //url: 'https://beta-olivia.ivivu.com/mobile/OliviaApis/AddFavouriteHotel',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/AddFavouriteBlog',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            authorization: text
+          },
+          body: { postId: this.blogID },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "blog",
+              func: "likeItem",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning",
+              param: JSON.stringify(options)
+            };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "blog";
+            error.func = "likeItem";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+          };
+
+        });
+      }
+      else {
+        se.valueGlobal.logingoback = 'TabPage';
+        se.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  unlikeItem() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        se.zone.run(() => se.setItemLikeStatus());
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          //url: 'https://beta-olivia.ivivu.com/mobile/OliviaApis/RemoveFavouriteHotelByUser',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/RemoveFavouriteBlogByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            authorization: text
+          },
+          body: { postId: this.blogID },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "blog",
+              func: "unlikeItem",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning",
+              param: JSON.stringify(options)
+            };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "blog";
+            error.func = "unlikeItem";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+          };
+        });
+      }
+      else {
+        this.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  likeItemsame(id) {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        se.bindItemLike(id);
+        //se.zone.run(() => se.setItemLikeStatus());
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          //url: 'https://beta-olivia.ivivu.com/mobile/OliviaApis/AddFavouriteHotel',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/AddFavouriteBlog',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            authorization: text
+          },
+          body: { postId: id },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "blog",
+              func: "likeItemsame",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning",
+              param: JSON.stringify(options)
+            };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "blog";
+            error.func = "likeItemsame";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+          };
+        });
+      }
+      else {
+        se.valueGlobal.logingoback = 'TabPage';
+        se.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  unlikeItemsame(id) {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        se.bindItemUnLike(id);
+        // se.zone.run(() => se.setItemLikeStatus());
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/RemoveFavouriteBlogByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            authorization: text
+          },
+          body: { postId: id },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "blog",
+              func: "unlikeItemsame",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning",
+              param: JSON.stringify(options)
+            };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "blog";
+            error.func = "unlikeItemsame";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+          };
+        });
+      }
+      else {
+        this.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  bindItemLike(id) {
+    var se = this;
+    se.zone.run(() => {
+      for (let i = 0; i < se.postLatest.length; i++) {
+        if (se.postLatest[i].id == id) {
+          se.postLatest[i].Like = true;
+          break;
+        }
+      }
+    })
+  }
+  bindItemUnLike(id) {
+    var se = this;
+    for (let i = 0; i < se.postLatest.length; i++) {
+      if (se.postLatest[i].id == id) {
+        se.zone.run(() => {
+          se.postLatest[i].Like = false;
+        })
+        break;
+      }
+    }
+  }
+  setItemLikeStatus() {
+    this.Liked = !this.Liked;
+  }
+  moreBlogLinkClick(id) {
+    this.getdata(id, 1);
+  }
+}

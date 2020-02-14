@@ -1,0 +1,33 @@
+import { Component,OnInit } from '@angular/core';
+import {  NavController, Platform } from '@ionic/angular';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+
+@Component({
+  selector: 'app-roomcancel',
+  templateUrl: 'roomcancel.html',
+  styleUrls: ['roomcancel.scss'],
+})
+    
+export class RoomCancelPage implements OnInit{
+    public roomInfo = null;
+    public totalPrice = '';
+    constructor(public navCtrl: NavController,public gf: GlobalFunction){
+        if(this.gf.getParams('roomInfo')){
+            this.roomInfo = gf.getParams('roomInfo');
+            //this.totalPrice = navParam.data.roomInfo.Penaltys[0].Penalty_Val_TA.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+        }
+       
+        //google analytic
+        gf.googleAnalytion('roomcancel','load','');
+    }
+    ngOnInit(){
+
+    }
+    goback(){
+        this.navCtrl.back();
+    }
+    cancel(){
+        this.navCtrl.back();
+    }
+}

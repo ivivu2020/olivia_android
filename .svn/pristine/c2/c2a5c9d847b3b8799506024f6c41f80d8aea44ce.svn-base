@@ -1,0 +1,56 @@
+<ion-content class="background center" padding="true">
+
+  <!-- <form [formGroup]="loginData" (ngSubmit)="logintk()" *ngIf="!showRoleSelection">
+            <ion-item>
+              <ion-label floating>Email đăng nhập</ion-label>
+              <ion-input clearInput type="text" formControlName="email"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label floating>Mật khẩu</ion-label>
+              <ion-input clearInput type="password" formControlName="password"></ion-input>
+            </ion-item>
+           
+          </form> -->
+  <div class="center">
+    <ion-card-title style="text-align: center">
+      <img style="height: 90px;" src="./assets/logo/logo.svg" />
+    </ion-card-title>
+    <div class="div-go-back" (click)="goback()">
+        <ion-icon style="font-size: 3.7em;float: left;" name="ios-arrow-round-back-outline" class="card-title">
+        </ion-icon>
+     </div>
+    <div style="margin-top: 60px">
+
+      <button ion-button round (click)="loginfb()" class="text-button button-fb">
+        Đăng nhập bằng Facebook
+      </button>
+      <!-- <div style="text-align:center;margin-top: 10px">
+        <button ion-button round color="danger" (click)="logingg()"  class="text-button button-gg">
+          Đăng nhập bằng Google
+        </button>
+      </div> -->
+      <div style="text-align:center;margin-top: 10px">
+        <button ion-button round outline color="light" (click)="logintk()"  class="text-button">Đăng
+          nhập bằng tài khoản iVIVU</button>
+      </div>
+      <!-- <div style="text-align:center;margin-top: 10px">
+          <button ion-button round outline color="light" (click)="bypasslogin()" style="text-align:center;width: 100%">Bỏ qua đăng
+            nhập</button>
+        </div> -->
+    </div>
+    <div class="row-line">
+      <ion-row>
+        <ion-col size="3.5" class="no-padding-left text-line"><hr class="hr-register"></ion-col>
+        <ion-col size="5" style="text-align: center;padding-left: 0px;"><div class="text-line-inlinetext"><label>Chưa có tài khoản?</label></div></ion-col>
+        <ion-col size="3.5" class="no-padding-right  text-line"><hr class="hr-register"></ion-col>
+      </ion-row>
+      
+      
+    </div>
+    <div class="row-register">
+      <div style="text-align:center;margin-top: 10px">
+        <button ion-button round outline color="light" (click)="register()"  class="text-button">Đăng ký tài khoản</button>
+      </div>
+    </div>
+  </div>
+</ion-content>

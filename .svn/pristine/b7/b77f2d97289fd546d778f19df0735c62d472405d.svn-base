@@ -1,0 +1,113 @@
+
+<ion-content>
+    <div class="div-icon-close" (click)="dismiss()"><ion-icon name="close" ></ion-icon></div>
+    <div class="hotel-request-combo-content">
+        <h2 class="request-combo-title">Yêu cầu đặt combo</h2>
+        <ion-row style="width: 100%;">
+            <ion-col size="5" class="text-label">Ngày khởi hành</ion-col>
+            <ion-col size="7" class="text-label">Số lượng</ion-col>
+        </ion-row>
+        <ion-row >
+            <ion-col size="5" *ngIf="isFlashSaleCombo">
+                <div class="text-cin">{{cindisplay}}
+                    <div class="img-cin"><img src="./assets/iocnsearch/ic_checkin.svg"></div>
+                </div>
+            </ion-col>
+            <ion-col size="5" *ngIf="!isFlashSaleCombo" (click)="openPickupCalendar()">
+                    <div class="text-cin">{{cindisplay}}
+                        <div class="img-cin"><img src="./assets/iocnsearch/ic_checkin.svg"></div>
+                    </div>
+                </ion-col>
+            <ion-col (click)="openmnu()">
+                <div class="text-pax">{{adult}} người lớn, {{child}} trẻ em</div>
+            </ion-col>
+        </ion-row>
+        <div class="hotel-request-departure">
+                <ion-row>
+                    <ion-col class="text-label">Khởi hành từ</ion-col>
+                </ion-row>
+                <ion-row>
+                    <ion-list>
+                            <ion-radio-group name="rdgroup" class="list-departure" [(ngModel)]="location">
+                                    <ion-radio style="--color-checked:#26bed6" value="SGN" class="rd-departure" (click)="radioCheck(1)" checked="true"></ion-radio>
+                                    <label class="rd-text" (click)="radioCheck(1)">Hồ Chí Minh</label>
+                                    <ion-radio value="HN" class="rd-departure" style="padding-left:30px;width: 48px;--color-checked:#26bed6" (click)="radioCheck(2)"></ion-radio>
+                                    <label class="rd-text" (click)="radioCheck(2)">Hà Nội</label>
+                            </ion-radio-group>
+                            
+                    </ion-list>
+                </ion-row>
+            </div>
+            <div class="hotel-request-name">
+                <ion-row>
+                    <ion-col class="text-label">Họ tên <span style="color:red">*</span></ion-col>
+                </ion-row>
+                <!-- <div *ngIf="!customerName || customerName == ''" style="color:red;padding-left: 4px;font-size: 12px;">Họ tên không được để trống</div> -->
+                <ion-row *ngIf="!customerName || customerName == ''">
+                    <ion-col [ngClass]="(!customerName || customerName == '') ? 'text-error' : ''">Họ tên không được để trống</ion-col>
+                </ion-row>
+                <ion-row class="request-input" [ngClass]="(!customerName || customerName == '') ? 'validate-error' : ''">
+                    <ion-input id="cusName" [(ngModel)]="customerName"></ion-input>
+                </ion-row>
+            </div>
+            <div class="hotel-request-phone">
+                <ion-row>
+                    <ion-col class="text-label">Số điện thoại</ion-col>
+                </ion-row>
+                <ion-row *ngIf="!mobilevalidate">
+                    <ion-col [ngClass]="!mobilevalidate ? 'text-error' : ''">Số điện thoại không hợp lệ</ion-col>
+                </ion-row>
+                <ion-row class="request-input" [ngClass]="!mobilevalidate ? 'validate-error' : ''">
+                    <ion-input id="cusMobile" placeholder="Nhập số điện thoại để được tư vấn ngay" [(ngModel)]="mobile"></ion-input>
+                </ion-row>
+            </div>
+            <div class="hotel-request-email">
+                <ion-row>
+                    <ion-col class="text-label">Email</ion-col>
+                </ion-row>
+                <ion-row *ngIf="!emailvalidate">
+                    <ion-col [ngClass]="!mobilevalidate ? 'text-error' : ''">Email không hợp lệ</ion-col>
+                </ion-row>
+                <ion-row class="request-input" [ngClass]="!emailvalidate ? 'validate-error' : ''">
+                    <ion-input id="cusEmail" placeholder="Nhập email để nhận báo giá" [(ngModel)]="usermail"></ion-input>
+                </ion-row>
+            </div>
+            <!-- <div class="support">
+                <ion-row>
+                        <span class="label-header">Chọn nhân viên hỗ trợ từ</span>
+                </ion-row>
+                <ion-row >
+                    <ion-col col-1>
+                            <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                    </ion-col>
+                    <ion-col col-10 class="support-text" (click)="makeCallSupport(1)">
+                            <span class="item-list item-call">Tổng đài iVIVU Hà Nội</span>
+                    </ion-col>
+                    <ion-col col-1 class="support-text s-text" (click)="makeCallSupport(1)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                </ion-row>
+                <ion-row >
+                    <ion-col col-1>
+                            <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                    </ion-col>
+                    <ion-col col-10 class="support-text" (click)="makeCallSupport(2)">
+                            <span class="item-list item-call">Tổng đài iVIVU Hồ Chí Minh</span>
+                    </ion-col>
+                    <ion-col col-1 class="support-text s-text" (click)="makeCallSupport(2)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                </ion-row>
+                <ion-row >
+                        <ion-col col-1>
+                                <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                        </ion-col>
+                        <ion-col col-10 class="support-text" (click)="makeCallSupport(3)">
+                                <span class="item-list item-call">Tổng đài iVIVU Cần Thơ</span>
+                        </ion-col>
+                        <ion-col col-1 class="support-text s-text" (click)="makeCallSupport(3)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                </ion-row>
+            </div> -->
+    </div>
+    
+    
+</ion-content>
+<ion-footer style="text-align: center">
+        <button ion-button round outline class="button btn-cancel" (click)="sendRequest()" [ngClass]="(!customerName || customerName=='') ? 'btn-disable' : ''">Gửi yêu cầu</button>
+</ion-footer>

@@ -1,0 +1,1449 @@
+import { AuthService } from './../providers/auth-service';
+import { SearchHotel, ValueGlobal } from './../providers/book-service';
+import { Component, NgZone, Input, ViewChild,OnInit, ViewChildren, QueryList } from '@angular/core';
+import { NavController, ModalController,IonContent,Platform, IonRouterOutlet,LoadingController, ToastController, Events, AlertController } from '@ionic/angular';
+import { HttpClientModule } from '@angular/common/http';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { InAppBrowserOptions } from '@ionic-native/in-app-browser';
+import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
+import { C } from './../providers/constants';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { GlobalFunction } from './../providers/globalfunction';
+import { DateTime, Toast } from 'ionic-angular';
+
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs/Subscription';
+import { NavigationEnd, Router,RouterModule } from '@angular/router';
+import {
+  CalendarModal,
+  CalendarModalOptions,
+  CalendarOptions,
+  DayConfig,
+  CalendarResult
+} from 'ion2-calendar';
+import { Directive, ElementRef, HostListener } from '@angular/core';
+import { Network } from '@ionic-native/network/ngx';
+import { NetworkProvider } from './../network-provider.service';
+import * as $ from 'jquery';
+
+// @Directive({
+//   selector: '[infiniteScroll]',
+// })
+/**
+ * 
+ * Generated class for the MainPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+@Component({
+  selector: 'app-tab1',
+   templateUrl: './tab1.page.html',
+   styleUrls: ['./tab1.page.scss'],
+})
+export class Tab1Page implements OnInit {
+  private subscription: Subscription;
+  @ViewChild(IonContent) content: IonContent;
+  @ViewChildren(IonRouterOutlet) routerOutlets: IonRouterOutlet;
+  pet: string = "khachsan";
+  slideData1 = [];
+  slideMood;
+  slideData= [];
+  slideData2= [];
+  sl; slregion; slmood;
+  regions= [];
+  regionshtml= [];
+  regionscheck= [];
+  regionsend= [];
+  recom= [];
+  arrregion;
+  arrtemp;
+  recoms= [];
+  arrtempdeal= [];
+  email; jti; ischeck =false; ischeckks = true; ischeckvmb;
+  public showCalCin = false;
+  public showCalCout = false;
+  public datecin: Date;
+  public datecout: Date;
+  public cindisplay; coutdisplay;
+  public cin; gbitem;
+  public cout; ischecklist = false; isenabled = true; co; gbmsg; json; index; ischeckclose = false;
+  cinthu; coutthu; blog; items; adult = 2; child = 0; roomnumber = 1; chuoi; ischecksearch = false; recent; input; ischeckdelete;
+  tabBarElement: any;
+  page = 1;
+  pagesize = 5;
+  totalItem = 200;
+  _infiniteScroll: any;
+  showloadmore = true;
+  public isConnected:boolean;
+  public myCalendar:any;
+  constructor( private iab: InAppBrowser, public navCtrl: NavController, public authService: AuthService, public modalCtrl: ModalController, private http: HttpClientModule, public zone: NgZone,
+    public platform: Platform, public searchhotel: SearchHotel, valueGlobal: ValueGlobal, public splashScreen: SplashScreen,public gf: GlobalFunction,
+    public activeRoute: ActivatedRoute,public router: Router,public loadCtrl: LoadingController,public loadingCtrl: LoadingController,
+    private element: ElementRef,private network: Network,public toastCtrl: ToastController,private alertCtrl: AlertController,
+    public events: Events,
+    public networkProvider: NetworkProvider
+    ) {
+    this.platform.ready().then(() => {
+      this.splashScreen.hide();
+    });
+    //Kiểm tra mạng trước khi loaddata
+      this.networkProvider.getNetworkStatus().subscribe((connected: boolean) => {
+        this.isConnected = connected;
+        if (this.isConnected) {
+          this.loaddata();
+          setTimeout(()=>{
+            this.getHoteldeal();
+          },100)
+        }else{
+          setTimeout(()=>{
+            this.ischeck = false;
+            this.slideData1 = [];
+          },100)
+          this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+        }
+      });
+      // var se =this;
+      // se.gf.checkNetworkStatus().then((res)=>{
+      //   if(res){
+      //       se.isConnected = true;
+      //       se.loaddata();
+      //       setTimeout(()=>{
+      //       se.getHoteldeal();
+      //       },100)
+      //   }else{
+      //     se.zone.run(()=>{
+      //       se.isConnected = false;
+      //     })
+      //   }
+      // })
+      
+    }
+  /**
+   * Hàm show cảnh báo
+   */
+  async presentToastWarning(msg) {
+    const toast = await this.toastCtrl.create({
+      message: msg,
+      duration: 3000,
+      position: 'top',
+    });
+    toast.present();
+  }
+
+  public async ngOnInit(): Promise<void> {
+    await this.onEnter();
+    this.gbmsg = this.searchhotel.gbmsg;
+    this.gbitem = this.searchhotel.gbitem;
+    this.co = this.searchhotel.flag;
+    this.input = this.searchhotel.input;
+    this.chuoi = this.searchhotel.chuoi;
+    this.recent = this.searchhotel.recent;
+    this.subscription = this.router.events.subscribe((event) => {
+              if (event instanceof NavigationEnd && (event.url === '/' || event.url== '/tabs/tab1')) {
+                  this.onEnter();
+              }
+          });
+    }
+
+    public async onEnter(): Promise<void> {
+          // do your on enter page stuff here
+          this.loaddata();
+    }
+
+    public ngOnDestroy(): void {
+          this.subscription.unsubscribe();
+    }
+
+  loaddata(){
+    this.page = 1;
+    this.pagesize = 5;
+    this.totalItem = 200;
+    this.ischeck==true;
+    this.ischeckks==true
+    this.isConnected = true;
+    this.gbmsg = this.searchhotel.gbmsg;
+    this.gbitem = this.searchhotel.gbitem;
+    this.co = this.searchhotel.flag;
+    this.input = this.searchhotel.input;
+    this.chuoi = this.searchhotel.chuoi;
+    this.recent = this.searchhotel.recent;
+    if (this.searchhotel.adult) {
+      this.adult = this.searchhotel.adult;
+    }
+    if (this.searchhotel.child != null) {
+      this.child = this.searchhotel.child;
+    }
+    if (this.searchhotel.child==0) {
+      this.child = this.searchhotel.child;
+    }
+    if (this.searchhotel.roomnumber) {
+      this.roomnumber = this.searchhotel.roomnumber;
+    }
+    if (!this.searchhotel.chuoi) {
+      if (this.searchhotel.star) {
+        for (let i = 0; i < this.searchhotel.star.length; i++) {
+          if (i == 0) {
+            if (i == this.searchhotel.star.length - 1) {
+              this.chuoi = "* " + this.searchhotel.star[i];
+            } else {
+              this.chuoi = "* " + this.searchhotel.star[i] + ",";
+            }
+
+          }
+          else if (i != 0) {
+            if (i != this.searchhotel.star.length - 1) {
+              this.chuoi = this.chuoi + this.searchhotel.star[i] + ",";
+            } else {
+              this.chuoi = this.chuoi + this.searchhotel.star[i];
+            }
+          }
+        }
+      }
+      if (this.searchhotel.minprice) {
+        if (this.chuoi) {
+          this.chuoi = this.chuoi + " | " + "đ " + this.searchhotel.minprice.toLocaleString() + " -" + " " + this.searchhotel.maxprice.toLocaleString();
+        } else {
+          this.chuoi = "đ " + this.searchhotel.minprice.toLocaleString() + " -" + " " + this.searchhotel.maxprice.toLocaleString();
+        }
+      }
+      if (this.searchhotel.review > 0) {
+        if (this.chuoi) {
+          this.chuoi = this.chuoi + " | " + "Nhận xét " + this.searchhotel.review + "+";
+        } else {
+          this.chuoi = "Nhận xét " + this.searchhotel.review + "+";
+        }
+      }
+      else {
+        this.chuoi = this.chuoi;
+      }
+
+    }
+    else {
+      this.chuoi = this.searchhotel.chuoi;
+    }
+    
+    if (this.searchhotel.CheckInDate) {
+      this.cin = this.searchhotel.CheckInDate;
+      this.cout = this.searchhotel.CheckOutDate;
+
+      this.datecin = new Date(this.searchhotel.CheckInDate);
+      this.datecout = new Date(this.searchhotel.CheckOutDate);
+      this.cindisplay = moment(this.datecin).format('DD-MM-YYYY');
+      this.coutdisplay = moment(this.datecout).format('DD-MM-YYYY');
+    } else {
+      this.cin = new Date();
+      var rescin = this.cin.setTime(this.cin.getTime() + (24 * 60 * 60 * 1000));
+      var datein = new Date(rescin);
+      this.cin = moment(datein).format('YYYY-MM-DD');
+      this.cindisplay = moment(datein).format('DD-MM-YYYY');
+      this.datecin = new Date(rescin);
+
+      this.cout = new Date();
+      var res = this.cout.setTime(this.cout.getTime() + (2 * 24 * 60 * 60 * 1000));
+      var date = new Date(res);
+      this.cout = moment(date).format('YYYY-MM-DD');
+      this.coutdisplay = moment(date).format('DD-MM-YYYY');
+      this.datecout = new Date(res);
+    }
+
+    this.cinthu = moment(this.datecin).format('dddd');
+    switch (this.cinthu) {
+      case "Monday":
+        this.cinthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.cinthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.cinthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.cinthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.cinthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.cinthu = "Thứ 7"
+        break;
+      default:
+        this.cinthu = "Chủ nhật"
+        break;
+    }
+
+    this.coutthu = moment(this.datecout).format('dddd');
+    switch (this.coutthu) {
+      case "Monday":
+        this.coutthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.coutthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.coutthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.coutthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.coutthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.coutthu = "Thứ 7"
+        break;
+      default:
+        this.coutthu = "Chủ nhật"
+        break;
+    }
+  }
+
+  getDayName(datecin, datecout){
+    this.cinthu = moment(datecin).format('dddd');
+    switch (this.cinthu) {
+      case "Monday":
+        this.cinthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.cinthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.cinthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.cinthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.cinthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.cinthu = "Thứ 7"
+        break;
+      default:
+        this.cinthu = "Chủ nhật"
+        break;
+    }
+
+    this.coutthu = moment(datecout).format('dddd');
+    switch (this.coutthu) {
+      case "Monday":
+        this.coutthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.coutthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.coutthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.coutthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.coutthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.coutthu = "Thứ 7"
+        break;
+      default:
+        this.coutthu = "Chủ nhật"
+        break;
+    }
+  }
+
+  cin_click() {
+
+  }
+  
+  showcalendarcin() {
+    this.showCalCin = !this.showCalCin;
+    if (this.showCalCout) {
+      this.showCalCout = !this.showCalCout;
+    }
+  }
+
+  showcalendarcout() {
+    if (this.showCalCin) {
+      this.showCalCin = !this.showCalCin;
+    }
+    this.showCalCout = !this.showCalCout;
+  }
+
+  getRegions() {
+    var se = this;
+    var options = {
+      method: 'GET',
+      url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/Regions',
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+        apisecret: '2Vg_RTAccmT1mb1NaiirtyY2Y3OHaqUfQ6zU_8gD8SU',
+        apikey: '0HY9qKyvwty1hSzcTydn0AHAXPb0e2QzYQlMuQowS8U'
+      }
+    };
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "main",
+            func: "getRegions",
+            message : response.statusMessage,
+            content : response.body,
+            param: JSON.stringify(options),
+            type: "warning"
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page="main";
+        error.func="getRegions";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(objError);
+      }
+      se.zone.run(() => {
+        // se.json = JSON.parse(body);
+        se.regions = JSON.parse(body);
+        for (let i = 0; i < se.regions.length; i++) {
+          if (se.regions[i].isPopular == true) {
+            se.regions[i].imageUrl = 'https:' + se.regions[i].imageUrl;
+            se.regions[i].imageUrl = se.regions[i].imageUrl.replace(".jpg", "-450x256.jpg");
+            se.regions[i].imageUrl = se.regions[i].imageUrl.replace(".png", "-450x256.png");
+            var item = { imageUrl: se.regions[i].imageUrl, name: se.regions[i].regionName, id: se.regions[i].regionId, regionCode: se.regions[i].regionCode, totalHotel: se.regions[i].totalHotel };
+            se.regionsend.push(item)
+          }
+        }
+        se.slregion = se.regionsend.length;
+        se.getmood();
+      })
+    });
+  }
+
+  /**
+   * Sự kiện loadmore khi scroll topdeal
+   * @param event biến event
+   */
+  onScroll(event:any){
+    let scrolled = 0;
+    let el:any = document.getElementsByClassName('slide2-scroll');
+    if(el.length >0){
+      scrolled = Math.round(el[0].scrollWidth - el[0].scrollLeft);
+    }
+    if(scrolled == el[0].offsetWidth || scrolled +1 == el[0].offsetWidth){
+      setTimeout(()=>{
+        this.doInfinite();
+      },500)
+    }
+    
+  }
+
+  /**
+   * Hàm gọi loadpaging topdeal
+   */
+  doInfinite() {
+    this.zone.run(() => {
+      if (this.ischeck == true) {
+          this.page = this.page + 1;
+          this.getHotelDealPaging();
+      }
+    })
+  }
+
+  getHoteldeal() {
+    var se = this;
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/TopDeals?pageIndex='+se.page+'&pageSize='+se.totalItem,
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+       
+        apisecret: '2Vg_RTAccmT1mb1NaiirtyY2Y3OHaqUfQ6zU_8gD8SU',
+        apikey: '0HY9qKyvwty1hSzcTydn0AHAXPb0e2QzYQlMuQowS8U'
+      }
+    };
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "main",
+            func: "getHoteldeal",
+            message : response.statusMessage,
+            content : response.body,
+            param: JSON.stringify(options),
+            type: "warning"
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page = "main";
+        error.func = "getHoteldeal";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(error);
+      };
+      se.slideData = JSON.parse(body);
+      se.totalItem = se.slideData.length;
+      se.showloadmore = se.slideData.length == se.totalItem ? false : true;
+      var chuoi = "";
+      se.zone.run(() => {
+        for (let i = 0; i < se.pagesize; i++) {
+          if (se.slideData[i].images[0]) {
+            var res = se.slideData[i].images[0].url.substring(0, 4);
+            if (res != "http") {
+              se.slideData[i].images[0].url = 'https:' + se.slideData[i].images[0].url;
+            }
+            var minPrice = se.slideData[i].minPrice.toLocaleString();
+            chuoi = "";
+            var name = se.slideData[i].name.split('|');
+            for (let x = 1; x < name.length; x++) {
+              if (x == name.length - 1) {
+                chuoi = chuoi + name[x];
+              } else {
+                chuoi = chuoi + name[x] + "|";
+              }
+            }
+            switch (se.slideData[i].rating) {
+              case 50:
+                se.slideData[i].rating = "./assets/star/ic_star_5.svg";
+                break;
+              case 45:
+                se.slideData[i].rating = "./assets/star/ic_star_4.5.svg";
+                break;
+              case 40:
+                se.slideData[i].rating = "./assets/star/ic_star_4.svg";
+                break;
+              case 35:
+                se.slideData[i].rating = "./assets/star/ic_star_3.5.svg";
+                break;
+              case 30:
+                se.slideData[i].rating = "./assets/star/ic_star_3.svg";
+                break;
+              case 25:
+                se.slideData[i].rating = "./assets/star/ic_star_2.5.svg";
+                break;
+              case 20:
+                se.slideData[i].rating = "./assets/star/ic_star_2.svg";
+                break;
+              case 15:
+                se.slideData[i].rating = "./assets/star/ic_star_1.5.svg";
+                break;
+              case 10:
+                se.slideData[i].rating = "./assets/star/ic_star.svg";
+                break;
+              case 5:
+                se.slideData[i].rating = "./assets/star/ic_star_0.5.svg";
+                break;
+              default:
+                break;
+            }
+            var item = { ischecked: 0, id: se.slideData[i].id, name: name[0], imageUrl: se.slideData[i].images[0].url, regionName: se.slideData[i].regionName, minPrice: minPrice, description: chuoi, rating: se.slideData[i].rating };
+            se.slideData1.push(item);
+          }
+
+        }
+        se.sl = se.slideData1.length;
+        se.ischeck = true;
+        if(se._infiniteScroll){
+          se._infiniteScroll.target.complete();
+        }
+        
+        se.getRegions();
+      })
+    });
+  }
+
+  /**
+   * Hàm load paging topdeal
+   */
+  getHotelDealPaging() {
+    var se = this;
+      se.showloadmore = se.slideData1.length == se.slideData.length ? false : true;
+      let start = se.slideData1.length;
+      var chuoi = "";
+      se.zone.run(() => {
+        for (let i = start ; i < start + se.pagesize; i++) {
+          if (se.slideData[i].images[0]) {
+            var res = se.slideData[i].images[0].url.substring(0, 4);
+            if (res != "http") {
+              se.slideData[i].images[0].url = 'https:' + se.slideData[i].images[0].url;
+            }
+            var minPrice = se.slideData[i].minPrice.toLocaleString();
+            chuoi = "";
+            var name = se.slideData[i].name.split('|');
+            for (let x = 1; x < name.length; x++) {
+              if (x == name.length - 1) {
+                chuoi = chuoi + name[x];
+              } else {
+                chuoi = chuoi + name[x] + "|";
+              }
+            }
+            switch (se.slideData[i].rating) {
+              case 50:
+                se.slideData[i].rating = "./assets/star/ic_star_5.svg";
+                break;
+              case 45:
+                se.slideData[i].rating = "./assets/star/ic_star_4.5.svg";
+                break;
+              case 40:
+                se.slideData[i].rating = "./assets/star/ic_star_4.svg";
+                break;
+              case 35:
+                se.slideData[i].rating = "./assets/star/ic_star_3.5.svg";
+                break;
+              case 30:
+                se.slideData[i].rating = "./assets/star/ic_star_3.svg";
+                break;
+              case 25:
+                se.slideData[i].rating = "./assets/star/ic_star_2.5.svg";
+                break;
+              case 20:
+                se.slideData[i].rating = "./assets/star/ic_star_2.svg";
+                break;
+              case 15:
+                se.slideData[i].rating = "./assets/star/ic_star_1.5.svg";
+                break;
+              case 10:
+                se.slideData[i].rating = "./assets/star/ic_star.svg";
+                break;
+              case 5:
+                se.slideData[i].rating = "./assets/star/ic_star_0.5.svg";
+                break;
+              default:
+                break;
+            }
+            var item = { ischecked: 0, id: se.slideData[i].id, name: name[0], imageUrl: se.slideData[i].images[0].url, regionName: se.slideData[i].regionName, minPrice: minPrice, description: chuoi, rating: se.slideData[i].rating };
+            se.slideData1.push(item);
+          }
+
+        }
+        se.sl = se.slideData1.length;
+        se.ischeck = true;
+      })
+  }
+  
+  getmood() {
+    var se = this;
+    var options = {
+      method: 'POST',
+      url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/Moods',
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+        'postman-token': 'f0589249-bf19-001c-f359-9b33dcf6db86',
+        'cache-control': 'no-cache',
+        apisecret: '2Vg_RTAccmT1mb1NaiirtyY2Y3OHaqUfQ6zU_8gD8SU',
+        apikey: '0HY9qKyvwty1hSzcTydn0AHAXPb0e2QzYQlMuQowS8U'
+      }
+    };
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "main",
+            func: "getmood",
+            message : response.statusMessage,
+            content : response.body,
+            param: JSON.stringify(options),
+            type: "warning"
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page = "main";
+        error.func = "getmood";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(error);
+      };
+      se.zone.run(() => {
+        se.slideMood = JSON.parse(body);
+        for (let i = 0; i < se.slideMood.length; i++) {
+          var res = se.slideMood[i].bannerUrl.substring(0, 4);
+          if (res != "http") {
+            se.slideMood[i].bannerUrl = 'https:' + se.slideMood[i].bannerUrl;
+          }
+          se.slideMood[i].bannerUrl = se.slideMood[i].bannerUrl.replace(".jpg", "-450x256.jpg");
+          se.slideMood[i].bannerUrl = se.slideMood[i].bannerUrl.replace(".png", "-450x256.png");
+        }
+        se.slmood = se.slideMood.length;
+        se.getNewsBlog();
+      })
+    });
+  }
+  clickks() {
+    this.ischeckks = true;
+    this.ischeckvmb = false;
+  }
+  clickvmb() {
+    this.ischeckks = false;
+    this.ischeckvmb = true;
+  }
+  /**
+   * Sự kiện khi chọn ngày trên datetimepicker checkin
+   * @param selectdate ngày được chọn
+   */
+  selectcin(selectdate: Date) {
+    var sdate = new Date(selectdate);
+    this.datecin = new Date(selectdate);
+    this.cin = moment(sdate).format('YYYY-MM-DD');
+    this.cindisplay = moment(sdate).format('DD-MM-YYYY');
+    //Set lại ngày checkout nếu chọn ngày checkin >= ngày checkout
+    if (selectdate >= this.datecout) {
+      var res = sdate.setTime(sdate.getTime() + (1 * 24 * 60 * 60 * 1000));
+      var date = new Date(res);
+      this.datecout = date;
+      this.cout = moment(date).format('YYYY-MM-DD');
+      this.coutdisplay = moment(sdate).format('DD-MM-YYYY');
+      this.coutthu = moment(date).format('dddd');
+      switch (this.coutthu) {
+        case "Monday":
+          this.coutthu = "Thứ 2"
+          break;
+        case "Tuesday":
+          this.coutthu = "Thứ 3"
+          break;
+        case "Wednesday":
+          this.coutthu = "Thứ 4"
+          break;
+        case "Thursday":
+          this.coutthu = "Thứ 5"
+          break;
+        case "Friday":
+          this.coutthu = "Thứ 6"
+          break;
+        case "Saturday":
+          this.coutthu = "Thứ 7"
+          break;
+        default:
+          this.coutthu = "Chủ nhật"
+          break;
+      }
+    }
+    //Set thứ theo ngày checkin được select
+    this.cinthu = moment(selectdate).format('dddd');
+    switch (this.cinthu) {
+      case "Monday":
+        this.cinthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.cinthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.cinthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.cinthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.cinthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.cinthu = "Thứ 7"
+        break;
+      default:
+        this.cinthu = "Chủ nhật"
+        break;
+    }
+    //Ẩn datepicker
+    this.showCalCin = !this.showCalCin;
+  }
+  /**
+   * Sự kiện khi chọn trên datetimepicker checkout
+   * @param selectdate ngày check out
+   */
+  selectcout(selectdate: Date) {
+    //Nếu ngày checkout > ngày checkin thì vào set lại biến ngày checkout
+    if (selectdate > this.datecin) {
+      this.datecout = new Date(selectdate);
+      this.cout = moment(this.datecout).format('YYYY-MM-DD');
+      this.coutdisplay = moment(this.datecout).format('DD-MM-YYYY');
+      this.coutthu = moment(this.datecout).format('dddd');
+      switch (this.coutthu) {
+        case "Monday":
+          this.coutthu = "Thứ 2"
+          break;
+        case "Tuesday":
+          this.coutthu = "Thứ 3"
+          break;
+        case "Wednesday":
+          this.coutthu = "Thứ 4"
+          break;
+        case "Thursday":
+          this.coutthu = "Thứ 5"
+          break;
+        case "Friday":
+          this.coutthu = "Thứ 6"
+          break;
+        case "Saturday":
+          this.coutthu = "Thứ 7"
+          break;
+        default:
+          this.coutthu = "Chủ nhật"
+          break;
+      }
+      this.showCalCout = !this.showCalCout;
+    } else {//Nếu ngày check in >= ngày checkout thì show cảnh báo
+      //this.presentToastwarming();
+    }
+
+  }
+  selectclickcin() {
+    this.cout = new Date(this.cin);
+    var res = this.cout.setTime(this.cout.getTime() + (1 * 24 * 60 * 60 * 1000));
+    var date = new Date(res);
+    this.cout = moment(date).format('YYYY-MM-DD');
+    this.cinthu = moment(this.cin).format('dddd');
+    switch (this.cinthu) {
+      case "Monday":
+        this.cinthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.cinthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.cinthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.cinthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.cinthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.cinthu = "Thứ 7"
+        break;
+      default:
+        this.cinthu = "Chủ nhật"
+        break;
+    }
+  }
+  selectclickcout() {
+    var datecin = Date.parse(this.cin);
+    var datecout = Date.parse(this.cout);
+    this.coutthu = moment(datecout).format('dddd');
+    switch (this.coutthu) {
+      case "Monday":
+        this.coutthu = "Thứ 2"
+        break;
+      case "Tuesday":
+        this.coutthu = "Thứ 3"
+        break;
+      case "Wednesday":
+        this.coutthu = "Thứ 4"
+        break;
+      case "Thursday":
+        this.coutthu = "Thứ 5"
+        break;
+      case "Friday":
+        this.coutthu = "Thứ 6"
+        break;
+      case "Saturday":
+        this.coutthu = "Thứ 7"
+        break;
+      default:
+        this.coutthu = "Chủ nhật"
+        break;
+    }
+    if (datecin >= datecout) {
+      //this.presentToastwarming();
+    }
+  }
+  
+  openmnu() {
+    this.searchhotel.input = this.input;
+    this.searchhotel.flag = this.co;
+    this.searchhotel.chuoi = this.chuoi;
+    this.searchhotel.CheckInDate = this.cin;
+    this.searchhotel.CheckOutDate = this.cout;
+    //Xóa clone page-searchhotel do push page
+    this.gf.setParams(false,'requestcombo');
+    this.navCtrl.navigateForward('/occupancy');
+  }
+  openmnu1() {
+    this.searchhotel.input = this.input;
+    this.searchhotel.flag = this.co;
+    this.searchhotel.chuoi = this.chuoi;
+    this.searchhotel.CheckInDate = this.cin;
+    this.searchhotel.CheckOutDate = this.cout;
+    this.navCtrl.navigateForward('/searchhotelfilter');
+    this.gf.googleAnalytion('mainpage','Search',this.input +'|'+ this.chuoi +'|'+ this.cin + '|' +this.cout);
+  }
+
+  async presentLoading() {
+    var loader = await this.loadingCtrl.create({
+      message: "",
+      duration: 3000
+    });
+    loader.present();
+  }
+
+  async clickedElement(e: any) {
+    //var iwasClickedDataFixed = $(e.currentTarget).data('key'); // will work
+    var obj:any = e.currentTarget;
+    if($(obj.parentNode).hasClass('endSelection')){
+      if(this.modalCtrl){
+        //this.modalCtrl.dismiss();
+        //const event: any = await this.myCalendar.onDidDismiss();
+        this.myCalendar.prototype.done();
+      }
+    }
+  }
+
+  async openPickupCalendar() {
+    //this.navCtrl.navigateForward('/pickup-calendar/true');
+    let fromdate = new Date(this.cin);
+    let todate = new Date(this.cout);
+      const options: CalendarModalOptions = {
+        pickMode: 'range',
+        title: 'Chọn ngày',
+        monthFormat: 'MM / YYYY', 
+        weekdays:['CN','T2','T3','T4','T5','T6','T7'],
+        closeLabel:'Thoát',
+        doneLabel: 'OK',
+        step: 0,
+        defaultScrollTo: fromdate,
+        defaultDateRange: {from: fromdate, to: todate}
+      };
+  
+      this.myCalendar = await this.modalCtrl.create({
+        component: CalendarModal,
+        animated: false,
+        componentProps: { options }
+      });
+  
+      this.myCalendar.present();
+      // setTimeout(()=>{
+      //   $('.days-btn').click(e => this.clickedElement(e));
+      // },500)
+      
+      // $(".days-btn").last().on('click',function(){
+      //   debugger
+      // })
+      var se = this;
+      const event: any = await this.myCalendar.onDidDismiss();
+      const date = event.data;
+      if(event.data){
+      const from: CalendarResult = date.from;
+      const to: CalendarResult = date.to;
+      se.cin = moment(from.dateObj).format('YYYY-MM-DD');
+      se.cout = moment(to.dateObj).format('YYYY-MM-DD');
+      se.zone.run(()=>{
+        se.searchhotel.CheckInDate = se.cin;
+        se.searchhotel.CheckOutDate = se.cout;
+        se.datecin = new Date(se.cin);
+        se.datecout = new Date(se.cout);
+        se.cindisplay = moment(se.datecin).format('DD-MM-YYYY');
+        se.coutdisplay = moment(se.datecout).format('DD-MM-YYYY');
+        se.cindisplay = moment(se.datecin).format('DD-MM-YYYY');
+        se.coutdisplay = moment(se.datecout).format('DD-MM-YYYY');
+        se.getDayName(se.datecin,se.datecout);
+      })
+      }
+  }
+  getNewsBlog() {
+    var se = this;
+    var options = {
+      method: 'GET',
+      url: C.urls.baseUrl.urlBlog +'/GetNewsBlog',
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+      }
+    };
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "main",
+            func: "getNewsBlog",
+            message : response.statusMessage,
+            content : response.body,
+            param: JSON.stringify(options),
+            type: "warning"
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page = "main";
+        error.func = "getNewsBlog";
+        error.param = JSON.stringify(options),
+        C.writeErrorLog(error);
+      }
+      se.zone.run(() => {
+        se.blog = JSON.parse(body);
+        for (let i = 0; i < se.blog.length; i++) {
+          se.blog[i].Date = moment(se.blog[i].Date).format('DD/MM/YYYY');
+        }
+      })
+
+    });
+
+  }
+  clickitemblog(item) {
+    this.navCtrl.navigateForward('/blog/'+item.Id);
+    //google analytic
+    this.gf.googleAnalytion('blog','Search','');
+  }
+  clickitemblogmain() {
+    var url = "https://www.ivivu.com/blog";
+    this.openWebpage(url);
+    //google analytic
+    this.gf.googleAnalytion('blog','Search','');
+  }
+  openWebpage(url: string) {
+    const options: InAppBrowserOptions = {
+      zoom: 'no',
+      location: 'yes',
+      toolbar: 'yes',
+      hideurlbar: 'yes',
+      closebuttoncaption: 'Đóng'
+    };
+    const browser = this.iab.create(url, '_self', options);
+    browser.show();
+  }
+  getItems(ev: any) {
+    // Reset items back to all of the items
+
+    if (this.input) {
+      this.ischeckclose = true;
+      var se = this;
+      const val = ev.target.value;
+
+      var options = {
+        method: 'GET',
+        url: 'https://www.ivivu.com/GListSuggestion',
+        timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+        qs: { key: val },
+        headers:
+        {
+        }
+      };
+
+      request(options, function (error, response, body) {
+        if(response.statusCode != 200){
+          var objError ={
+              page: "main",
+              func: "getItems",
+              message : response.statusMessage,
+              content : response.body,
+              param: JSON.stringify(options),
+              type: "warning"
+            };
+          C.writeErrorLog(objError);
+        }
+        if (error) {
+          error.page = "main";
+          error.func = "getItems";
+          error.param =  JSON.stringify(options);
+          C.writeErrorLog(error);
+        };
+        se.zone.run(() => {
+          se.items = JSON.parse(body);
+          if (val && val.trim() != '') {
+            se.items;
+            se.ischecklist = true;
+          }
+          else {
+            se.items = [];
+            se.ischecklist = false;
+          }
+        });
+      })
+    }
+    else {
+      this.ischeckclose = false;
+      this.ischecklist = false;
+    }
+    //google analytic
+    this.gf.googleAnalytion('main','searchregion','');
+  }
+  change() {
+    // this.ischecksearch = true;
+    if(!this.isConnected){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    if (this.input) {
+      this.ischeckclose = true;
+    }
+    this.recent = this.searchhotel.recent;
+    this.navCtrl.navigateForward('/searchhotel');
+    //this.gf.googleAnalytion('main','Search', 'searchrecent:'+this.input+'|'+this.cin + '|'+this.cout );
+  }
+
+  clearClonePage(pagename) {
+    //Xóa clone do push page
+    let elements = [];
+    elements = Array.from(document.querySelectorAll(pagename));
+    if (elements != null && elements.length > 0) {
+      elements.forEach(el => {
+
+        if (el && el != null) {
+          //if (el != null && el.length > 0) {
+          el.remove();
+        }
+      });
+    }
+  }
+  itemclick(item) {
+    this.gbitem = item;
+    if (item.HotelName) {
+      this.input = item.HotelName;
+    } else {
+      this.input = item.RegionName;
+    }
+    this.ischeckclose = false;
+    // this.isenabled = false
+    // this.showpopup = false;
+    this.ischecksearch = false;
+    this.co = 0;
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('main','Search',''+this.input +'|'+this.cin + '|'+this.cout);
+  }
+  next1(msg) {
+    this.gbmsg = msg;
+    this.ischeckclose = false;
+    this.searchhotel.gbmsg = msg;
+    this.ischecksearch = false;
+    if (msg.regionName) {
+      this.input = msg.regionName;
+    } else {
+      this.input = msg.HotelName;
+    }
+    this.isenabled = false;
+    this.co = 2;
+    this.content.scrollToTop(50);
+    //this.authService.region=name;
+    //this.navCtrl.push('HotelListPage');
+    this.gf.googleAnalytion('main','Search',''+this.input +'|'+this.cin + '|'+this.cout);
+  }
+
+  close() {
+    this.ischecksearch = false;
+    if (!this.input) {
+      this.isenabled = true;
+    }
+  }
+  next(msg, i) {
+    this.ischeckclose = false;
+    this.gbmsg = msg;
+    this.searchhotel.gbmsg = msg;
+    this.ischecksearch = false;
+    this.index = i;
+
+    this.input = msg.regionName;
+
+    this.isenabled = false;
+    this.co = 1;
+    this.content.scrollToTop(50);
+    //this.authService.region=name;
+    //this.navCtrl.push('HotelListPage');
+    this.gf.googleAnalytion('main','Search',''+this.input +'|'+this.cin + '|'+this.cout);
+  }
+  getdata() {
+    var se = this;
+    var options = {
+      method: 'GET',
+      url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/Regions',
+      headers:
+      {
+        apisecret: '2Vg_RTAccmT1mb1NaiirtyY2Y3OHaqUfQ6zU_8gD8SU',
+        apikey: '0HY9qKyvwty1hSzcTydn0AHAXPb0e2QzYQlMuQowS8U'
+      }
+    };
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "main",
+            func: "getdata",
+            message : response.statusMessage,
+            content : response.body,
+            param: JSON.stringify(options),
+            type: "warning"
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page = "main";
+        error.func = "getdata";
+        error.param =  JSON.stringify(options);
+        C.writeErrorLog(error);
+      };
+      se.json = JSON.parse(body);
+      se.getRegions();
+    });
+  }
+  search() {
+    if(!this.isConnected){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    this.searchhotel.backPage = "";
+    if (this.input) {
+      this.searchhotel.chuoi = this.chuoi;
+      this.searchhotel.CheckInDate = this.cin;
+      this.searchhotel.CheckOutDate = this.cout;
+      this.searchhotel.child = this.child;
+      this.searchhotel.adult = this.adult;
+      this.searchhotel.input = this.input;
+
+      var se = this;
+      if (this.co == 1) {
+        this.authService.region = this.gbmsg.regionName;
+        this.authService.regionid = this.gbmsg.regionId;
+        this.authService.regioncode = this.gbmsg.regionCode;
+        if (this.recent) {
+          var cocheck = 0;
+          for (let i = 0; i < this.recent.length; i++) {
+            if (this.recent[i].RegionId == this.gbmsg.regionId) {
+              cocheck = 1;
+              break;
+            }
+          }
+          if (cocheck == 0) {
+            var item1 = { Type: "2", HotelId: "", HotelName: "", RegionId: this.gbmsg.regionId, RegionCode: this.gbmsg.regionCode, regionName: this.gbmsg.regionName, flag: "1", TotalHotels: this.gbmsg.totalHotel };
+            se.searchhotel.recent = [];
+
+            if (this.recent.length > 1) {
+              se.searchhotel.recent.push(this.recent[1]);
+            } else {
+              se.searchhotel.recent.push(this.recent[0]);
+            }
+            se.searchhotel.recent.push(item1);
+          }
+
+        }
+        else {
+          var item1 = { Type: "2", HotelId: "", HotelName: "", RegionId: this.gbmsg.regionId, RegionCode: this.gbmsg.regionCode, regionName: this.gbmsg.regionName, flag: "1", TotalHotels: this.gbmsg.totalHotel };
+          se.searchhotel.recent = [];
+          se.searchhotel.recent.push(item1);
+        }
+        //Xóa clone page-hotel-list do push page
+        //this.navCtrl.navigateForward('/hotellist/false');
+        this.navCtrl.navigateForward(['/app/tabs/hotellist/false']);
+        this.gf.googleAnalytion('main','Search',''+this.authService.regioncode +'/' + this.input +'|'+this.cin + '|'+this.cout);
+      }
+      else if (this.co == 0) {
+        if (this.gbitem.Type == 1) {
+          var id1 = { id: this.gbitem.HotelId };
+          if (this.recent) {
+            var cocheck = 0;
+            for (let i = 0; i < this.recent.length; i++) {
+              var temp=this.recent[i].HotelId;
+              if (temp == id1.id) {
+                cocheck = 1;
+                break;
+              }
+            }
+            if (cocheck == 0) {
+              var item2 = { Type: "1", HotelId: this.gbitem.HotelId, HotelName: this.gbitem.HotelName, RegionId: "", RegionCode: "", regionName: "", flag: "0", TotalHotels: '' };
+              se.searchhotel.recent = [];
+
+              if (this.recent.length > 1) {
+                se.searchhotel.recent.push(this.recent[1]);
+              } else {
+                se.searchhotel.recent.push(this.recent[0]);
+              }
+              this.searchhotel.recent.push(item2)
+            }
+          }
+          else {
+            var item2 = { Type: "1", HotelId: this.gbitem.HotelId, HotelName: this.gbitem.HotelName, RegionId: "", RegionCode: "", regionName: "", flag: "0", TotalHotels: '' };
+            se.searchhotel.recent = [];
+
+            this.searchhotel.recent.push(item2)
+          }
+          this.searchhotel.rootPage = "mainpage";
+          //this.navCtrl.navigateForward('/hoteldetail/'+this.gbitem.HotelId);
+          this.navCtrl.navigateForward(['/app/tabs/hoteldetail/'+this.gbitem.HotelId]);
+          this.gf.googleAnalytion('main','Search',''+this.input +'|'+this.cin + '|'+this.cout+'|'+this.gbitem.HotelId+'|'+this.gbitem.HotelName);
+        } else {
+          if (this.recent) {
+            var cocheck = 0;
+            for (let i = 0; i < this.recent.length; i++) {
+              if (this.recent[i].RegionId == this.gbitem.RegionId) {
+                cocheck = 1;
+                break;
+              }
+            }
+            if (cocheck == 0) {
+              var item3 = { Type: "2", HotelId: "", HotelName: "", RegionId: this.gbitem.RegionId, RegionCode: this.gbitem.RegionCode, regionName: this.gbitem.RegionName, flag: "0", TotalHotels: this.gbitem.TotalHotels };
+              se.searchhotel.recent = [];
+
+              if (this.recent.length > 1) {
+                se.searchhotel.recent.push(this.recent[1]);
+              } else {
+                se.searchhotel.recent.push(this.recent[0]);
+              }
+              this.searchhotel.recent.push(item3)
+            }
+          }
+          else {
+            var item3 = { Type: "2", HotelId: "", HotelName: "", RegionId: this.gbitem.RegionId, RegionCode: this.gbitem.RegionCode, regionName: this.gbitem.RegionName, flag: "0", TotalHotels: this.gbitem.TotalHotels };
+            se.searchhotel.recent = [];
+            this.searchhotel.recent.push(item3)
+          }
+
+          this.authService.region = this.gbitem.RegionName;
+          this.authService.regionid = this.gbitem.RegionId;
+          this.authService.regioncode = this.gbitem.RegionCode;
+          var obj = {
+            regionName: this.authService.region,
+            regionId: this.authService.regionid,
+            regionCode: this.authService.regioncode
+          }
+          this.searchhotel.gbmsg = obj;
+          //this.navCtrl.navigateForward('/hotellist/false');
+          this.navCtrl.navigateForward(['/app/tabs/hotellist/false']);
+          this.gf.googleAnalytion('main','Search',''+this.authService.regioncode +''+this.input +'|'+this.cin + '|'+this.cout+'|'+this.gbitem.RegionCode);
+        }
+      }
+      else if (this.co == 2) {
+        if (this.gbmsg.Type == 1) {
+          var id1 = { id: this.gbmsg.HotelId };
+          this.searchhotel.rootPage = "mainpage";
+          this.searchhotel.gbitem.HotelId=this.gbmsg.HotelId;
+          //this.navCtrl.navigateForward('/hoteldetail/'+id1);
+          this.navCtrl.navigateForward(['/app/tabs/hoteldetail/'+id1]);
+          this.gf.googleAnalytion('main','Search',''+this.input +'|'+this.cin + '|'+this.cout+'|'+this.gbitem.HotelId);
+        } else {
+          this.authService.region = this.gbmsg.regionName;
+          this.authService.regionid = this.gbmsg.RegionId;
+          this.authService.regioncode = this.gbmsg.RegionCode;
+          //Xóa clone page-hotel-list do push page
+          //this.navCtrl.navigateForward('/hotellist/false');
+          this.navCtrl.navigateForward(['/app/tabs/hotellist/false']);
+          this.gf.googleAnalytion('main','Search',''+(this.authService.regioncode ? this.authService.regioncode : this.gbmsg.RegionCode) +'|'+this.input +'|'+this.cin + '|'+this.cout);
+
+        }
+      }
+      else if(this.input && !this.co){
+        this.input = "";
+        this.navCtrl.navigateForward('/searchhotel');
+      }
+    }
+    else {
+      this.navCtrl.navigateForward('/searchhotel');
+    }
+  }
+  deletetext() {
+    this.input = "";
+    this.ischeckclose = false;
+    this.ischecklist = false;
+  }
+
+
+  ionViewDidLoad() {
+    let elements = document.querySelectorAll(".tabbar");
+
+    if (elements != null) {
+      Object.keys(elements).map((key) => {
+        elements[key].style.display = 'flex';
+      });
+    }
+  }
+
+  ionViewWillEnter(){
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+  }
+
+  ionViewDidEnter(){
+    // let elements = document.querySelectorAll(".tabbar");
+
+    // if (elements != null) {
+    //   Object.keys(elements).map((key) => {
+    //     elements[key].style.display = 'flex';
+    //   });
+    // }
+    
+  }
+
+  itemclickht(item) {
+    if(!this.isConnected){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    this.searchhotel.CheckInDate = this.cin;
+    this.searchhotel.CheckOutDate = this.cout;
+    this.searchhotel.child = this.child;
+    this.searchhotel.adult = this.adult;
+    this.searchhotel.roomnumber = this.roomnumber;
+    this.searchhotel.hotelID = item.id;
+    this.searchhotel.rootPage = "topdeal";
+    //this.navCtrl.navigateForward('/hoteldetail/'+item.id);
+    this.navCtrl.navigateForward(['/app/tabs/hoteldetail/'+item.id]);
+    //google analytic
+  }
+  itemSelectedmood(item) {
+    if(!this.isConnected){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    var id1 = { id: item.id, title: item.title };
+    this.searchhotel.CheckInDate = this.cin;
+    this.searchhotel.CheckOutDate = this.cout;
+    this.searchhotel.child = this.child;
+    this.searchhotel.adult = this.adult;
+    this.searchhotel.roomnumber = this.roomnumber;
+    //this.navCtrl.navigateForward('hotellistmood/'+item.id+'/'+item.title);
+    this.navCtrl.navigateForward(['/app/tabs/hotellistmood/'+item.id+'/'+item.title]);
+    //google analytic
+    this.gf.googleAnalytion('hotellistmood','Search',item.id+'|'+item.title);
+  }
+
+  /**
+   * Chuyển sang hotel list theo id vùng
+   * @param item //item vùng
+   */
+  itemclickregion(item){
+    if(!this.isConnected){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    this.searchhotel.CheckInDate = this.cin;
+    this.searchhotel.CheckOutDate = this.cout;
+    this.searchhotel.child = this.child;
+    this.searchhotel.adult = this.adult;
+    this.searchhotel.roomnumber = this.roomnumber;
+    this.searchhotel.rootPage = "topregion";
+    this.authService.region = item.name;
+    this.authService.regionid = item.id;
+    this.authService.regioncode = item.regionCode;
+    this.searchhotel.location = "";
+    this.zone.run(()=>{
+      this.input = item.name;
+      this.searchhotel.input = item.name;
+    })
+    //clear local
+    this.searchhotel.local0check = false;
+    this.searchhotel.local1check = false;
+    this.searchhotel.local2check = false;
+    this.searchhotel.local3check = false;
+    this.searchhotel.local4check = false;
+    this.searchhotel.local5check = false;
+    this.searchhotel.local6check = false;
+    this.searchhotel.local7check = false;
+    this.searchhotel.local8check = false;
+    this.searchhotel.local9check = false;
+    this.searchhotel.local10check = false;
+    this.searchhotel.local11check = false;
+    this.searchhotel.local12check = false;
+    this.searchhotel.local13check = false;
+    this.searchhotel.local14check = false;
+    this.searchhotel.local15check = false;
+    this.searchhotel.local16check = false;
+    this.searchhotel.local17check = false;
+    this.searchhotel.local18check = false;
+    this.searchhotel.local19check = false;
+    this.searchhotel.location = "";
+    var obj = {
+      regionName: this.authService.region,
+      regionId: this.authService.regionid,
+      regionCode: this.authService.regioncode
+    }
+    this.searchhotel.gbmsg = obj;
+    this.searchhotel.flag =1;
+    //this.navCtrl.navigateForward('/hotellist/true');
+    this.navCtrl.navigateForward(['/app/tabs/hotellist/true']);
+    //google analytic
+    this.gf.googleAnalytion('topregion','Search',this.authService.regioncode);
+  }
+
+}

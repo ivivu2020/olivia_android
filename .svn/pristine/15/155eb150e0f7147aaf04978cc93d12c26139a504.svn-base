@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="firebase_database_url" translatable="false">https://ivivu-9aeb4.firebaseio.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">936105820400</string>
+    <string name="google_api_key" translatable="false">AIzaSyCQzf2MGU_DutboClZZC5dx4n9Ddhfdflk</string>
+    <string name="google_app_id" translatable="false">1:936105820400:android:f59954cd2634fd98</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCQzf2MGU_DutboClZZC5dx4n9Ddhfdflk</string>
+    <string name="google_storage_bucket" translatable="false">ivivu-9aeb4.appspot.com</string>
+    <string name="project_id" translatable="false">ivivu-9aeb4</string>
+</resources>

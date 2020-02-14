@@ -1,0 +1,427 @@
+import { Component, OnInit, NgZone } from '@angular/core';
+import { NavController, Platform } from '@ionic/angular';
+import { C } from '../providers/constants';
+import { GlobalFunction } from '../providers/globalfunction';
+import { ActivatedRoute } from '@angular/router';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { SocialSharing } from '@ionic-native/social-sharing/ngx';
+import { ValueGlobal, SearchHotel } from '../providers/book-service';
+import { Storage } from '@ionic/storage';
+import { NetworkProvider } from '../network-provider.service';
+/**
+ * Generated class for the PolicyPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-bloglist',
+  templateUrl: 'bloglist.html',
+  styleUrls: ['bloglist.scss'],
+})
+export class BlogListPage implements OnInit {
+  blogtrips = []; arrbloglike; istextblog = false; public isConnected: boolean = true; username; page = 1;
+  _infiniteScroll: any; ischeckloadmore = false;ischecksearchbar=false;
+  regionnamesuggest: any="";
+  memberid: any="";
+  constructor(public searchhotel:SearchHotel, public networkProvider: NetworkProvider, public valueGlobal: ValueGlobal, public storage: Storage, public platform: Platform, public navCtrl: NavController, public value: ValueGlobal, public gf: GlobalFunction, private activatedRoute: ActivatedRoute, public zone: NgZone, private socialSharing: SocialSharing) {
+    this.searchhotel.backPage = "bloglist";
+    storage.get('username').then(username => {
+      this.username = username;
+    });
+    this.storage.get('jti').then((uid:any)=>{
+      this.memberid = uid;
+    })
+    if (this.networkProvider.isOnline()) {
+      this.isConnected = true;
+      this.networkProvider.setNetworkStatus(true);
+      this.gf.setNetworkStatus(true);
+      this.getbloglike(0);
+    } else {
+      this.isConnected = false;
+      this.networkProvider.setNetworkStatus(false);
+      this.gf.setNetworkStatus(false);
+      this.gf.showWarning('Không có kết nối mạng', 'Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng', 'Đóng');
+    }
+
+  }
+
+  ngOnInit() {
+
+  }
+
+  getblogtrips() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/GeBlogByTripLatestOfUser' + '?pageIndex=' + this.page + '&pageSize=10'+ (se.memberid ? '&memberid='+se.memberid : ''),
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "hotellike";
+            error.func = "getblog";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+            throw new Error(error)
+          }
+          se.zone.run(() => {
+            if (body && body.length > 0) {
+              var data = JSON.parse(body);
+              var listBlogtemp = data.items;
+              // if (listBlogtemp.error) {
+              //   //se.blogtrips = [];
+              //   se.regionnamesuggest="";
+              // }
+              if(listBlogtemp && listBlogtemp.length >0){
+                se.regionnamesuggest = "Vi Vu "+ data.regionName;
+                if (se.arrbloglike.length > 0) {
+                  var itemblog;
+                  for (let i = 0; i < listBlogtemp.length; i++) {
+                    listBlogtemp[i].date = moment(listBlogtemp[i].date).format('HH:ss DD/MM/YYYY');
+                    itemblog = { avatar: listBlogtemp[i].avatar, date: listBlogtemp[i].date, id: listBlogtemp[i].id, title: listBlogtemp[i].title, url: listBlogtemp[i].url, Like: false }
+                    for (let j = 0; j < se.arrbloglike.length; j++) {
+                      if (se.arrbloglike[j].id == listBlogtemp[i].id) {
+                        itemblog = { avatar: listBlogtemp[i].avatar, date: listBlogtemp[i].date, id: listBlogtemp[i].id, title: listBlogtemp[i].title, url: listBlogtemp[i].url, Like: true };
+                        break;
+                      }
+                    }
+                    se.blogtrips.push(itemblog);
+                  }
+                }
+                else {
+                    for (let i = 0; i < listBlogtemp.length; i++) {
+                      listBlogtemp[i].date = moment(listBlogtemp[i].date).format('HH:ss DD/MM/YYYY');
+                      itemblog = { avatar: listBlogtemp[i].avatar, date: listBlogtemp[i].date, id: listBlogtemp[i].id, title: listBlogtemp[i].title, url: listBlogtemp[i].url, Like: false }
+                      se.blogtrips.push(itemblog);
+                    }
+                }
+                if(se._infiniteScroll){
+                  se._infiniteScroll.target.complete();
+                }
+              }
+              
+            }
+
+          });
+        });
+      }
+      else {
+        
+      }
+    });
+  }
+getbloglikelocal(id,value)
+{
+  this.zone.run(() => {
+    if (this.blogtrips&& this.blogtrips.length>0) {
+      for (let i = 0; i < this.blogtrips.length; i++) {
+        if (this.blogtrips[i].id==id) {
+          if (value==1) {
+            this.blogtrips[i].Like=true;
+          } else {
+            this.blogtrips[i].Like=false;
+          }
+         break;
+        }
+      }
+    }
+  })
+  }
+  getbloglike(value) {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/GetFavouriteBlogByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            'cache-control': 'no-cache',
+            'content-type': 'application/json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "hotellike";
+            error.func = "getblog";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+            throw new Error(error)
+          }
+          se.zone.run(() => {
+            se.arrbloglike = JSON.parse(body);
+            if (se.arrbloglike.msg) {
+              se.arrbloglike = [];
+            }
+            if (value == 0) {
+              let loadtype = se.gf.getParams('seemoreblog');
+              if(loadtype==1){
+                se.getblogtrips();
+              }else{
+                se.getNewsBlog();
+              }
+              
+            } else {
+              se.bindItemLike(se.arrbloglike);
+            }
+          });
+        });
+      }else{
+        //Trường hợp không login mà xem blog thì vẫn cho load
+        let loadtype = se.gf.getParams('seemoreblog');
+        if(loadtype==2){
+          se.getNewsBlog();
+        }
+      }
+    });
+  }
+
+  getNewsBlog() {
+    var se = this;
+    var options = {
+      method: 'GET',
+      url: C.urls.baseUrl.urlBlog + '/GetNewsBlog?pageIndex=' + se.page + '&pageSize=10'+ (se.memberid ? '&memberid='+se.memberid : ''),
+      timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+      headers:
+      {
+      }
+    };
+    request(options, function (error, response, body) {
+      if (response.statusCode != 200) {
+        var objError = {
+          page: "main",
+          func: "getNewsBlog",
+          message: response.statusMessage,
+          content: response.body,
+          param: JSON.stringify(options),
+          type: "warning"
+        };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page = "main";
+        error.func = "getNewsBlog";
+        error.param = JSON.stringify(options),
+          C.writeErrorLog(error);
+      }
+      se.zone.run(() => {
+        var listBlogtemp = JSON.parse(body);
+        se.regionnamesuggest = "Cẩm nang du lịch";
+        for (let i = 0; i < listBlogtemp.length; i++) {
+          listBlogtemp[i].Date = moment(listBlogtemp[i].Date).format('DD/MM/YYYY');
+        }
+        if (se.arrbloglike && se.arrbloglike.length>0) {
+          var itemblog;
+          for (let i = 0; i < listBlogtemp.length; i++) {
+            itemblog={avatar: listBlogtemp[i].Avatar,date: listBlogtemp[i].Date,id: listBlogtemp[i].id,title: listBlogtemp[i].Title,url: listBlogtemp[i].Url,Like:false}
+            for (let j = 0; j < se.arrbloglike.length; j++) {
+              if (se.arrbloglike[j].id==listBlogtemp[i].id) {
+                itemblog={avatar: listBlogtemp[i].Avatar,date: listBlogtemp[i].Date,id: listBlogtemp[i].id,title: listBlogtemp[i].Title,url: listBlogtemp[i].Url,Like:true};
+                break;
+              }
+            }
+            if(!se.checkExistsItemInArray(se.blogtrips, itemblog,3)){
+              se.blogtrips.push(itemblog);
+            }
+            
+          }
+        }
+        else{
+          for (let i = 0; i < listBlogtemp.length; i++) {
+            itemblog={avatar: listBlogtemp[i].Avatar,date: listBlogtemp[i].Date,id: listBlogtemp[i].id,title: listBlogtemp[i].Title,url: listBlogtemp[i].Url,Like:false}
+            if(!se.checkExistsItemInArray(se.blogtrips, itemblog,3)){
+              se.blogtrips.push(itemblog);
+            }
+          }
+        }
+       
+      })
+      if(se._infiniteScroll){
+        se._infiniteScroll.target.complete();
+      }
+
+    });
+  }
+
+  /**
+   * 
+   * @param arrays mảng kiểm tra trùng
+   * @param item item kiểm tra
+   * @param type loại 1 - topdeal, 2 - region, 3 - mood, 4 - blog
+   */
+  checkExistsItemInArray(arrays:any,item:any,type:any){
+    var res = false;
+    if(type==1 || type ==3 || type==2)//hoteldeal || mood
+    {
+      res = arrays.some(r => r.id == item.id);
+    }
+    if(type==4)//blog
+    {
+      res = arrays.some(r => r.Id == item.Id);
+    }
+    
+    return res;
+  }
+
+  bindItemLike(listLike) {
+    var se = this;
+    if(listLike && listLike.length >0){
+      se.blogtrips.forEach(element => {
+        var itemlikemap = listLike.filter((item) => { return item.id == element.id });
+        if (itemlikemap && itemlikemap.length > 0) {
+          se.zone.run(() => {
+            element.Like = true;
+          })
+        }
+        else {
+          se.zone.run(() => {
+            element.Like = false;
+          })
+        }
+      });
+    }
+  }
+  likeItemblog(id) {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        se.getbloglikelocal(id,1);
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/AddFavouriteBlog',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            authorization: text
+          },
+          body: { postId: id },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "hotel-list",
+              func: "likeItem",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning",
+              param: JSON.stringify(options)
+            };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "hotel-list";
+            error.func = "likeItem";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+          };
+          // se.zone.run(() => se.getbloglike(1));
+        });
+
+      }
+      else {
+        se.valueGlobal.logingoback = 'TabPage';
+        se.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  unlikeItemblog(id) {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        se.getbloglikelocal(id,0);
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'POST',
+          url: C.urls.baseUrl.urlMobile + '/mobile/OliviaApis/RemoveFavouriteBlogByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+          headers:
+          {
+            authorization: text
+          },
+          body: { postId: id },
+          json: true
+        };
+
+        request(options, function (error, response, body) {
+          if (response.statusCode != 200) {
+            var objError = {
+              page: "blog",
+              func: "unlikeItem",
+              message: response.statusMessage,
+              content: response.body,
+              type: "warning",
+              param: JSON.stringify(options)
+            };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "blog";
+            error.func = "unlikeItem";
+            error.param = JSON.stringify(options);
+            C.writeErrorLog(error);
+          };
+          se.zone.run(() => se.getbloglike(1));
+
+          console.log(body);
+        });
+      }
+      else {
+        this.navCtrl.navigateForward('/login');
+      }
+    });
+  }
+  share(url) {
+    this.socialSharing.share(null, null, null, url).then(() => {
+      // Success!
+    }).catch(() => {
+      // Error!
+    });
+  }
+  goback() {
+    this.navCtrl.navigateBack(['/app/tabs/tab1']);
+  }
+  itemblogclick(item) {
+    this.valueGlobal.urlblog = item.url;
+    this.navCtrl.navigateForward('/blog/' + item.id);
+    //google analytic
+    this.gf.googleAnalytion('blog', 'Search', '');
+  }
+  doInfinite(infiniteScroll) {
+    var se = this;
+    setTimeout(() => {
+      se.page = se.page + 1;
+      se._infiniteScroll = infiniteScroll;
+      se.getbloglike(0);
+      //infiniteScroll.target.complete();
+    }, 10);
+  }
+  ionViewWillEnter() {
+    this.getbloglike(1);
+  }
+  change()
+  {
+    this.ischecksearchbar=!this.ischecksearchbar;
+  }
+  iconcancel()
+  {
+    this.ischecksearchbar=!this.ischecksearchbar;
+  }
+}

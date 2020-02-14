@@ -1,0 +1,153 @@
+import { Component, NgZone, ViewChild, OnInit } from '@angular/core';
+import { NavController, ModalController, AlertController,Platform } from '@ionic/angular';
+import { Booking, ValueGlobal, RoomInfo, Bookcombo } from '../providers/book-service';
+import { Storage } from '@ionic/storage';
+import { C } from '../providers/constants';
+import { GlobalFunction } from '../providers/globalfunction';
+import * as request from 'requestretry';
+import jwt_decode from 'jwt-decode';
+import * as moment from 'moment';
+/**
+ * Generated class for the FacilitiesPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-flightcomboreviews',
+  templateUrl: 'flightcomboreviews.html',
+  styleUrls: ['flightcomboreviews.scss'],
+})
+export class FlightComboReviewsPage implements OnInit{
+    Avatar; Name; Address; cin; cout; dur; room; nameroom; jsonroom;
+    roomnumber; adults; children; breakfast; PriceAvgPlusTAStr; ischeckpoint = false;
+    imgroom; roomtype; indexme; indexroom; cin1; cout1; point; price; ischeck = true; Pricepoint; Pricepointshow; roomcancel;
+    titlecombo;
+    listDeparture =[];
+    //listReturn =[];
+    de_departtime;de_departdatestr;
+    ar_departtime;ar_departdatestr;
+    de_flightpricetitle;ar_flightpricetitle;
+    loadflightpricedone = false;
+    paxtitle='';
+  constructor(public platform: Platform,public valueGlobal: ValueGlobal, public navCtrl: NavController, private Roomif: RoomInfo, public zone: NgZone,
+    public booking: Booking, public storage: Storage, public alertCtrl: AlertController, public value: ValueGlobal, public modalCtrl: ModalController, public gf: GlobalFunction,
+    public bookCombo: Bookcombo) {
+        this.Avatar = Roomif.imgHotel;
+        this.Name = booking.HotelName;
+        this.Address = Roomif.Address;
+        this.cin = booking.CheckInDate;
+        this.cout = booking.CheckOutDate;
+        this.dur = Roomif.dur;
+        this.roomnumber = Roomif.roomnumber;
+        this.adults = booking.Adults;
+        this.children = booking.Child;
+        this.roomtype = Roomif.roomtype;
+        //this.indexme = booking.indexmealtype;
+        //this.indexroom = booking.indexroom;
+        this.jsonroom = Roomif.jsonroom;
+        this.room = Roomif.arrroom;
+        var chuoicin = this.cin.split('-');
+        var chuoicout = this.cout.split('-');
+        this.cin = chuoicin[2] + "-" + chuoicin[1] + "-" + chuoicin[0];
+        this.cout = chuoicout[2] + "-" + chuoicout[1] + "-" + chuoicout[0];
+        this.nameroom = this.room[0].ClassName;
+        //this.roomcancel = this.room[0].MealTypeRates[this.indexme];
+        this.breakfast = this.bookCombo.ComboDetail.MealTypeName;
+        this.PriceAvgPlusTAStr = this.booking.cost.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+        this.value.flagreview = 1;
+        this.titlecombo = this.bookCombo.ComboDetail.ComboTitle;
+        if(this.adults >0){
+          this.paxtitle += this.adults + ' người lớn'
+        }
+        if(this.children >0){
+          this.paxtitle += ', '+this.children +' trẻ em'
+        }
+        this.storage.get('point').then(point => {
+          if (point) {
+            //point=500;
+            if (point > 0) {
+              this.Roomif.point = point;
+              this.point = point * 1000;
+              this.price = this.point.toLocaleString();
+              var tempprice = this.PriceAvgPlusTAStr.replace(/\./g, '').replace(/\,/g, '');
+              this.Pricepoint = tempprice - this.point;
+              this.Pricepointshow = this.Pricepoint.toLocaleString();
+              if (this.Pricepoint <= 0) {
+                this.ischeckpoint = true;
+                this.Pricepointshow = 0;
+              }
+            }
+          }
+        });
+        
+    }
+
+  ngOnInit(){
+    this.getdata();
+  }
+
+  goback(){
+    this.navCtrl.navigateBack('/hoteldetail/'+this.booking.HotelId);
+  }
+  getdata() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+            var text = "Bearer " + auth_token;
+            var options = {
+                method: 'GET',
+                url: C.urls.baseUrl.urlMobile + "/get-flight-for-olivia?apiToken=3b760e5dcf038878925b5613c32615ea3&departDate="+se.booking.CheckInDate+'&returnDate='+se.booking.CheckOutDate+'&departCode='+this.bookCombo.ComboDetail.comboDetail.departureCode+'&arrivalCode='+this.bookCombo.ComboDetail.arrivalCode+'&adult='+this.adults+'&child='+this.children+'&infant=0&FlagInt=false',
+                timeout: 180000, maxAttempts: 5, retryDelay: 2000,
+                headers: {
+                    apiToken: '3b760e5dcf038878925b5613c32615ea3',
+                  }
+              };
+              request(options, function (error, response, body) {
+                if(response.statusCode != 200){
+                  var objError ={
+                      page: "flightcomboreviews",
+                      func: "getdata",
+                      message : response.statusMessage,
+                      content : response.body,
+                      type: "warning",
+                      param: JSON.stringify(options)
+                    };
+                  C.writeErrorLog(objError);
+                }
+                if (error) {
+                  error.page="flightcomboreviews";
+                  error.func="loaddata";
+                  error.param = JSON.stringify(options);
+                  C.writeErrorLog(objError);
+                }
+                if(response.statusCode== 200){
+                  let jsondata = JSON.parse(body);
+                  se.zone.run(()=>{
+                    if(jsondata.depart[0] && jsondata.depart[0].flights.length >0){
+                        se.listDeparture.push(jsondata.depart[0].flights[0]);
+                        let de_date = new Date(jsondata.depart[0].flights[0].departTime);
+                        let de_date_landing = new Date(jsondata.depart[0].flights[0].landingTime);
+                        se.de_departtime = moment(de_date).format("HH") +':'+  moment(de_date).format("MM")+ ' → ' + moment(de_date_landing).format("HH")+ ':' + moment(de_date_landing).format("MM");
+                        se.de_departdatestr = "Đi thứ "+ new Date(jsondata.depart[0].flights[0].departTime).getDay().toString() +', ' + moment(new Date(jsondata.depart[0].flights[0].departTime)).format('DD-MM-YYYY') ;
+                        //if(se.bookCombo.ComboDetail)
+                    }
+
+                    if(jsondata.return[0] && jsondata.return[0].flights.length >0){
+                        se.listDeparture.push(jsondata.return[0].flights[0]);
+                        let ar_date = new Date(jsondata.return[0].flights[0].departTime);
+                        let ar_date_landing = new Date(jsondata.return[0].flights[0].landingTime);
+                        se.ar_departtime = moment(ar_date).format("HH") +':'+ moment(ar_date).format("MM")+ ' → ' + moment(ar_date_landing).format("HH")+ ':' + moment(ar_date_landing).format("MM");
+                        se.ar_departdatestr = "Về thứ "+ new Date(jsondata.return[0].flights[0].departTime).getDay().toString()+', ' + moment(new Date(jsondata.return[0].flights[0].departTime)).format('DD-MM-YYYY') ;
+                    }
+                    se.loadflightpricedone = true;
+                  })
+                 
+                }
+              })
+            }
+        })
+    
+  }
+}

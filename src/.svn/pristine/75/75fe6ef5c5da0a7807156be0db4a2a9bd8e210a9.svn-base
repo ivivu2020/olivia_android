@@ -1,0 +1,217 @@
+import { Component, ViewChildren, QueryList } from '@angular/core';
+import { Platform, IonRouterOutlet, ModalController, PopoverController, ActionSheetController, ToastController, NavController } from '@ionic/angular';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+import { Router } from '@angular/router';
+import { SearchHotel,Booking } from'./providers/book-service';
+import { GlobalFunction } from'./providers/globalfunction';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: 'app.component.html'
+})
+export class AppComponent {
+  // set up hardware back button event.
+  lastTimeBackPress = 0;
+  timePeriodToExit = 2000;
+
+  @ViewChildren(IonRouterOutlet) routerOutlets: QueryList<IonRouterOutlet>;
+  constructor(
+    private platform: Platform,
+    private splashScreen: SplashScreen,
+    private statusBar: StatusBar,
+    public modalCtrl: ModalController,
+    private popoverCtrl: PopoverController,
+    private actionSheetCtrl: ActionSheetController,
+    private router: Router,
+    private toast: ToastController,
+    private navCtrl: NavController,
+    public searchhotel: SearchHotel,
+    public gf: GlobalFunction,
+    public booking: Booking
+  ) {
+    this.initializeApp();
+
+    //this.backButtonEvent();
+  }
+
+  initializeApp() {
+    this.platform.ready().then(() => {
+      this.statusBar.styleDefault();
+      //this.splashScreen.hide();
+    });
+  }
+
+  backButtonEvent() {
+    //Xử lý nút back của dt
+    this.platform.ready().then(() => {
+      document.addEventListener("backbutton", async () => {
+        if (this.router.url.indexOf("tab1") != -1) {
+          const element = await this.modalCtrl.getTop();
+          if (element) {
+            element.dismiss();
+          } else {
+            navigator['app'].exitApp();
+          }
+        } else {
+          if (this.router.url.indexOf("hotellist") != -1 || this.router.url.indexOf("searchhotel") != -1) {
+            this.navCtrl.navigateBack('/');
+            
+          }
+          else if (this.router.url.indexOf("roompaymentdone") != -1) {
+            this.navCtrl.navigateBack('/');
+            
+          }
+          else if (this.router.url.indexOf("roompaymentdoneean") != -1) {
+            this.navCtrl.navigateBack('/');
+            
+          }
+          else if (this.router.url.indexOf("hoteldetail") != -1) {
+            const element = await this.modalCtrl.getTop();
+            if (element) {
+              element.dismiss();
+            } else {
+              if (this.searchhotel.rootPage == "mainpage" || this.searchhotel.rootPage == "topdeal"|| this.searchhotel.rootPage == "roompaymentselect-ean" || this.searchhotel.rootPage == "roomchoosebank") {
+                this.navCtrl.navigateBack('/');
+              }
+              else if(this.searchhotel.rootPage == "likepage"){
+                this.navCtrl.navigateBack(['/app/tabs/tab2/']);
+              }
+              else {
+                if (this.searchhotel.rootPage == "listpage") {
+                  this.navCtrl.navigateBack('/hotellist/false');
+                } else if (this.searchhotel.rootPage == "listmood") {
+                  let hotellistmoodparams = this.gf.getParams('hotellistmood')
+                  if (hotellistmoodparams) {
+                    this.navCtrl.navigateBack('/hotellistmood/' + hotellistmoodparams.moodid + '/' + hotellistmoodparams.title);
+                  } else {
+                    this.navCtrl.back();
+                  }
+
+                } else {
+                  this.navCtrl.navigateBack('/');
+                }
+              }
+            }
+          } else if (this.router.url.indexOf("hotelreviews") != -1
+            || this.router.url.indexOf("hoteldescription") != -1
+            || this.router.url.indexOf("policy") != -1
+            || this.router.url.indexOf("facilities") != -1
+            || this.router.url.indexOf("hotelroomdetail") != -1
+            || this.router.url.indexOf("occupancy") != -1){
+              this.navCtrl.back();
+          }
+          else if (this.router.url.indexOf("mytripbookingdetail") != -1){
+            this.navCtrl.navigateBack(['/app/tabs/tab3/']);
+            
+          }
+          else if (this.router.url.indexOf("tripweather") != -1
+          || this.router.url.indexOf("hotelnotes") != -1
+          || this.router.url.indexOf("hotelexpsnotes") != -1
+          || this.router.url.indexOf("tripweather") != -1
+          ) {
+              this.navCtrl.back();
+            
+          }else if(this.router.url.indexOf("tab2") != -1
+          || this.router.url.indexOf("tab3") != -1
+          || this.router.url.indexOf("tab4") != -1
+          || this.router.url.indexOf("tab5") != -1){
+            this.navCtrl.navigateBack('/');
+          }else if (this.router.url.indexOf("roomadddetails") != -1 ) {
+              this.navCtrl.navigateBack('roomdetailreview');
+              
+          }
+
+          else if (this.router.url.indexOf("roomadddetails-ean") != -1 ) {
+            this.navCtrl.navigateBack('roomdetailreview');
+            
+        }
+          else if(this.router.url.indexOf("roompaymentselect") != -1)
+          {
+            if (this.searchhotel.backPage=="roompaymentselect-ean") {
+              this.navCtrl.navigateBack('roomadddetails-ean');
+              
+            } else {
+              this.navCtrl.navigateBack('roomadddetails');
+              
+            }
+       
+          }
+          else if(this.router.url.indexOf("roompaymentlive") != -1)
+          {
+            if (this.searchhotel.backPage=="roompaymentselect-ean") {
+              this.navCtrl.navigateBack('roompaymentselect-ean');
+              
+            } else {
+              this.navCtrl.navigateBack('roompaymentselect');
+              
+            }
+          }
+
+          else if(this.router.url.indexOf("roompaymentbank") != -1)
+          {
+            if (this.searchhotel.backPage=="roompaymentselect-ean") {
+              this.navCtrl.navigateBack('roompaymentselect-ean');
+              
+            } else {
+              this.navCtrl.navigateBack('roompaymentselect');
+              
+            }
+          }
+
+          else if(this.router.url.indexOf("roompaymentatm") != -1)
+          {
+            if (this.searchhotel.backPage=="roompaymentselect-ean") {
+              this.navCtrl.navigateBack('roompaymentselect-ean');
+              
+            } else {
+              this.navCtrl.navigateBack('roompaymentselect');
+              
+            }
+          }
+          
+          else if (this.router.url.indexOf("roomdetailreview") != -1) {
+            this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+            
+          }
+          else if (this.router.url.indexOf("onepay") != -1) {
+            this.navCtrl.navigateBack('/hoteldetail/' + this.booking.HotelId);
+            
+          }
+          else if(this.router.url.indexOf('roomcancel')){
+            if(this.searchhotel.backPage == "roomdetailreview"){
+              this.navCtrl.navigateBack('/roomdetailreview');
+              
+            }else if(this.searchhotel.backPage == "roompaymentselect"){
+              this.navCtrl.navigateBack('/roompaymentselect');
+              
+            }
+            else if(this.searchhotel.backPage == "roompaymentselect-ean"){
+              this.navCtrl.navigateBack('/roompaymentselect-ean');
+              
+            }else if(this.searchhotel.backPage ="mytripbookingdetail"){
+              this.navCtrl.navigateBack('/mytripbookingdetail');
+            }
+          }
+          else if(this.router.url.indexOf("roompaymentbreakdow") != -1){
+            if(this.searchhotel.backPage == "roomdetailreview"){
+              this.navCtrl.navigateBack('/roomdetailreview');
+              
+            }else if(this.searchhotel.backPage == "roompaymentselect"){
+              this.navCtrl.navigateBack('/roompaymentselect');
+              
+            }
+            else if(this.searchhotel.backPage == "roompaymentselect-ean"){
+              this.navCtrl.navigateBack('/roompaymentselect-ean');
+              
+            }
+          }
+          else {
+            this.navCtrl.navigateBack('/');
+          }
+        }
+      })
+    })
+    
+}
+}

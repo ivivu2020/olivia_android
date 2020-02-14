@@ -1,0 +1,15 @@
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-combodone',
+  templateUrl: './combodone.page.html',
+  styleUrls: ['./combodone.page.scss'],
+})
+export class CombodonePage implements OnInit {
+
+  constructor() { }
+
+  ngOnInit() {
+  }
+
+}

@@ -1,0 +1,342 @@
+
+    
+    .segment-button.activated, .segment-button.segment-activated,.segment-button-checked {
+        border-color: #26bed6 !important;
+        opacity: 1;
+        color: #26bed6 !important;
+        text-transform: none;
+        font-size: 17px;
+    }
+    .segment-button {
+        text-transform: none !important;
+        font-size: 17px !important;
+    }
+
+    .first-content,.second-content{
+        padding: 11px;
+        font-size: 14px;
+    }
+    .div-split-color{
+        height: 7px;
+        background-color: #f2f2f2;
+    }
+    .div-wrapimg {
+        position: relative;
+        height:104px;
+        width: 104px;
+        overflow: hidden;
+        border-radius: 5px;
+    }
+    .img-avatar {
+        left: 0;
+        bottom: 0;
+        object-fit: contain;
+        max-width: 300px;
+        max-height: 200px;
+    }
+    .header-title{
+        padding: 10px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .header-arrow{
+        margin: 3px 11px;
+    }
+    .label-badge{
+        color: #000000;
+        font-size: 12px;
+        font-weight:400;
+        margin-left: 3px;
+        padding-top: 3px;
+        //background-color: #26bed6;
+      }
+      .align-center{
+          text-align: center;
+      }
+    .badgescss {
+        position: absolute;
+        color: #ffffff;
+        z-index: 10;
+        margin-left: 84%;
+        margin-top: -10%;
+        background: rgba(0, 0, 0, 0.5);
+        border: 0.5px solid rgba(255, 255, 255, 0.5);
+        box-sizing: border-box;
+        font-weight: 100;
+        border-radius: 10px;
+        display: block;
+        padding: 4px 8px;
+    }
+    .badge-md {
+        border-radius: 9px;
+        color: #fff;
+        background-color: #26bed6;
+    }
+    .room-class-name {
+        font-size: 18px;
+    }
+    .bkg-id{
+        padding-left: 4px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .row-bkg-id{
+        align-items: center;
+    }
+    h2{
+        margin: 0;
+    }
+    .cls-avg-point{
+        margin: 8px 0px;
+    }
+    .support-text{
+        text-align: right;
+    }
+    .div-split{
+        border-bottom: solid 1px #dedede;
+        opacity: 0.6;
+        margin: 11px 5px 11px 5px;
+    }
+    .col-icon{
+        padding: 3px 0px;
+    }
+    .col-text{
+        padding: 2px 0px;
+    }
+    .col-address{
+        padding: 0;
+    }
+    .hidden-text{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .div-date {
+        border-right: solid 1px #cdcdcd;
+        font-size: 14px;
+        color: #000000;
+        font-weight: bold;
+        margin-top: 8px;
+        padding-top: 0;
+    }
+    .div-date-cout {
+        font-size: 14px;
+        color: #000000;
+        font-weight: bold;
+        margin-top: 8px;
+        padding-top: 0;
+    }
+    .icon-arrow-right{
+        text-align: right;
+        font-size: 24px;
+        padding-right: 0 5px;
+    }
+    .col-nopd-top{
+        padding: 0 5px;
+        align-self: center;
+    }
+    .col-normaltext-nopd-top{
+        padding: 0 5px;
+        align-self: center;
+    }
+    .room-name{
+        font-size: 18px;
+        font-weight: 500;
+    }
+    .btn-next
+    {
+        border-color: #f79221;
+        color: #ffffff;
+        background: #f79221;
+        width: 100%;
+        height: 48px;
+        text-transform: none;
+        font-size: 17px;
+        font-weight: normal;
+    }
+    .trip-empty{
+        padding: 0;
+    }
+    .img-trip-empty{
+        height: 320px;
+        text-align: center;
+    }
+    .img-empty{
+        padding-top: 20%;
+    }
+    .text-trip-empty{
+        text-align: center;
+        color: #bdbdbd;
+    }
+    .button-trip-empty{
+        text-align: center;
+    }
+    .btn-trip-empty{
+        border-color: #f79221;
+        color: #ffffff;
+        background: #f79221;
+        width: 90%;
+        height: 48px;
+
+        text-transform: none;
+        font-size: 17px;
+        font-weight: normal;
+    }
+    .history-trip{
+        align-self: center;
+        margin-right: 11px;
+    }
+    
+    //////////////combo
+    .label-comboname{
+        white-space: normal;
+        padding-left: 5px;
+        font-size: 18px;
+        font-weight: 500;
+    }
+    .label-flight-start, .label-flight-return{
+        font-size: 12px;
+        color:#4f4f4f;
+    }
+    .flight-start-code{
+        text-align: center;
+        font-weight: 500;
+    }
+    .div-flight-label{
+        font-size: 12px;
+        color:#4f4f4f;
+    }
+    .col-nopadding-left{
+        padding: 5px 5px 5px 0px;
+    }
+    .combo-info{
+        font-size: 12px;
+    }
+    .combo-departure-date{
+        font-weight: bold;
+    }
+    .flight-from,.flight-numner{
+        color: #4f4f4f;
+    }
+
+//Style triphistory
+    .card-background-page-history-trips {
+        padding: 11px;
+
+    .div-wrapimg {
+        position: relative;
+        height:157px;
+        width: 104px;
+        overflow: hidden;
+        border-radius: 5px;
+    }
+    img {
+        left: 0;
+        bottom: 0;
+        object-fit: contain;
+        //max-width: 300px;
+        //max-height: 200px;
+    }
+    .header-title{
+        padding: 12px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        padding-right: 15%;
+    }
+    .header-arrow{
+        margin: 3px 11px;
+    }
+    .label-badge{
+        color: #000000;
+        font-size: 12px;
+        font-weight:400;
+        margin-left: 3px;
+        //background-color: #26bed6;
+    }
+    .badgescss {
+        position: absolute;
+        color: #ffffff;
+        z-index: 10;
+        margin-left: 84%;
+        margin-top: -10%;
+        background: rgba(0, 0, 0, 0.5);
+        border: 0.5px solid rgba(255, 255, 255, 0.5);
+        box-sizing: border-box;
+        font-weight: 100;
+        display: block;
+    }
+    .badge-md {
+        border-radius: 9px;
+        color: #fff;
+        background-color: #26bed6;
+    }
+    .room-class-name {
+        font-size: 16px;
+        color: #003c71;
+        line-height: 20px;
+    }
+    
+    .row-bkg-id{
+        align-items: center;
+        padding-left: 5px;
+    }
+    h2{
+        margin: 0;
+    }
+    .cls-avg-point{
+        margin: 8px 0px;
+    }
+    .support-text{
+        text-align: right;
+    }
+    .div-split{
+        border-bottom: solid 1px #dedede;
+        opacity: 0.6;
+        margin: 11px 5px 11px 5px;
+    }
+    }
+
+    .card-background-page-request-trips{
+        padding: 11px;
+    }
+    .header-md::after{
+        background-image: none !important;
+    }
+    .header-ios::after{
+        background-image: none !important;
+    }
+    .div-request-button{
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }
+    .col-img-historytrip{
+        padding: 5px 0;
+    }
+
+    @media (min-width:300px) and (max-width: 359px) {
+        .col-mytrip-text-description,.col-historytrip-text-description,.col-requestrip-text-description{
+          left: 12px;
+        }
+        .btn-next{
+            font-size: 14px;
+            height: 48px;
+        }
+        .col-text-right{
+            font-size: 13px;
+        }
+        
+      }
+      :host{
+        --ion-color-primary:#26bed6;
+    }
+    ion-list{
+        padding: 0;
+    }
+    .div-label-date{
+        font-size: 12px;
+        color: #4f4f4f;
+    }
+

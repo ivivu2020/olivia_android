@@ -1,0 +1,165 @@
+import { Bookcombo } from './../providers/book-service';
+import { Component, OnInit } from '@angular/core';
+import { ModalController } from '@ionic/angular';
+
+@Component({
+  selector: 'app-combocarchangeplace',
+  templateUrl: './combocarchangeplace.page.html',
+  styleUrls: ['./combocarchangeplace.page.scss'],
+})
+export class CombocarchangeplacePage implements OnInit {
+  depPlace; retPlace;isDepart
+  public tabplace: string = "placed";
+  arrplaced = [];
+  arrplacet = [];
+  activeTap=1;
+  placed=[];
+  placet=[];
+  // arrplaceretd = [];
+  // arrplacerett = [];
+  constructor(public bookCombo: Bookcombo, public modalCtrl: ModalController) {
+
+    this.depPlace = this.bookCombo.ComboDetail.comboDetail.departurePlace;
+    this.retPlace = this.bookCombo.ComboDetail.arrivalName;
+    this.isDepart=this.bookCombo.isDepart;
+    if (this.isDepart=='0') {
+      this.arrplaced = this.bookCombo.arrplacedepd;
+      this.arrplacet = this.bookCombo.arrplacedept;
+      for (var i = 0; i < this.arrplaced.length; i++) {
+        if (this.bookCombo.idpointd) {
+          if (this.bookCombo.idpointd== this.arrplaced[i].id) {
+            var ischeck=true;
+            this.arrplaced[i].ischeck=ischeck;
+            this.placed.push(this.arrplaced[i]);
+          }
+          else{
+            var ischeck=false;
+            this.arrplaced[i].ischeck=ischeck;
+          }
+        }
+        else
+        {
+          if (i==0) {
+            var ischeck=true;
+            this.arrplaced[i].ischeck=ischeck;
+          }
+          else{
+            var ischeck=false;
+            this.arrplaced[i].ischeck=ischeck;
+          }
+        }
+      
+      
+      }
+      for (var i = 0; i < this.arrplacet.length; i++) {
+        if (this.bookCombo.idpointt) {
+          if (this.bookCombo.idpointd== this.arrplacet[i].id) {
+            var ischeck=true;
+            this.arrplacet[i].ischeck=ischeck;
+            this.placed.push(this.arrplacet[i]);
+          }
+          else{
+            var ischeck=false;
+            this.arrplacet[i].ischeck=ischeck;
+          }
+        }
+        else
+        {
+          if (i==0) {
+            var ischeck=true;
+            this.arrplacet[i].ischeck=ischeck;
+          }
+          else {
+            var ischeck=false;
+            this.arrplacet[i].ischeck=ischeck;
+          }
+        }
+      
+      
+      }
+    }
+    else{
+      this.arrplaced = this.bookCombo.arrplaceretd;
+      this.arrplacet = this.bookCombo.arrplacerett;
+      for (var i = 0; i < this.arrplaced.length; i++) {
+        if (this.bookCombo.idpointd) {
+          if (this.bookCombo.idpointd== this.arrplaced[i].id) {
+            var ischeck=true;
+            this.arrplaced[i].ischeck=ischeck;
+            this.placed.push(this.arrplaced[i]);
+          }
+          else{
+            var ischeck=false;
+            this.arrplaced[i].ischeck=ischeck;
+          }
+        }
+        else
+        {
+          if (i==0) {
+            var ischeck=true;
+            this.arrplaced[i].ischeck=ischeck;
+          }
+          else{
+            var ischeck=false;
+            this.arrplaced[i].ischeck=ischeck;
+          }
+        }
+      
+      
+      }
+      for (var i = 0; i < this.arrplacet.length; i++) {
+        if (this.bookCombo.idpointt) {
+          if (this.bookCombo.idpointd== this.arrplacet[i].id) {
+            var ischeck=true;
+            this.arrplacet[i].ischeck=ischeck;
+            this.placed.push(this.arrplacet[i]);
+          }
+          else{
+            var ischeck=false;
+            this.arrplacet[i].ischeck=ischeck;
+          }
+        }
+        else
+        {
+          if (i==0) {
+            var ischeck=true;
+            this.arrplacet[i].ischeck=ischeck;
+          }
+          else {
+            var ischeck=false;
+            this.arrplacet[i].ischeck=ischeck;
+          }
+        }
+      
+      
+      }
+    }
+  }
+  //Chọn tap
+  Selectdepart()
+  {
+    this.activeTap=1;
+  }
+  Selectreturn()
+  {
+    this.activeTap=2;
+  }
+  //chọn nơi đón
+  itemrddep(item)
+  {
+    this.placed = [];
+    this.placed.push(item);
+  }
+  //chọn nơi trả
+  itemrdret(item)
+  {
+    this.placet = [];
+    this.placet.push(item);
+  }
+  ngOnInit() {
+  }
+  goback() {
+    this.modalCtrl.dismiss({ isdepart: this.isDepart, placed: this.placed,placet: this.placet });
+  }
+
+}

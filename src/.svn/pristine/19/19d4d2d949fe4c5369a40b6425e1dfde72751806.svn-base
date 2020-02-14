@@ -1,0 +1,155 @@
+// http://ionicframework.com/docs/theming/
+@import '~@ionic/angular/css/core.css';
+@import '~@ionic/angular/css/normalize.css';
+@import '~@ionic/angular/css/structure.css';
+@import '~@ionic/angular/css/typography.css';
+@import '~@ionic/angular/css/display.css';
+@import '~@ionic/angular/css/padding.css';
+@import '~@ionic/angular/css/float-elements.css';
+@import '~@ionic/angular/css/text-alignment.css';
+@import '~@ionic/angular/css/text-transformation.css';
+@import '~@ionic/angular/css/flex-utils.css';
+
+:root{
+    --ion-row-width:100%;
+}
+
+.button {
+    height: 48px;
+    border-radius: 28px;
+    font-size: 18px;
+    margin: 8px;
+}
+
+label > p{
+    margin: 2px 0;
+    line-height: 20px;
+}
+.item-inner{
+    padding-inline-end: 0;
+}
+
+::ng-deep {
+    .item-inner{
+        border-style: none;
+    }
+    .text-loading{
+        text-align: center;
+    }
+}
+
+.loading-wrapper.sc-ion-loading-ios {
+    padding-top: 0 !important; 
+    padding-bottom: 0 !important;
+    height: 80px !important;
+}
+
+.loading-wrapper.sc-ion-loading-md {
+    padding-top: 0 !important; 
+    padding-bottom: 0 !important;
+    height: 80px !important;
+}
+// ion-range.range-review div.range-bar{
+//     --bar-background: #26bed6;
+//     --ion-color-primary: #ccc;
+
+
+.body{
+    background: #003C71;
+    background-image: url('./assets/logo_splash.svg');
+    margin: 0 auto;
+    width: 200px;
+    height: 160px;
+    position: relative;
+    background-repeat: no-repeat;
+}
+
+
+:host{
+    --ion-color-primary:#26bed6;
+}
+
+ion-toolbar{
+    text-align: center;
+}
+    button:focus{
+    outline:none;
+   }
+
+
+    --background-activated{
+        background-image: url('./assets/imgs/ic_check.svg');
+        background-repeat: no-repeat;
+    }
+    ::-webkit-scrollbar { 
+        display: none; 
+    }
+
+    .button {
+        height: 48px !important;
+        font-size: 22px !important;
+        border-radius: 6px !important;
+        text-transform: none !important;
+        font-weight: bold !important;
+    }
+    
+    ion-footer button{
+        margin: 16px 0;
+    }
+
+    ion-header{
+        background-color: #ffffff;
+        -moz-box-shadow:    0px 0px 2px 0px #dedede;
+        -webkit-box-shadow: 0px 0px 2px 0px #dedede;
+        box-shadow: 0px 0px 2px 0px #dedede;
+    }
+    ion-footer{
+        -moz-box-shadow:    2px 4px 5px 3px #dedede;
+        -webkit-box-shadow: 2px 4px 5px 3px #dedede;
+        box-shadow:         2px 4px 5px 3px #dedede;
+    }
+    ion-title{
+        font-size:18px !important;
+    }
+
+    .header-height{
+        height: 56px;
+    }
+    .header-title{
+        padding-top: 11px;font-size: 18px;font-weight: bold;
+    }
+    .header-img-twoline{
+        height: 48px; padding: 8px;margin-top: -8px;margin-left:-8px
+    }
+    .header-img-oneline{
+        height: 48px; padding: 8px;margin-top: 0px;margin-left:-8px
+    }
+    .header-md:after{
+         height: 0px;
+    }
+    scroll-bar-indicator { display: none; }
+    //style calendar
+    ion-calendar-modal ion-title{
+        position: absolute;
+        text-align: center;
+        width: 60%;
+        top: 14px;
+        font-size: 20px !important;
+    }
+    ion-calendar-modal .sc-ion-buttons-md-s ion-button{
+        font-size: 18px !important;
+        font-weight: normal !important;
+    }
+    //hide scroll
+    .slide2-scroll {
+        overflow-x: scroll;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: none;  // IE 10+
+        scrollbar-width: none;  // Firefox
+        scroll-behavior: smooth;
+    
+        &::-webkit-scrollbar {
+          display: none; // Safari and Chrome
+        }
+    }
+    //////////

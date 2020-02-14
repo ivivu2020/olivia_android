@@ -1,0 +1,32 @@
+<ion-header>
+          <ion-toolbar style="min-height: 0px;text-align: center">
+                <ion-row>
+                <ion-col style="text-align: center;height: 48px;">
+                    <div style="align-self: center" >
+                    <div style="position: absolute;height: 48px;width: 48px;top: 8px;" (click)="goback()">
+                        <ion-icon color="dark-tint" style="font-size: 2em;" name="arrow-back" class="card-title"></ion-icon>
+                    </div>
+                    <div style="padding-top: 6px;font-size: 20px;font-weight: bold;"><label class="text-title">Thời tiết {{CityName}}</label></div>
+                    </div>
+                </ion-col>
+                </ion-row>
+            </ion-toolbar>
+          
+</ion-header>
+
+<ion-content >
+    <div class="weather-content">
+        <ion-list *ngFor="let record of weatherData">
+            <ion-row>
+                <ion-col size="10">
+                    <div class="weather-datestr">{{record.datetimeStr}}</div>
+                    <div class="weather-tempstr">{{record.tempStr}}</div>
+                </ion-col>
+                <ion-col size="2" class="weather-img">
+                    <img src="{{record.weather.iconUrl}}">
+                </ion-col>
+            </ion-row>
+            <hr>
+        </ion-list>
+    </div>
+</ion-content>

@@ -1,0 +1,110 @@
+import { Component, ViewChildren, QueryList } from '@angular/core';
+import { Platform, IonRouterOutlet, ModalController, PopoverController, ActionSheetController, ToastController, NavController, Events } from '@ionic/angular';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+import { Router } from '@angular/router';
+import { SearchHotel,Booking, ValueGlobal } from'./providers/book-service';
+import { GlobalFunction } from'./providers/globalfunction';
+import { C } from './providers/constants';
+import { Network } from '@ionic-native/network/ngx';
+import { FCM } from '@ionic-native/fcm/ngx';
+import { Storage } from '@ionic/storage';
+import { FirebaseDynamicLinks } from '@ionic-native/firebase-dynamic-links/ngx';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: 'app.component.html'
+})
+export class AppComponent {
+  // set up hardware back button event.
+  lastTimeBackPress = 0;
+  timePeriodToExit = 2000;
+  disconnectSubscription:any;
+  connectSubscription:any;
+  @ViewChildren(IonRouterOutlet) routerOutlets: QueryList<IonRouterOutlet>;
+  constructor(
+    private platform: Platform,
+    private splashScreen: SplashScreen,
+    private statusBar: StatusBar,
+    public modalCtrl: ModalController,
+    private popoverCtrl: PopoverController,
+    private actionSheetCtrl: ActionSheetController,
+    private router: Router,
+    private toast: ToastController,
+    private navCtrl: NavController,
+    public searchhotel: SearchHotel,
+    public gf: GlobalFunction,
+    public booking: Booking,
+    public network: Network,
+    public fcm: FCM,
+    private storage: Storage,
+    public valueGlobal: ValueGlobal,
+    private firebaseDynamicLinks: FirebaseDynamicLinks
+  ) {
+    this.initializeApp();
+
+    //this.backButtonEvent();
+  }
+
+  initializeApp() {
+    this.platform.ready().then(() => {
+      this.statusBar.hide();
+     
+      //Start log with UXCam 
+      //UXCam.startWithKey(C.UXCam_Key);
+      this.disconnectSubscription = this.network.onDisconnect().subscribe(() => {
+        //this.presentAlert(); //some alert msg that netwk has gone 
+        this.gf.setNetworkStatus(false);
+        this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      });
+  
+      this.connectSubscription = this.network.onConnect().subscribe(() => {
+        
+        setTimeout(() => {
+          if (this.network.type) {
+            this.gf.setNetworkStatus(true);
+          }
+        }, 3000);
+      });
+      //Dynamiclink
+      this.firebaseDynamicLinks.onDynamicLink().subscribe((res:any)=>{
+        if(res && res.deepLink){
+          var arrLink = res.deepLink.split('?');
+          if(arrLink && arrLink.length >1){
+            var id = arrLink[1];
+            this.navCtrl.navigateForward(['/app/tabs/hoteldetail/' + id]);
+          }
+        }
+      })
+      
+      this.fcm.onNotification().subscribe( (data:any) => {
+        //chuyển qua tab mytrip
+        if(data && data.bookingCode){
+          this.gf.setParams(data.bookingCode,'notifiBookingCode');
+          this.navCtrl.navigateForward(['/app/tabs/tab3']);
+        }
+        this.valueGlobal.countNotifi++;
+      });
+      //clear cache khi start app
+      this.storage.remove('blogtripdefault');
+      this.storage.remove('listblogdefault');
+      this.storage.remove('listtopdealdefault');
+      this.storage.remove('regionnamesuggest');
+      this.storage.remove('deviceToken');
+      this.valueGlobal.countNotifi=0;
+    });
+    
+  }
+  /**
+   * Hàm show cảnh báo
+   */
+  async presentToastNotifi(msg) {
+    const toast = await this.toast.create({
+      message: msg,
+      duration: 3000,
+      position: 'top',
+    });
+    toast.present();
+  }
+
+}

@@ -1,0 +1,35 @@
+<ion-content>
+  <div class="center">
+    <div>
+      <ion-card-title style="text-align: center">
+        <img style="height: 90px;" src="./assets/logo/logo.svg" />
+      </ion-card-title>
+      <div class="div-go-back">
+        <ion-icon (click)="goback()" style="font-size: 2em;float: left;" name="arrow-back" class="card-title">
+        </ion-icon>
+      </div>
+    </div>
+    <ion-grid>
+      <ion-row justify-content-around>
+        <ion-col col-sm-6 col-md-6 col-lg-4 col-xl-3 align-self-center>
+          <form padding="true" [formGroup]="loginData" style="margin-top: 40px" (ngSubmit)="logintk()">
+              <ion-item style="--padding-start: 0px">
+              <ion-label style="color:white" position="floating">Nhập bằng email hoặc số điện thoại</ion-label>
+              <ion-input clearInput type="text" style="color:white" formControlName="email"></ion-input>
+            </ion-item>
+            <ion-item style="--padding-start: 0px">
+              <ion-label style="color:white" position="floating">Mật khẩu</ion-label>
+              <ion-input clearInput type="password" style="color:white" formControlName="password"></ion-input>
+            </ion-item>
+            <div style="text-align:center">
+              <ion-button style="text-transform: none;font-weight: 400;margin-top: 30px" shape="round" fill="outline"
+                (click)="logintk()" class="button text-button">Đăng
+                nhập</ion-button>
+            </div>
+          </form>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+</ion-content>

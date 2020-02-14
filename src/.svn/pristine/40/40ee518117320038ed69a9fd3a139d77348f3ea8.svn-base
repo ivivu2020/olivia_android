@@ -1,0 +1,143 @@
+
+<ion-content *ngFor="let objectRoom of roomdetailarr">
+    <img class="img-hotel-detail" style="width: 100%;" [src]="imgurl">
+    <div class="hotel-room-detail-content">
+        <h2 class="room-class-name">{{objectRoom.ClassName}}</h2>
+        <!-- Số khách -->
+        <ion-row>
+          <ion-col size="1" class="no-padding room-class-icon">
+            <img class="icon-detail-fix" src="./assets/iocnsearch/ic_people.svg">
+          </ion-col>
+          <ion-col class="p-top-8">
+            <span *ngIf="objectRoom.Rooms[0].MaxAdults != objectRoom.Rooms[0].IncludeAdults" class="text-room-class-description">{{objectRoom.Rooms[0].MaxAdults}} người lớn | {{objectRoom.Rooms[0].IncludeAdults}} người lớn & {{objectRoom.Rooms[0].MaxChils}} trẻ em</span>
+            <span *ngIf="objectRoom.Rooms[0].MaxAdults == objectRoom.Rooms[0].IncludeAdults" class="text-room-class-description">{{objectRoom.Rooms[0].MaxAdults}} người lớn & {{objectRoom.Rooms[0].MaxPax - objectRoom.Rooms[0].MaxAdults}} trẻ em</span>
+          </ion-col>
+        </ion-row>
+        
+        <ion-row >
+            <ion-col style="padding:0">
+            <ion-row>
+                <ion-col size="1" class="no-padding room-class-icon">
+                <img class="icon-detail-fix" src="./assets/ic_hoteldetail/ic_bed.svg">
+                </ion-col>
+                <ion-col class="p-top-8" *ngIf="objectRoom.Rooms[0].RoomInfomations.SubRoomHotels && objectRoom.Rooms[0].RoomInfomations.SubRoomHotels.length > 0">
+                    {{objectRoom.Rooms[0].RoomInfomations.SubRoomHotels[0].Quantity}} phòng ngủ
+                </ion-col>
+                <ion-col class="p-top-8" *ngIf="objectRoom.Rooms[0].RoomInfomations.SubRoomHotels && objectRoom.Rooms[0].RoomInfomations.SubRoomHotels.length == 0">
+                    {{objectRoom.Rooms[0].MaxPax/objectRoom.Rooms[0].MaxAdults}} phòng ngủ
+                </ion-col>
+            </ion-row>
+            <div class="div-bedroom-display" *ngIf="objectRoom.Rooms[0].RoomInfomations && objectRoom.Rooms[0].RoomInfomations.BedSummaryDisplaysMobile && objectRoom.Rooms[0].RoomInfomations.BedSummaryDisplaysMobile.length >0">
+                <ion-row *ngFor="let beddisplay of objectRoom.Rooms[0].RoomInfomations.BedSummaryDisplaysMobile" class="p-left-28">
+                    <ion-col size="1" class="room-class-icon">
+                        <ion-icon  class="icon-detail-check" name="checkmark-circle-outline"></ion-icon>
+                    </ion-col>
+                    <ion-col>
+                        <ion-label class="text-hotel-description">{{ beddisplay }}</ion-label>
+                        <div class="text-or"><span>Hoặc</span></div>
+                    </ion-col>
+                </ion-row>
+            </div>
+            </ion-col>
+        </ion-row>
+        <div>
+            <ion-row class="row-title">
+                <span style="font-size:16px;font-weight: bold">Tiện ích khách sạn</span>
+            </ion-row>
+            <!-- Hướng -->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.Direction">
+                <ion-col size="1" class="no-padding room-class-icon">
+                <img class="icon-detail-fix" src="./assets/ic_hoteldetail/ic_view.svg">
+                </ion-col>
+                <ion-col class="p-top-8">
+                Hướng {{objectRoom.Rooms[0].RoomInfomations.Direction}}
+                </ion-col>
+            </ion-row>
+            <!-- Phòng cửa sổ -->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.WindowOpen">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_hoteldetail/ic_view.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Phòng cửa sổ mở
+                    </ion-col>
+            </ion-row>
+            <!-- Diện tích -->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.Acreage">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_hotel.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    {{objectRoom.Rooms[0].RoomInfomations.Acreage}}m2
+                    </ion-col>
+                </ion-row>
+          <!-- Không hút thuốc -->
+            <ion-row *ngIf="!objectRoom.Rooms[0].RoomInfomations.AllowSmoke">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_nonsmoking.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Phòng không hút thuốc
+                    </ion-col>
+            </ion-row>
+            <!-- Ban công -->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.Balcony">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_balcone.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Ban công
+                    </ion-col>
+            </ion-row>
+            <!-- Bồn tắm & vòi sen-->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.BathTub && objectRoom.Rooms[0].RoomInfomations.Shower">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_shower.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Bồn tắm & vòi hoa sen
+                    </ion-col>
+            </ion-row>
+            <!-- Bồn tắm -->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.BathTub && !objectRoom.Rooms[0].RoomInfomations.Shower">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_bathtub.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Bồn tắm
+                    </ion-col>
+            </ion-row>
+            <!-- Vòi sen -->
+            <ion-row *ngIf="!objectRoom.Rooms[0].RoomInfomations.BathTub && objectRoom.Rooms[0].RoomInfomations.Shower">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_shower.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Vòi hoa sen
+                    </ion-col>
+            </ion-row>
+            <!-- Bể bơi -->
+            <ion-row *ngIf="objectRoom.Rooms[0].RoomInfomations.Pools">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                    <img class="icon-detail-fix" src="./assets/ic_facility/ic_pool.svg">
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    Bể bơi
+                    </ion-col>
+            </ion-row>
+            <!-- Facilitys -->
+            <ion-row *ngFor="let fac of objectRoom.Rooms[0].RoomInfomations.Facilitys">
+                    <ion-col size="1" class="no-padding room-class-icon">
+                        <ion-icon  class="icon-detail-check" name="checkmark"></ion-icon>
+                    </ion-col>
+                    <ion-col class="p-top-8">
+                    {{fac.Name}}
+                    </ion-col>
+            </ion-row>
+        </div>
+    </div>
+    
+</ion-content>
+<ion-footer style="text-align: center;background: #ffffff">
+        <button ion-button round outline class="button btn-cancel" (click)="goback()">Đóng</button>
+</ion-footer>

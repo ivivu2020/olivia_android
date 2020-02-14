@@ -1,0 +1,1226 @@
+import { Component, NgZone,ViewChild,OnInit, Input } from '@angular/core';
+import { NavController, ModalController,AlertController,Platform,IonContent,IonSlides, LoadingController } from '@ionic/angular';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import { ValueGlobal, SearchHotel } from '../providers/book-service';
+import { GlobalFunction } from './../providers/globalfunction';
+import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
+import { InAppBrowserOptions } from '@ionic-native/in-app-browser';
+import { NetworkProvider } from '../network-provider.service';
+import { Network } from '@ionic-native/network/ngx';
+import { UserReviewsPage } from '../userreviews/userreviews';
+import { OverlayEventDetail } from '@ionic/core';
+import { UserFeedBackPage } from '../userfeedback/userfeedback';
+/**
+ * Generated class for the MytripsPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-tab3',
+  templateUrl: 'tab3.page.html',
+  styleUrls: ['./tab3.page.scss'],
+})
+export class Tab3Page implements OnInit{
+  @Input('myScrollVanish') scrollArea;
+  @ViewChild(IonContent) content: IonContent;
+  @ViewChild('mySlider') slider: IonSlides;
+    public listMyTrips = [];
+    public listHistoryTrips= [];
+    public listRequestTrips = [];
+    public listAlltrips = [];
+    public listSupport = [];
+    public currentTrip = 0;
+    public currentRQTrip = 0 ;
+    public showCalCin = false;
+    public showCalCout = false;
+    public datecin:Date;
+    public datecout:Date;
+    public cindisplay;coutdisplay;
+    public cinRQdisplay;coutRQdisplay;
+    public cincombodeparturedisplay;cincomboarrivaldisplay;coutcombodeparturedisplay;coutcomboarrivaldisplay;
+    public cincombodeparturelocationdisplay;cincomboarrivallocationdisplay;coutcombodeparturelocationdisplay;coutcomboarrivallocationdisplay;
+    public cincombodeparturetimedisplay;cincomboarrivaltimedisplay;coutcombodeparturetimedisplay;coutcomboarrivaltimedisplay;
+    public cincombodepartureflightnumberdisplay;cincomboarrivalflightnumberdisplay;coutcombodepartureflightnumberdisplay;coutcomboarrivalflightnumberdisplay;
+    public cin; cout; coutthu;cinthu;numberOfDay = 0;numberOfRQDay = 0;
+    public hasdata = false;
+    public hasloaddata = false;
+    public hasloadRQdata = false;
+    public activeTabTrip = 1;
+    public tabtrip: string="nexttrip";
+    public isShowConfirm = false;
+    private tabBarHeight;
+    private topOrBottom:string;
+    private contentBox;
+    public currentPosition = 0;
+    public intervalID;
+    public isRequestTrip = false;
+    public isConnected;
+    public loader: any;
+    public myloader;
+    topDealData = [];
+    slide;
+    Description: any;
+    loginuser: any;
+    mytripcount=0;
+    requestripcount=0;
+    historytripcount=0;
+    arrHotelReviews: any[];
+    nexttripcounttext = '';
+    historytripcounttext = '';
+  constructor(public platform: Platform,public navCtrl: NavController,public searchhotel: SearchHotel,
+    public storage:Storage,public zone: NgZone,public modalCtrl: ModalController,public iab: InAppBrowser,
+    public alertCtrl: AlertController,public valueGlobal: ValueGlobal,public gf: GlobalFunction,public loadingCtrl: LoadingController,
+    public network: Network,
+    public networkProvider: NetworkProvider) {
+    this.handleSplashScreen();
+    //this.getdata();
+    storage.get('auth_token').then(auth_token => {
+      this.loginuser = auth_token;
+     });
+    //google analytic
+    gf.googleAnalytion('mytrips','Search','');
+  }
+  
+  ngOnInit(){
+
+  }
+
+  async presentLoadingData() {
+    this.myloader = await this.loadingCtrl.create({
+    });
+    this.myloader.present();
+  }
+
+  async presentLoadingDuration(timeout){
+    let loader = await this.loadingCtrl.create({
+      message:"",
+      duration: timeout
+    });
+    loader.present();
+  }
+
+  /***
+   * Hàm load thông tin phòng
+   */
+  getListSupportByUser(auth_token) {
+    var se = this;
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/BookingMemberDetailByUser',
+          timeout: 10000, maxAttempts: 5, retryDelay: 2000,retryCount:0,
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getListSupportByUser";
+            error.param = JSON.stringify(options);
+           
+            if(options.retryCount>0)
+            {
+              C.writeErrorLog(error);
+            }
+            options.retryCount++;
+            throw new Error(error)
+          }else{
+            options.retryCount++;
+            if(body){
+              se.zone.run(() => {
+                se.listSupport = JSON.parse(body);
+             });
+            }else{
+              if(response.statusCode == 400 || response.statusCode == 401){
+                if(se.isShowConfirm) return;
+                se.showConfirm();
+                se.isShowConfirm = true;
+              }
+            }
+          }
+        });
+      }
+  }
+
+  getdata() {
+    var se = this;
+    se.presentLoadingData();
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/api/dashboard/getmytrip?getall=true',
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if(response.statusCode != 200){
+            var objError ={
+                page: "mytrips",
+                func: "getdata",
+                message : response.statusMessage,
+                content : response.body,
+                type: "warning",
+                param:  JSON.stringify(options)
+              };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getdata";
+            error.param =  JSON.stringify(options);
+            C.writeErrorLog(error);
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.mytripcount = 0;
+                se.listMyTrips = [];
+                se.historytripcount = 0;
+                se.listHistoryTrips = [];
+                
+                let lstTrips = JSON.parse(body);
+                //se.hasloaddata = true;
+                //List trip sắp đi
+                if(lstTrips.tripFuture.length >0){
+                  lstTrips.tripFuture.forEach(element => {
+                    if(element.payment_status != 3 && element.payment_status != -2){
+                      if(element.avatar){
+                        let urlavatar = element.avatar.substring(0,element.avatar.length-4);
+                        let tail = element.avatar.substring(element.avatar.length-4,element.avatar.length);
+                        element.avatar = urlavatar + "-" + "104x104" +tail;
+                      }
+                      element.isRequestTrip = false;
+                      se.listMyTrips.push(element);
+                      se.mytripcount++;
+                    }
+                  });
+                  let idx =0;
+                  if(se.gf.getParams('mytripbookingdetail') && se.gf.getParams('mytripbookingdetail').currentTrip){
+                    idx = se.gf.getParams('mytripbookingdetail').currentTrip;
+                    se.currentTrip = idx;
+                  }
+                  // let obj = se.listMyTrips[idx];
+                  // se.setCheckInCheckOutInfo(obj);
+                }
+                //List trip đã đi
+                if(lstTrips.tripHistory.length >0){
+                  lstTrips.tripHistory.forEach(elementHis => {
+                    if(elementHis.avatar){
+                      let urlavatar = elementHis.avatar.substring(0,elementHis.avatar.length-4);
+                      let tail = elementHis.avatar.substring(elementHis.avatar.length-4,elementHis.avatar.length);
+                      elementHis.avatar157 = urlavatar + "-" + "104x157" +tail;
+                      elementHis.avatar104 = urlavatar + "-" + "104x104" +tail;
+                      elementHis.avatar110 = urlavatar + "-" + "104x118" +tail;
+                    }else{
+                      elementHis.avatar110 = "//cdn1.ivivu.com/iVivu/2018/02/07/15/noimage-104x118.jpg";
+                    }
+                      
+                    se.listHistoryTrips.push(elementHis);
+                    se.historytripcount++;
+                  });
+                  se.historytripcounttext = " (" + se.historytripcount + ")";
+                }
+                //List trip yêu cầu
+                se.getCombineRequestTrip();
+               
+                //Lấy list support
+                //se.getListSupportByUser(auth_token);
+                se.hideloader();
+              });
+            }else{
+              if(response.statusCode != 200){
+                se.listMyTrips = [];
+                se.listHistoryTrips = [];
+                se.hasloaddata = true;
+                se.hideloader();
+                se.showConfirm();
+
+              }
+            }
+            
+          }
+          
+        });
+      }else{
+        se.hasloaddata = true;
+        se.listMyTrips = [];
+        se.listHistoryTrips = [];
+        se.hideloader();
+      }
+    });
+    setTimeout(()=>{
+      if(se.myloader){
+        se.myloader.dismiss();
+      }
+    },1000)
+  }
+  /**
+   * Thực hiện sort theo checkin/startdate
+   * Vì có 2 list mytrip và requestrip nên phải sort lại đồng nhất theo date
+   */
+  sortMytrip() {
+    var se = this;
+    if (se.listMyTrips && se.listMyTrips.length > 0) {
+      se.zone.run(() => se.listMyTrips.sort(function (a, b) {
+        let direction = -1;
+        if (!a['isRequestTrip'] && !b['isRequestTrip']) {
+          if (moment(a['checkInDate']).diff(moment(b['checkInDate']), 'days') >0) {
+            return -1 * direction;
+          }
+          else {
+            return 1 * direction;
+          }
+        }
+        else if (!a['isRequestTrip'] && b['isRequestTrip']) {
+          if (moment(a['checkInDate']).diff(moment(b['start_date']), 'days') >0) {
+            return -1 * direction;
+          }
+          else {
+            return 1 * direction;
+          }
+        }
+        else if (a['isRequestTrip'] && !b['isRequestTrip']) {
+          if (moment(a['start_date']).diff(moment(b['checkInDate']), 'days') >0) {
+            return -1 * direction;
+          }
+          else {
+            return 1 * direction;
+          }
+        }else{
+          if (moment(a['start_date']).diff(moment(b['start_date']), 'days') >0) {
+            return -1 * direction;
+          }
+          else {
+            return 1 * direction;
+          }
+        }
+      }));
+    }
+  };
+
+hideloader(){
+    var se = this;
+    if(se.myloader){
+      se.myloader.dismiss();
+    }
+  }
+  setCheckInCheckOutInfo(obj){
+    var se = this;
+    se.datecin=new Date(obj.checkInDate);
+    se.datecout=new Date(obj.checkOutDate);
+    se.cindisplay = moment(se.datecin).format('DD-MM-YYYY');
+    se.coutdisplay = moment(se.datecout).format('DD-MM-YYYY');
+    if(obj.bookingsComboData){
+      se.cincombodeparturedisplay = moment(new Date(obj.bookingsComboData[0].departureDate)).format('DD-MM-YYYY');
+      se.cincomboarrivaldisplay = moment(new Date(obj.bookingsComboData[0].arrivalDate)).format('DD-MM-YYYY');
+      se.coutcombodeparturedisplay = moment(new Date(obj.bookingsComboData[1].departureDate)).format('DD-MM-YYYY');
+      se.coutcomboarrivaldisplay = moment(new Date(obj.bookingsComboData[1].arrivalDate)).format('DD-MM-YYYY');
+    }
+    
+    se.numberOfDay = moment(se.datecout).diff(moment(se.datecin),'days');
+    //Set flight info nếu là combo
+    if(obj.flight_ticket_info){
+      let arrInfo = obj.flight_ticket_info.split("<br/>");
+      if(arrInfo.length ==2){
+        let arrFlightStart = arrInfo[0].split("|");
+        let arrFlightReturn = arrInfo[1].split("|");
+        se.cincombodeparturedisplay = arrFlightStart[0];
+        se.cincombodeparturelocationdisplay = arrFlightStart[1];
+        se.cincombodeparturetimedisplay = arrFlightStart[2];
+        se.cincombodepartureflightnumberdisplay = arrFlightStart[3];
+
+        se.cincomboarrivaldisplay = arrFlightReturn[0];
+        se.cincomboarrivallocationdisplay = arrFlightReturn[1];
+        se.cincomboarrivaltimedisplay = arrFlightReturn[2];
+        se.cincomboarrivalflightnumberdisplay = arrFlightReturn[3];
+      }
+      else if(arrInfo.length >2){
+        let arrFlightStart = arrInfo[0].split("|");
+        let arrFlightReturn = arrInfo[2].split("|");
+        se.cincombodeparturedisplay = arrFlightStart[0];
+        se.cincombodeparturelocationdisplay = arrFlightStart[1];
+        se.cincombodeparturetimedisplay = arrFlightStart[2];
+        se.cincombodepartureflightnumberdisplay = arrFlightStart[3];
+
+        se.cincomboarrivaldisplay = arrFlightReturn[0];
+        se.cincomboarrivallocationdisplay = arrFlightReturn[1];
+        se.cincomboarrivaltimedisplay = arrFlightReturn[2];
+        se.cincomboarrivalflightnumberdisplay = arrFlightReturn[3];
+      }
+    }
+  }
+
+  setCheckInCheckOutRQInfo(obj){
+    var se = this;
+    var datecinRQ =new Date(obj.start_date);
+    var datecoutRQ =new Date(obj.end_date);
+    se.cinRQdisplay = moment(datecinRQ).format('DD-MM-YYYY');
+    se.coutRQdisplay = moment(datecoutRQ).format('DD-MM-YYYY');
+    
+    se.numberOfRQDay = moment(datecoutRQ).diff(moment(datecinRQ),'days');
+  }
+
+  ionViewDidLoad() {
+    let elements = document.querySelectorAll(".tabbar");
+
+    if (elements != null) {
+      Object.keys(elements).map((key) => {
+        elements[key].style.display = 'flex';
+      });
+    }
+    //30p load lại trạng thái 1 lần
+    var se = this;
+        se.intervalID =  setInterval(()=>{
+            //se.getdata();
+            //Kiểm tra mạng trước khi loaddata
+            this.networkProvider.getNetworkStatus().subscribe((connected: boolean) => {
+              this.isConnected = connected;
+              if (this.isConnected) {
+                setTimeout(()=>{
+                  this.getdata();
+                },100)
+              }else{
+                this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+              }
+            });
+        },1800000);
+  }
+  ionViewWillEnter(){
+    if(this.gf.getParams('notifiBookingCode')){
+      this.activeTabTrip = 1;
+      this.tabtrip = 'nexttrip';
+    }
+    this.storage.get('auth_token').then((data:any)=>{
+      this.loginuser = data;
+    })
+    this.mytripcount = 0;
+    this.requestripcount = 0;
+    this.historytripcount = 0;
+    this.historytripcounttext="";
+    this.nexttripcounttext="";
+    if(!this.hasloaddata || (this.hasloaddata && this.listAlltrips.length==0)){
+      // setTimeout(() => {
+      //   this.getdata();
+      // }, 300);
+      //Kiểm tra mạng on/off để hiển thị
+        if (this.networkProvider.isOnline()) {
+          this.networkProvider.setNetworkStatus(true);
+          this.gf.setNetworkStatus(true);
+          this.isConnected = true;
+          setTimeout(()=>{
+            this.getdata();
+          },300)
+          //load dữ liệu topdeal suggest
+          this.storage.get('listtopdealdefault').then((data:any)=>{
+            if(data && data.length >0 ){
+              this.topDealData = data;
+              //this.slide = data[0];
+              this.loaddatatopdeal(data);
+            }
+          })
+        }else{
+          this.isConnected = false;
+        
+      }
+    }
+  }
+
+  loaddatatopdeal(data:any){
+    var se = this;
+    var chuoi = "";
+      se.zone.run(() => {
+        //for (let i = 0; i < se.pageSize; i++) {
+          let i =0;
+          if (data[i].images[0]) {
+            var res = data[i].images[0].url.substring(0, 4);
+            if (res != "http") {
+              data[i].images[0].url = 'https:' + data[i].images[0].url;
+            }
+            var minPrice = data[i].minPrice.toLocaleString();
+            chuoi = "";
+            var name = data[i].name.split('|');
+            for (let x = 1; x < name.length; x++) {
+              if (x == name.length - 1) {
+                chuoi = chuoi + name[x];
+              } else {
+                chuoi = chuoi + name[x] + "|";
+              }
+            }
+            switch (data[i].rating) {
+              case 50:
+                data[i].rating = "./assets/star/ic_star_5.svg";
+                break;
+              case 45:
+                data[i].rating = "./assets/star/ic_star_4.5.svg";
+                break;
+              case 40:
+                data[i].rating = "./assets/star/ic_star_4.svg";
+                break;
+              case 35:
+                data[i].rating = "./assets/star/ic_star_3.5.svg";
+                break;
+              case 30:
+                data[i].rating = "./assets/star/ic_star_3.svg";
+                break;
+              case 25:
+                data[i].rating = "./assets/star/ic_star_2.5.svg";
+                break;
+              case 20:
+                data[i].rating = "./assets/star/ic_star_2.svg";
+                break;
+              case 15:
+                data[i].rating = "./assets/star/ic_star_1.5.svg";
+                break;
+              case 10:
+                data[i].rating = "./assets/star/ic_star.svg";
+                break;
+              case 5:
+                data[i].rating = "./assets/star/ic_star_0.5.svg";
+                break;
+              default:
+                break;
+            }
+            var item = { ischecked: 0, id: data[i].id, name: name[0], imageUrl: data[i].images[0].url, regionName: data[i].regionName, minPrice: minPrice, description: chuoi, rating: data[i].rating, priceshow: (data[i].minPrice/1000).toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.").replace(',','.') };
+            se.slide = item;
+            //load combodetail
+            se.loaddetailcombo(item.id);
+          }
+
+        //}
+      })
+      
+  }
+
+  loaddetailcombo(hotelID){
+    let url = C.urls.baseUrl.urlPost + "/mhoteldetail/" + hotelID;
+    var se = this;
+    var options = {
+      method: 'POST',
+      url: url,
+      timeout: 180000, maxAttempts: 5, retryDelay: 2000,
+    };
+    request(options, function (error, response, body) {
+      if(response.statusCode != 200){
+        var objError ={
+            page: "hoteldetail",
+            func: "loaddata",
+            message : response.statusMessage,
+            content : response.body,
+            type: "warning",
+            param: JSON.stringify(options)
+          };
+        C.writeErrorLog(objError);
+      }
+      if (error) {
+        error.page="hoteldetail";
+        error.func="loaddata";
+        error.param = JSON.stringify(options);
+        C.writeErrorLog(objError);
+      }
+      if(response.statusCode== 200){
+        let jsondata = JSON.parse(body);
+        if(jsondata.Combos || jsondata.ComboPromotion){
+          se.Description = jsondata.ComboPromtion ? jsondata.ComboPromtion.Description.replace(/\r\n/g, "") : jsondata.Combos.Description.replace(/\r\n/g, "");
+          se.Description = se.Description.replace("Trọn gói bao gồm:", "");
+          se.Description = se.Description.replace(/#r/g, "");
+          se.Description = se.Description.replace(/r#/g, "");
+          se.Description = se.Description.replace(/#m/g, "");
+          se.Description = se.Description.replace(/m#/g, "");
+          se.Description = se.Description.replace(/#n/g, "");
+          se.Description = se.Description.replace(/n#/g, "");
+          se.Description = se.Description.replace(/n#/g, "");
+        }
+      }
+    })
+  }
+
+  viewComboDetail(item){
+    this.searchhotel.hotelID = item.id;
+    this.searchhotel.rootPage = "MyTrip";
+    this.navCtrl.navigateForward(['/app/tabs/hoteldetail/'+item.id]);
+  }
+
+  viewComboList(){
+    this.navCtrl.navigateForward(['/app/tabs/tab3/combolist']);
+  }
+
+  ionViewDismiss(){
+    this.hasloaddata = false;
+  }
+
+  ionViewWillLeave() {
+    this.zone.run(()=>{
+        clearInterval(this.intervalID);
+    })
+    this.hasloaddata = false;
+}
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      if (error) {
+        error.page = "mytrips";
+        error.func = "handleSplashScreen";
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+    }
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+
+  }
+
+  goback() {
+    this.navCtrl.navigateRoot('/');
+  }
+
+  enableTabbar(modal){
+    modal.onDidDismiss(() => {
+      let elements = document.querySelectorAll(".tabbar");
+      if (elements != null) {
+        Object.keys(elements).map((key) => {
+          elements[key].style.display = 'flex';
+        });
+      }
+    })
+  }
+
+  openBookingTrip(trip){
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    if(trip && !trip.isRequestTrip){
+      this.gf.setParams({trip: trip, currentTrip: this.currentTrip},'mytripbookingdetail');
+      this.navCtrl.navigateForward('/mytripbookingdetail');
+      //google analytic
+      this.gf.googleAnalytion('mytrips','Search','/opentripdeail');
+    }
+  }
+
+  openWeather(cityname){
+    this.navCtrl.navigateForward('/tripweather/'+cityname);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','openweather/'+cityname);
+  }
+
+  openHotelNotes(notes){
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    this.gf.setParams(notes,'hotelnotes');
+    this.navCtrl.navigateForward('/hotelnotes');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','opentripnote');
+  }
+
+  openHotelExpsNotes(notes, provincename){
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    this.gf.setParams({ notes: notes, provincename: provincename},'hotelexpsnotes')
+    this.navCtrl.navigateForward('/hotelexpsnotes');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','opentripexpsnotes');
+  }
+
+  async presentLoading() {
+    this.loader = await this.loadingCtrl.create({
+      duration: 300
+    });
+    this.loader.present();
+  }
+
+  nextTrip(){
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    
+    this.zone.run(() => {
+      this.currentTrip = this.currentTrip +1;
+      if(this.currentTrip > 0){
+        this.presentLoadingDuration(300);
+      }
+      let obj = this.listMyTrips[this.currentTrip];
+      if(!obj.isRequestTrip){
+        this.setCheckInCheckOutInfo(obj);
+        this.isRequestTrip = false;
+      }else{
+        this.setCheckInCheckOutRQInfo(obj);
+        this.isRequestTrip = true;
+      }
+    })
+    
+    this.content.scrollToTop(500);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','nexttrip');
+  }
+
+  previousTrip(){
+    if(!this.networkProvider.isOnline()){
+      this.gf.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+      return;
+    }
+    this.presentLoadingDuration(300);
+    this.zone.run(() => {
+      this.currentTrip = this.currentTrip -1;
+      let obj = this.listMyTrips[this.currentTrip];
+      if(!obj.isRequestTrip){
+        this.setCheckInCheckOutInfo(obj);
+        this.isRequestTrip = false;
+      }else{
+        this.setCheckInCheckOutRQInfo(obj);
+        this.isRequestTrip = true;
+      }
+    })
+    this.content.scrollToTop(500);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','previoustrip');
+  }
+
+  nextRQTrip(){
+    this.zone.run(() => {
+      this.currentRQTrip = this.currentRQTrip +1;
+      let obj = this.listRequestTrips[this.currentRQTrip];
+      this.setCheckInCheckOutRQInfo(obj);
+    })
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','nextrequesttrip');
+  }
+
+  previousRQTrip(){
+    this.zone.run(() => {
+      this.currentRQTrip = this.currentRQTrip -1;
+      let obj = this.listRequestTrips[this.currentRQTrip];
+      this.setCheckInCheckOutRQInfo(obj);
+    })
+    this.content.scrollToTop(50);
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','previousrequesttrip');
+  }
+
+  openHistoryTrip(){
+    // let modal = this.modalCtrl.create('MytripsHistoryPage',{lstHistoryTrips: this.listHistoryTrips});
+    // modal.present();
+    // this.enableTabbar(modal);
+    this.navCtrl.navigateForward('/mytripshistory');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','openhistorytrip');
+  }
+
+  openInclusion(inclusion){
+    // let modal = this.modalCtrl.create('ComboInClusionPage',{comboInclusion: inclusion});
+    // modal.present();
+    // this.enableTabbar(modal);
+    this.navCtrl.navigateForward('/comboinclusion');
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','openinclusion');
+  }
+
+  /***
+     * Gọi tổng đài hỗ trợ
+     * PDANH 26/02/2019
+     */
+    async makeCallSupport(phone){
+      try {
+        setTimeout(() => {
+          window.open(`tel:${phone}`, '_system');
+        },10);
+      }
+      catch (error) {
+        if (error) {
+          error.page = "mytrips";
+          error.func = "makeCallSupport";
+          C.writeErrorLog(error);
+        };
+      }
+      //google analytic
+      this.gf.googleAnalytion('mytrips','Search','callsupport');
+    }
+    
+    public async showConfirm(){
+      let alert = await this.alertCtrl.create({
+        message: "Phiên đăng nhập hết hạn. Xin vui lòng đăng nhập lại để sử dụng chức năng này.",
+        buttons: [
+        {
+          text: 'Để sau',
+          handler: () => {
+            this.storage.remove('auth_token');
+            this.storage.remove('email');
+            this.storage.remove('username');
+            this.storage.remove('jti');
+            this.storage.remove('userInfoData');
+            this.storage.remove('userRewardData');
+            this.storage.remove('point');
+            this.storage.remove('blogtripdefault');
+            this.mytripcount =0;
+            this.nexttripcounttext="";
+            this.historytripcounttext="";
+            this.requestripcount = 0;
+            this.historytripcount =0;
+            // this.app.getActiveNav().push('MainPage');
+            // this.navCtrl.setRoot('MainPage');
+            // this.navCtrl.popToRoot();
+            // this.app.getRootNav().getActiveChildNav().select(0);
+            this.loginuser = null;
+            this.valueGlobal.countNotifi = 0;
+            this.navCtrl.navigateRoot('/');
+          }
+        },
+        {
+          text: 'Đăng nhập',
+          role: 'OK',
+          handler: () => {
+            this.storage.remove('auth_token');
+            this.storage.remove('email');
+            this.storage.remove('username');
+            this.storage.remove('jti');
+            this.storage.remove('userInfoData');
+            this.storage.remove('userRewardData');
+            this.storage.remove('point');
+            this.storage.remove('blogtripdefault');
+            this.loginuser = null;
+            this.mytripcount =0;
+            this.nexttripcounttext= "";
+            this.historytripcounttext= "";
+            this.requestripcount = 0;
+            this.historytripcount =0;
+            this.valueGlobal.countNotifi = 0;
+            this.valueGlobal.logingoback = "MainPage";
+            this.navCtrl.navigateForward('/login');
+          }
+        },
+      ]
+    });
+    alert.present();
+  }
+
+  SelectNextTrip(){
+    this.activeTabTrip = 1;
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','selectnexttrip');
+  }
+  
+  SelectHistoryTrip(){
+    this.activeTabTrip = 2;
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    this.loadUserReviews();
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','selecthistorytrip');
+  }
+ 
+
+  SelectRequestTrip(){
+    this.activeTabTrip = 3;
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    this.getRequestTrip();
+    //google analytic
+    this.gf.googleAnalytion('mytrips','Search','selectrequesttrip');
+  }
+
+  getRequestTrip() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/api/dashboard/GetMyRequestPrice',
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if(response.statusCode != 200){
+            var objError ={
+                page: "mytrips",
+                func: "getRequestTrip",
+                message : response.statusMessage,
+                content : response.body,
+                type: "warning",
+                param:  JSON.stringify(options),
+              };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getRequestTrip";
+            error.param =  JSON.stringify(options);
+            C.writeErrorLog(error);
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.listRequestTrips = [];
+                var result = JSON.parse(body);
+                let lstRQTrips = result.data;
+                se.hasloadRQdata = true;
+                //List trip yêu cầu
+                lstRQTrips.forEach(element => {
+                  let urlavatar = element.hotelAvatar.substring(0,element.hotelAvatar.length-4);
+                      let tail = element.hotelAvatar.substring(element.hotelAvatar.length-4,element.hotelAvatar.length);
+                      element.hotelAvatar = urlavatar + "-" + "104x104" +tail;
+                      se.listRequestTrips.push(element);
+                });
+                if(se.listRequestTrips.length >0){
+                  let obj = se.listRequestTrips[0];
+                  se.setCheckInCheckOutRQInfo(obj);
+                }
+              });
+            }else{
+              if(response.statusCode != 200){
+                se.listRequestTrips = [];
+                se.hasloadRQdata = true;
+              }
+            }
+            
+          }
+          
+        });
+      }else{
+        se.hasloadRQdata = true;
+        se.listRequestTrips = [];
+      }
+    });
+  }
+
+  getCombineRequestTrip() {
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+      if (auth_token) {
+        var text = "Bearer " + auth_token;
+        var options = {
+          method: 'GET',
+          url: C.urls.baseUrl.urlMobile +'/api/dashboard/GetMyRequestPrice',
+          headers:
+          {
+            'accept': 'application/json',
+            'content-type': 'application/json-patch+json',
+            authorization: text
+          }
+        };
+        request(options, function (error, response, body) {
+          if(response.statusCode != 200){
+            var objError ={
+                page: "mytrips",
+                func: "getRequestTrip",
+                message : response.statusMessage,
+                content : response.body,
+                type: "warning",
+                param:  JSON.stringify(options),
+              };
+            C.writeErrorLog(objError);
+          }
+          if (error) {
+            error.page = "mytrips";
+            error.func = "getRequestTrip";
+            error.param =  JSON.stringify(options);
+            C.writeErrorLog(error);
+          }else{
+            if(body){
+              se.zone.run(() => {
+                se.currentTrip = 0;
+                se.requestripcount=0;
+                se.listRequestTrips = [];
+                var result = JSON.parse(body);
+                let lstRQTrips = result.data;
+                se.hasloadRQdata = true;
+                //List trip yêu cầu
+                lstRQTrips.forEach(element => {
+                  if(!element.booking_id && element.payment_status != 3 && element.payment_status != -2 ){
+                    let urlavatar = element.hotelAvatar.substring(0,element.hotelAvatar.length-4);
+                    let tail = element.hotelAvatar.substring(element.hotelAvatar.length-4,element.hotelAvatar.length);
+                    element.hotelAvatar = urlavatar + "-" + "104x104" +tail;
+                    element.isRequestTrip = true;
+                    se.listRequestTrips.push(element);
+                    se.requestripcount++;
+                  }
+                });
+                
+                if(se.listRequestTrips.length >0){
+                  //let obj = se.listRequestTrips[0];
+                  //se.setCheckInCheckOutRQInfo(obj);
+                  se.listMyTrips.push(...se.listRequestTrips)
+                }
+                
+                se.sortMytrip();
+              
+                if(se.listMyTrips.length >0){
+
+                  if(se.gf.getParams('notifiBookingCode')){
+                    //Map số bkg trong listtrip để focus vào bkg được notifi
+                    var idxMap = se.listMyTrips.map( (item,index) =>{ 
+                      return item.booking_id == se.gf.getParams('notifiBookingCode');
+                    });
+                    if(idxMap && idxMap.length>0){
+                      var idx = idxMap.findIndex((el)=>{ return el == true});
+                      se.currentTrip = idx;
+                    }
+                    //Sau khi map được trip thì set giá trị về null
+                    se.gf.setParams(null, 'notifiBookingCode');
+                  }
+
+                  if(se.currentTrip){
+                    let obj = se.listMyTrips[se.currentTrip];
+                    if(!obj.isRequestTrip){
+                        se.setCheckInCheckOutInfo(obj);
+                        se.isRequestTrip = false;
+                    }else{
+                      se.setCheckInCheckOutRQInfo(obj);
+                      se.isRequestTrip = true;
+                    }
+                  }else{
+                    se.currentTrip =-1;
+                    if(se.listMyTrips.length >0){
+                      se.nextTrip();
+                    }
+                    
+                  }
+                }else{
+                  se.hasdata = false;
+                }
+                setTimeout(() => {
+                  if(se.myloader){
+                    se.myloader.dismiss();
+                  }
+                  
+                  se.hasloaddata = true;
+                  se.hasdata = true;
+                  if(se.mytripcount + se.requestripcount >0){
+                    se.nexttripcounttext = " ("+ (se.mytripcount + se.requestripcount) + ")";
+                  }else{
+                    se.nexttripcounttext = "";
+                  }
+                  
+                  //se.activeTabTrip = (se.mytripcount + se.requestripcount) == 0 ? 2 : 1;
+                }, 300);
+                 se.getListSupportByUser(auth_token);
+              });
+            }else{
+              if(response.statusCode != 200){
+                se.listRequestTrips = [];
+                se.requestripcount =0;
+                if(se.mytripcount + se.requestripcount >0){
+                  se.nexttripcounttext = " ("+ se.mytripcount + se.requestripcount + ")";
+                }else{
+                  se.nexttripcounttext = "";
+                }
+                se.hasloadRQdata = true;
+                se.hasloaddata = true;
+                if(se.myloader){
+                  se.myloader.dismiss();
+                }
+              }
+            }
+            
+          }
+          
+        });
+      }else{
+        se.hasloaddata = true;
+        se.hasloadRQdata = true;
+        se.listRequestTrips = [];
+        se.listHistoryTrips = [];
+        if(se.myloader){
+          se.myloader.dismiss();
+        }
+      }
+    });
+    setTimeout(()=>{
+      if(se.myloader){
+        se.myloader.dismiss();
+      }
+    },1000)
+  }
+
+  public scrollFunction = (event: any) => {
+    var se = this;
+    se.zone.run(() => {
+      if(!se.currentPosition){
+        se.currentPosition = event.detail.scrollTop;
+      }
+      if (event.detail.scrollTop > se.currentPosition) {
+        document.querySelector(".tabbar")['style'].display = 'none';
+        if (se.topOrBottom == "top") {
+          se.contentBox.marginTop = 0;
+        } else if (se.topOrBottom == "bottom") {
+          se.contentBox.marginBottom = 0;
+        }
+  
+      } else {
+        if(document.querySelector(".tabbar")){
+          document.querySelector(".tabbar")['style'].display = 'flex';
+        }
+        
+        if (se.topOrBottom == "top") {
+          se.contentBox.marginTop = se.tabBarHeight;
+        } else if (se.topOrBottom == "bottom") {
+          se.contentBox.marginBottom = se.tabBarHeight;
+        }
+  
+      }//if else
+      if(se.activeTabTrip != 1){
+        if(document.querySelector(".tabbar")){
+          document.querySelector(".tabbar")['style'].display = 'flex';
+          return;
+        }
+      }
+    })
+  }
+
+  async feedback(trip:any){
+    var se = this;
+    se.gf.setParams(trip,'tripFeedBack');
+    if(trip.booking_id){
+      
+      const modal: HTMLIonModalElement =
+      await this.modalCtrl.create({
+        component: UserFeedBackPage,
+        componentProps: {
+          aParameter: true,
+        }
+      });
+    modal.present();
+
+    modal.onDidDismiss().then((data: OverlayEventDetail) => {
+
+    })
+  }
+
+  }
+
+  openWebpage(url: string) {
+    const options: InAppBrowserOptions = {
+      zoom: 'no',
+      location: 'yes',
+      toolbar: 'yes',
+      hideurlbar: 'yes',
+      closebuttoncaption: 'Đóng'
+    };
+    const browser = this.iab.create(url, '_self', options);
+    browser.show();
+  }
+
+  loadUserReviews(){
+    var se = this;
+        se.storage.get('auth_token').then(auth_token => {
+            if (auth_token) {
+                var text = "Bearer " + auth_token;
+                var options = {
+                method: 'GET',
+                url: C.urls.baseUrl.urlMobile +'/api/Dashboard/GetUserReviews',
+                timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+                headers:
+                {
+                    'cache-control': 'no-cache',
+                    'content-type': 'application/json',
+                    authorization: text
+                },
+                //body: JSON.stringify({file: this.photos})
+                };
+                request(options, function (error, response, body) {
+                    if(response.statusCode != 200){
+                        var objError ={
+                            page: "userreviews",
+                            func: "loadUserReviews",
+                            message : response.statusMessage,
+                            content : response.body,
+                            type: "warning",
+                            param:  JSON.stringify(options)
+                          };
+                        C.writeErrorLog(objError);
+                    }
+                    if (error) {
+                        error.page = "userreviews";
+                        error.func = "loadUserReviews";
+                        error.param =  JSON.stringify(options);
+                        C.writeErrorLog(error);
+                    }else{
+                        if(body){
+                            var result = JSON.parse(body);
+                            se.arrHotelReviews = [];
+                            
+                            if(result.data && result.data.length >0){
+                                se.zone.run(()=>{
+                                    result.data.forEach(element => {
+                                      if(element.images && element.images.length >0){
+                                        element.images.forEach(img => {
+                                            img.thumpUrl = img.thumpUrl.replace("84x84","150x150");
+                                        });
+                                      }
+                                        se.arrHotelReviews.push(element);
+                                    });
+                                })
+                                //bind lại điểm đánh giá
+                                se.bindUserReviews();
+                            }
+                        }else if(response.statusCode == 401){
+                            se.showConfirm();
+                        }
+                    }
+                })
+            }
+        }) 
+  }
+
+  bindUserReviews(){
+    var se = this;
+    if(se.arrHotelReviews && se.arrHotelReviews.length >0){
+      se.arrHotelReviews.forEach((item) => {
+        var itemReview = se.listMyTrips.filter((element) =>{
+          return element.booking_id == item.bookingId && item.hotelId == element.HotelIdERP;
+        })
+        if(itemReview && itemReview.length >0){
+          se.zone.run(()=>{
+            item.reviewLink = 'manualBindReview';
+            item.reviewPoint = itemReview[0].reviewPoint;
+            item.reviewPoint = itemReview[0].reviewPoint;
+          })
+        }
+      })
+    }
+  }
+
+  async showReviews(trip:any){
+    //this.navCtrl.navigateForward('/userreviews');
+    var se = this;
+    se.gf.setParams({trip: trip, hotelreviewlist: se.arrHotelReviews},'hotelreviewlist');
+    const modal: HTMLIonModalElement =
+        await se.modalCtrl.create({
+          component: UserReviewsPage,
+        });
+      modal.present();
+  }
+}

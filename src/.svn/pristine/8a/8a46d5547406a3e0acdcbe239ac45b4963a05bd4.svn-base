@@ -1,0 +1,250 @@
+<ion-header class="insurrance-header">
+  <ion-toolbar>
+    <div class="div-goback" (click)="goback()">
+      <img class="img-goback" src="./assets/imgs/ios-arrow-round-back.svg">
+    </div>
+    <ion-title class="toolbar-title">Ghi chú</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="insurrance-note">
+  <!-- <div class="note-title">HƯỚNG DẪN YÊU CẦU BỒI THƯỜNG 
+    QUYỀN LỢI TAI NẠN -  MẤT /THIỆT HẠI HÀNH LÝ 
+    VÀ CÁC QUYỀN LỢI BỔ SUNG
+  </div>
+  <div  class="note-sub-title">
+    Cảm ơn quý  khách đã đặt dịch vụ bảo hiểm du lịch nội địa cùng iVIVU.com và Bảo Hiểm Cathay!
+  </div>
+  <div class="note-content">
+    <div class="note-header-text">1.	Ngay khi xảy ra sự cố:</div>
+    <div class="p-left-14">
+      <div>Quý khách vui lòng liên hệ số hotline bên dưới để được hỗ trợ và tư vấn các bước xử lý sự cố liên quan đến việc bồi thường bảo hiểm chậm nhất trong vòng 24h xảy ra sự kiện</div>
+      <div class="p-top-16">-	Cathay (Hotline)	- Email: anhthu@cathay-ins.com.vn hoặc lclong@cathay-ins.com.vn</div>
+      <div class="p-left-16">•	Liên hệ ISOS	: (848)38298520</div>
+        <div class="p-left-16">•	Hà Nội		: 0938 999 549</div>
+          <div class="p-left-16">•	Tổng công ty	: 0933 555 920</div>
+            <div class="p-left-16">•	VP. Phú Nhuận : 0908 998 108</div>
+    </div>
+    
+    <div class=" text-italic p-top-16">Lưu ý: Khi thông báo tổn thất, Quý khách cần cung cấp đầy đủ những thông tin sau:</div>
+    <div class="p-left-14">
+      <div class="p-left-16">•	Số chứng nhận bảo hiểm</div>
+        <div class="p-left-16">•	Hoàn cảnh sự cố/ tổn thất</div>
+        <div class="p-left-16">•	Ngày/ Nơi xảy ra tai nạn/ sự cố</div>
+        <div class="p-left-16">•	Mức độ tổn thất</div>
+        <div class="p-left-16">•	Tên, địa chỉ, số điện thoại, email liên lạc</div>
+    </div>
+    
+    <div class="note-header-text p-top-16">2.	Trong vòng 30 ngày kể từ thời điểm xảy ra sự kiện bảo hiểm</div>
+    <div class="p-left-14">Qúy khách cần phải thông báo cho Cathay bằng văn bản các hồ sơ giấy tờ có liên quan theo thủ tục được hướng dẫn bên dưới</div>
+    <div class="note-header-text p-top-16">3.	Trong vòng 15 ngày kể từ khi nhận đủ hồ sơ</div>
+    <div class="p-left-14 text-italic">Hồ sơ của qúy khách sẽ được Cathay xem xét, giải quyết và thanh toán tiền bảo hiểm.</div>
+    <div class="p-top-30">Qúy khách hàng cần đảm bảo rằng các thông tin kê khai trên các giấy tờ gửi đến Công Ty Bảo Hiểm là đúng và xác thực từng chi tiết. Qúy khách hàng đồng ý rằng nếu khai báo sai sự thật hoặc lừa dối trong yêu cầu bồi thường hoặc các thông báo bổ sung về yêu cầu bồi thường đó, hoặc không thông báo, che dấu hoặc khai sai sự thật bất kỳ thông tin quan trọng nào, Hợp đồng bảo hiểm sẽ bị vô hiệu và mọi quyền lợi bảo hiểm theo Hợp đồng bảo hiểm đối với các yêu cầu bồi thường trước đây hoặc sau này sẽ không có giá trị.</div>
+    <div class="text-right text-bold p-top-16">Thay mặt Cathay</div>
+  </div> -->
+  <div class="note-content">
+  <div class="note-title1">Quyền lợi bảo hiểm du lịch trong nước</div>
+    <ion-grid class="table-insurrance no-padding">
+      <ion-row class="row-header row-border">
+        <ion-col size="8.5">
+          <ion-label class="label-header text-bold">QUYỀN LỢI BẢO HIỂM</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header text-bold">SỐ TIỀN BỒI THƯỜNG</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item text-bold">I</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left col-height p-top-12">
+          <ion-label class="label-item text-bold">TỬ VONG/ THƯƠNG TẬT THÂN THỂ</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">Lên đến 100,000,000vnđ</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item text-bold">II</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item text-bold">DI CHUYỂN Y TẾ KHẨN CẤP ĐẾN NƠI ĐIỀU TRỊ KHÁC TẠI VIỆT NAM</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">Lên đến 50,000,000vnđ</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item text-bold">III</ion-label>
+        </ion-col>
+        <ion-col size="11" class="col-border-l  text-left">
+          <ion-label class="label-item text-bold">TRỄ CHUYẾN BAY (tối đa 1 lần/chuyến bay)</ion-label>
+        </ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">1</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Từ 120 - 179 phút</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">350,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">2</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Từ 180 - 239 phút</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">350,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">3</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Từ 240 - 299 phút</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">700,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">4</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Từ 300 - 359 phút</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">875,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">5</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Từ 360 phút trở lên</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">1,000,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item text-bold">IV</ion-label>
+        </ion-col>
+        <ion-col size="11" class="col-border-l text-left">
+          <ion-label class="label-item text-bold ">QUYỀN LỢI TRỄ CHUYẾN MỞ RỘNG </ion-label>
+        </ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">1</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Hủy chuyến bay</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">500,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">2</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Chuyến bay quay đầu/ hạ cánh xuống sân bay khác</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">500,000</ion-label></ion-col>
+      </ion-row>
+
+      <ion-row  class="row-border-no-top">
+        <ion-col size="1">
+          <ion-label class="label-item">3</ion-label>
+        </ion-col>
+        <ion-col size="7.5" class="col-border-lr text-left">
+          <ion-label class="label-item">Hành lý đến trễ</ion-label>
+        </ion-col>
+        <ion-col size="3.5"><ion-label class="label-header">500,000</ion-label></ion-col>
+      </ion-row>
+
+    </ion-grid>
+
+    <div class="note-title2">Hướng dẫn yêu cầu bồi thường</div>
+    <div class="note-text">Quý khách cần cung cấp đầy đủ các giấy tờ hợp lệ sau:</div>
+    
+    <div class="note-content-header">1.	BẢO HIỂM TRỄ CHUYẾN:</div>
+    <div class="p-left-16">
+      <div class="note-content-text">-	Bản chụp/scan CMND/ Passport (khách Quốc Tịch Nước Ngoài) / giấy khai sinh (trẻ em)</div>
+      <div class="note-content-text">-	Bản chụp/scan Thẻ lên máy bay (Boarding pass) của Người được bảo hiểm</div>
+      <div class="note-content-text">-	Số tài khoản ngân hàng để nhận bồi thường (theo từng khách). </div>
+      <div class="note-content-text">-	Tên chủ tài khoản phải khớp với tên Người được bảo hiểm trên hợp đồng</div>
+      <div class="note-content-text">-	Trường hợp Người được bảo hiểm ủy quyền cho người khác nhận tiền bảo hiểm thì phải có giấy ủy quyền hợp pháp.</div>
+      <div class="note-content-text">   Thực hiện yêu cầu bồi thường online <a>tại đây</a> hoặc gởi email về: ….</div>
+    </div>
+    
+
+    <div class="note-content-header">2.	BẢO HIỂM TRỄ CHUYẾN MỞ RỘNG</div>
+    <div class="p-left-16">
+      <div class="note-content-sub-header">2.1	TRƯỜNG HỢP HỦY CHUYẾN (áp dụng khi Người được bảo hiểm đã có Thẻ lên máy bay)</div>
+      <div class="p-left-16">
+        <div class="note-content-text">-	Bản chụp/scan CMND/ Passport (khách Quốc Tịch Nước Ngoài) / giấy khai sinh (trẻ em)</div>
+        <div class="note-content-text">-	Bản chụp/scan Thẻ lên máy bay (Boarding pass) của Người được bảo hiểm</div>
+        <div class="note-content-text text-italic">-	Bản chụp/scan Văn bản xác nhận của Hãng hàng không về việc chuyến bay bị hủy</div>
+        <div class="note-content-text">-	Số tài khoản ngân hàng để nhận bồi thường (theo từng khách). </div>
+        <div class="note-content-text">   Tên chủ tài khoản phải khớp với tên Người được bảo hiểm trên hợp đồng</div>
+        <div class="note-content-text text-italic">-	Trường hợp Người được bảo hiểm ủy quyền cho người khác nhận tiền bảo hiểm thì phải có giấy ủy quyền hợp pháp.</div>
+        <div class="note-content-text">   Thực hiện yêu cầu bồi thường online <a>tại đây</a> hoặc gởi email về: ….</div>
+      </div>
+    </div>
+
+    <div class="p-left-16">
+      <div class="note-content-sub-header">2.2	TRƯỜNG HỢP MÁY BAY QUAY ĐẦU HOẶC ĐÁP XUỐNG SÂN BAY KHÁC VÀ HÀNH LÝ ĐẾN TRỄ</div>
+      <div class="p-left-16">
+        <div class="note-content-text">-	Giấy yêu cầu trả tiền bảo hiểm (theo mẫu của Cathay)</div>
+        <div class="note-content-text">-	Giấy tờ tùy thân của NĐBH (Giấy CMND hoặc hộ chiếu)</div>
+        <div class="note-content-text">-	Vé máy bay/thẻ lên máy bay hoặc chứng minh đã lên máy bay của NĐBH</div>
+        <div class="note-content-text">-	Văn bản xác nhận của Hãng hàng không về việc chuyến bay bị hủy, quay đầu hoặc hạ cánh xuống sân bay khác</div>
+        <div class="note-content-text">-	Văn bản xác nhận của hãng hàng không hoặc đơn vị chịu trách nhiệm về ngày giờ thực tế hành lý được vận chuyển đến trong trường hợp hành lý đến trễ</div>
+        <div class="note-content-text text-italic">   Gởi hồ sơ (bản gốc) về Bộ phận Bồi thường Cathay </div>
+      </div>
+    </div>
+
+    <div class=" p-left-16">
+      <div class="note-content-sub-header">2.3	TRƯỜNG HỢP MẤT HOẶC THIỆT HẠI HÀNH LÝ</div>
+      <div class="p-left-16">
+        <div class="note-content-text">-	Giấy yêu cầu trả tiền bảo hiểm</div>
+        <div class="note-content-text">-	Giấy tờ tùy thân của NĐBH (Giấy CMND hoặc hộ chiếu)</div>
+        <div class="note-content-text">-	Thẻ lên máy bay (Boarding pass) của Người được bảo hiểm</div>
+        <div class="note-content-text">-	Biên bản báo cáo về việc mất hoặc thiệt hại hành lý từ hãng vận chuyển/ Khách Sạn/…</div>
+        <div class="note-content-text">-	Biên bản của cảnh sát cho biết ngày, giờ và nguyên nhân mất hoặc thiệt hại</div>
+        <div class="note-content-text">-	Danh sách đồ vật mất hay thiệt hại (nêu chi tiết)</div>
+        <div class="note-content-text">-	Tất cả hóa đơn bản chính của đồ vật bị mất hay thiệt hại</div>
+        <div class="note-content-text">-	Bản báo giá/ hóa đơn sửa chữa hoặc thay thế</div>
+        <div class="note-content-text">-	Văn bản xác nhận của hãng vận chuyển hoặc bên thứ ba chịu trách nhiệm về số tiền có thể thu hồi</div>
+        <div class="note-content-text text-italic">   Gởi hồ sơ (bản gốc) về Bộ phận Bồi thường Cathay</div>
+      </div>
+    </div>
+    
+    <div class="note-content-header">3.	BẢO HIỂM TỬ VONG, THƯƠNG TẬT</div>
+    <div class="p-left-16">
+      <div class="note-content-text">Qúy khách cần chuẩn bị đầy đủ các giấy tờ được nêu sau:</div>
+      <div class="note-content-text">-	Hợp đồng bảo hiểm/giấy chứng nhận bảo hiểm</div>
+      <div class="note-content-text">-	Giấy tờ tùy thân của NĐBH (Giấy CMND hoặc hộ chiếu)</div>
+      <div class="note-content-text">-	CMND, hộ chiếu (sao y công chứng hoặc bản photo kèm bản chính để đối chiếu khi nộp hồ sơ)</div>
+      <div class="note-content-text">-	Giấy chẩn đoán, hồ sơ bệnh án, giấy xác nhận phẫu thuật, giấy ra viện, hóa đơn chi phí y tế liên quan sự kiện BH</div>
+      <div class="note-content-text">-	Xác nhận điều trị của cơ quan y tế (giấy ra viện, phiếu điều trị và giấy tờ liên quan đến sự kiện bảo hiểm)</div>
+      <div class="note-content-text">-	Giấy chứng tử và giấy xác nhận quyền thừa kế (trong trường hợp tử vong).</div>
+      <div class="note-content-text">-	Biên bản xác nhận cơ quan du lịch, chính quyền địa phương, hoặc công an nơi xẩy ra sự kiện bảo hiểm</div>
+      <div class="note-content-text">-	Trường hợp yêu cầu chi trả cho di chuyển y tế khẩn cấp và Hồi hương di hài thì cung cấp đầy đủ chi tiết các chứng từ hợp lệ liên quan đến việc thanh toán như hóa đơn, biên lai, phiếu thu theo quy định của pháp luật.</div>
+      <div class="note-content-text">-	Trường hợp ủy quyền cho người khác nhận tiền, phải có giấy ủy quyền hợp pháp</div>
+      <div class="note-content-text">-	Cathay sẽ lưu giữ bản gốc các giấy tờ trên và không hoàn trả lại.</div>
+      <div class="note-content-text text-italic">Gởi hồ sơ (bản gốc) về Bộ phận Bồi thường Cathay trong vòng 30 ngày từ ngày kết thúc hiệu lực hợp đồng bảo hiểm</div>
+  
+      <div class="note-content-text hot-line text-bold" >Hotline bồi thường:  <span class="text-callcenter" (click)="makeCallSupport(0933555920)">HCM: 0933 555 920</span> & <span class="text-callcenter" (click)="makeCallSupport(0938999549)">Hà Nội: 0938 999 549</span></div>
+    </div>
+    
+  </div>
+</ion-content>

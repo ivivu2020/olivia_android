@@ -1,0 +1,35 @@
+import { Component, ViewChild, NgZone } from '@angular/core';
+import { NavController, ModalController, IonSlides } from '@ionic/angular';
+import { SearchHotel } from '../providers/book-service';
+
+
+/**
+ * Generated class for the OccupancyPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-hotelreviewsimage',
+  templateUrl: 'hotelreviewsimage.html',
+  styleUrls: ['hotelreviewsimage.scss'],
+})
+export class HotelreviewsimagePage  {
+  arrimgreview=[];cusnamereview;datereview;
+  @ViewChild('mySlider') slider: IonSlides;
+  constructor(public navCtrl: NavController, public modalCtrl: ModalController, public searchhotel: SearchHotel,public zone:NgZone) {
+  }
+  goback() {
+    this.modalCtrl.dismiss();
+  }
+  private ionViewDidEnter() {
+    this.cusnamereview=this.searchhotel.cusnamereview;
+    this.datereview=this.searchhotel.datereview;
+    setTimeout(() => {
+      this.arrimgreview = this.searchhotel.arrimgreview;
+      this.slider.slideTo(this.searchhotel.indexreviewimg);
+    },900)
+
+  }
+}

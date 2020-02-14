@@ -1,0 +1,23 @@
+page-cuspoints {
+  .title-header{
+    text-align: center;
+  }
+    .text
+    {
+        font-size: 16px;
+        color: #26bed6
+    }
+      .toolbar-title-md {
+      text-align: center;
+      margin-right: 70px;
+    }  
+    .row-line{
+      border-bottom: solid 1px #ccc;
+    }
+    .header-icon{
+      width: 48px;
+      height: 48px;
+      padding-top: 8px;
+      text-align: center;
+    }
+}

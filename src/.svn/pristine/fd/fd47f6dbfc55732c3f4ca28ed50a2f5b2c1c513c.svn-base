@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-toolbar style="min-height: 0px;text-align: center">
+    <ion-row>
+      <ion-col style="text-align: center">
+        <div style="align-self: center">
+          <div style="padding-top: 6px;font-size: 20px;font-weight: bold"><label class="text-title">Hoàn thành</label>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-toolbar>
+</ion-header>
+<ion-content padding>
+  <div style="text-align: center">
+    <img src="./assets/step/step_4.svg">
+  </div>
+</ion-content>

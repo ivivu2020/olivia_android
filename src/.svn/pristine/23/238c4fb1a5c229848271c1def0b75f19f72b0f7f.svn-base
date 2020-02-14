@@ -1,0 +1,58 @@
+import { Component, NgZone, OnInit } from '@angular/core';
+import { NavController, ModalController, Platform } from '@ionic/angular';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-hotelroomdetail',
+  templateUrl: 'hotelroomdetail.html',
+  styleUrls: ['hotelroomdetail.scss'],
+})
+
+export class HotelRoomDetailPage implements OnInit {
+  roomdetail = null;
+  roomdetailarr = [];
+  imgurl = null;
+  public HotelID;
+  constructor(public platform: Platform, public modalCtrl: ModalController, public navCtrl: NavController,
+    public gf: GlobalFunction, private activatedRoute: ActivatedRoute, public zone: NgZone) {
+    this.HotelID = this.activatedRoute.snapshot.paramMap.get('id');
+    this.roomdetail = this.gf.getParams('hotelroomdetail');
+    if (this.roomdetail) {
+      var str = this.roomdetail.Rooms[0].ImagesMaxWidth500;
+      var res = str.substr(0, 4);
+      if (res != "http") {
+        this.imgurl="https:"+str;
+      }
+      else
+      {
+        this.imgurl=str;
+      }
+      if (str.indexOf('noimage') != -1) {
+        this.imgurl = "https://cdn1.ivivu.com/iVivu/2018/02/07/15/noimage-104x110.jpg";
+      }
+      // this.imgurl = this.roomdetail.Rooms[0].ImagesMaxWidth500 ? "https:"+ this.roomdetail.Rooms[0].ImagesMaxWidth500 : 'https://cdn1.ivivu.com/iVivu/2018/02/07/15/noimage.png';
+      this.roomdetailarr = [];
+      this.roomdetailarr.push(this.roomdetail);
+    }
+
+    //Xử lý nút back của dt
+    this.platform.ready().then(() => {
+      this.platform.backButton.subscribe(() => {
+        this.navCtrl.navigateBack('/hoteldetail/' + this.HotelID);
+      })
+    })
+    //google analytic
+    gf.googleAnalytion('hotelroomdetail', 'load', '');
+  }
+
+  ngOnInit() {
+
+  }
+  goback() {
+    //this.navCtrl.navigateBack('/hoteldetail/'+this.HotelID);
+    this.navCtrl.navigateBack(['/app/tabs/hoteldetail/' + this.HotelID]);
+  }
+
+}

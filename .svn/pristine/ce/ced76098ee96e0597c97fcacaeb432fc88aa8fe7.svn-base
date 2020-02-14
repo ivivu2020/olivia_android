@@ -1,0 +1,68 @@
+<!--
+  Generated template for the RoompaymentbreakdownPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>Chi Tiết Thanh Toán</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <ion-list no-lines>
+    <ion-item style="margin-left: -10px">
+      <ion-thumbnail item-start>
+        <img style="width: 100px;height: 100px;object-fit: cover" src={{imgroom}}>
+      </ion-thumbnail>
+      <div style="margin-bottom:45px">
+        <h2 class="text-name" text-wrap>{{Name}}
+
+        </h2>
+        <p class="text">{{roomnumber}} phòng</p>
+      </div>
+      <p text-wrap>
+        <img class="image-card" *ngIf="breakfast" src="./assets/ic_facility/ic_food_b.svg"> {{breakfast}}
+      </p>
+     
+ 
+    </ion-item>
+    <div style="margin-left: -15px">
+      <ion-item>
+        <ion-label style="font-size: 14px">Giá 1 phòng/đêm</ion-label>
+        <p class="total-price" style="margin-top: 0"  item-end>
+          {{PriceAvgMinPriceStr}}đ
+        </p>
+      </ion-item>
+    </div>
+
+    <div style="margin-left: -15px">
+      <ion-item>
+        <ion-label style="font-size: 14px">Giá phòng x {{roomnumber}}| {{dur}} đêm</ion-label>
+        <p class="total-price" style="margin-top: 0"  item-end>
+          {{PriceAvgPlusOTAStr}}đ
+        </p>
+      </ion-item>
+      <ion-item  *ngFor="let msg of arr">
+          <ion-label style="font-size: 14px;white-space: normal">{{msg.text}}</ion-label>
+          <p style="margin-top: 0" class="total-price" item-end>
+            {{msg.price}}đ
+          </p>
+        </ion-item>
+    </div>
+   <hr>
+    <div style="margin-left: -15px">
+      <ion-item>
+        <ion-label style="font-size: 14px">Tổng cộng</ion-label>
+        <p class="total-price1" item-end>
+          {{total}}đ
+        </p>
+      </ion-item>
+    </div>
+  </ion-list>
+</ion-content>

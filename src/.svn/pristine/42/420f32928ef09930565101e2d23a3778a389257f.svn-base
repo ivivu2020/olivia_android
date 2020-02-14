@@ -1,0 +1,1846 @@
+import { Component, OnInit, NgZone, ViewChild } from '@angular/core';
+import { AuthService } from '../providers/auth-service';
+import * as request from 'requestretry';
+import { Storage } from '@ionic/storage';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import * as $ from 'jquery';
+import * as moment from 'moment';
+import { ActionSheetController, NavController, ModalController, Platform, IonContent, AlertController, IonSlides } from '@ionic/angular';
+import { ExperienceFilterPage } from '../experiencefilter/experiencefilter.page';
+import { OverlayEventDetail } from '@ionic/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { Map, tileLayer, marker, icon,latLng } from 'leaflet';
+import * as L from 'leaflet';
+import 'leaflet-routing-machine';
+import { map } from 'rxjs/operators';
+import { ExperienceDetailPage } from '../experiencedetail/experiencedetail.page';
+import { SearchHotel } from '../providers/book-service';
+import { DrawerState } from 'ion-bottom-drawer';
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+import { LocationAccuracy } from '@ionic-native/location-accuracy/ngx';
+import { NativeGeocoder, NativeGeocoderResult, NativeGeocoderOptions } from '@ionic-native/native-geocoder/ngx';
+import { SocialSharing } from '@ionic-native/social-sharing/ngx';
+declare const H;
+declare var google;
+@Component({
+  selector: 'app-experiencesearch',
+  templateUrl: './experiencesearch.page.html',
+  styleUrls: ['./experiencesearch.page.scss'],
+})
+export class ExperienceSearchPage implements OnInit {
+  shouldBounce = true;
+  dockedHeight = 0;
+  distanceTop = 20;
+  drawerState = DrawerState.Docked;
+  states = DrawerState;
+  minimumHeight = 72;
+
+  @ViewChild('scrollArea') content: IonContent;
+  @ViewChild('myFloatSlider') slider: IonSlides;
+  herePlatform;
+  region = 'phú quốc';
+  linkMap:any;
+  canLoadBlog: boolean=true;
+  pageCount=0;
+  pageSize=10;
+  totalPage=0;
+  listBlog=[];
+  showloadmoreblog: boolean= true;
+  arrbloglike=[];
+  blog=[];
+  map:any;
+  googleMap: any;
+  latlng: any;
+  geocoder:any;
+  listEmpty = [1,2,3,4,5]
+  listRestaurant = [{ id: 1, name: 'BoatHouse Restaurant, Khu đô thị An Phú, Thao Dien, District 2, Ho Chi Minh City',lat: 10.8092809, long: 106.7355885 },
+    { id: 2, name: 'Khu Phan Xích Long (quận Phú Nhuận)',lat: 10.7992354, long: 106.6848483 },
+    { id: 3, name: 'Khu phố Tây Bùi Viện (quận 1)',lat: 10.7679735, long: 106.6934983 },
+    { id: 4, name: 'Khu Vĩnh Viễn (quận 10)',lat: 10.7634253, long: 106.6642136 },
+    { id: 5, name: 'Khu Hà Tôn Quyền (quận 5)',lat: 10.7567114, long: 106.6517515 },
+    { id: 6, name: 'Khu Hàng Xanh (quận Bình Thạnh)',lat: 10.8045888, long: 106.7054792 }
+  ]
+  textsearch: string='';
+  curLat: number;
+  curLng: number;
+  markers: L.Marker<any>[] = [];
+  markersSelected: L.Marker<any>[] = [];
+  routings: L.Routing.Control [] = [];
+  listSuggests: any=[];
+  regionCode: any;
+  listSearch: any=[];
+  listSearchOriginal: any=[];
+  listSearchDisplay: any=[];
+  itemclick: boolean = false;
+  sort=1;//1 - ascending; -1- descending
+  filterHourOpen=1;//1 - filter; -1 clear filter
+  regionId: any;
+  markersOriginal: L.Marker<any>[];
+  curType: any;
+  locationCoords: any;
+  devicePlatform: any;
+  recent: any;
+  countfilter = 0;
+  requestGPS: boolean = false;
+  actionSheet: any;
+  dataListLike: any;
+  username: string;
+  _infiniteScroll: any;
+  routesHidden: any=[];
+  sortvalue: any;
+  markerhaschange: boolean;
+  slidehaschange: boolean;
+  loaddatadone: boolean=false;
+  url ='';
+  
+  constructor(private storage: Storage, private zone: NgZone,
+    private navCtrl: NavController,
+    private actionSheetCtrl: ActionSheetController,
+    private gf: GlobalFunction,
+    private modalCtrl: ModalController,
+    private sanitizer: DomSanitizer,
+    private platform: Platform,
+    private geolocation: Geolocation,
+    public searchhotel: SearchHotel,
+    private androidPermissions: AndroidPermissions,
+    private locationAccuracy: LocationAccuracy,
+    private nativeGeocoder: NativeGeocoder,
+    private alertCtrl: AlertController,
+    private socialSharing: SocialSharing
+    ) { 
+      this.locationCoords = {
+        latitude: "",
+        longitude: "",
+        accuracy: "",
+        timestamp: ""
+      }
+
+      // this.platform.ready().then(()=>{
+      //   if(cordova){
+      //     this.devicePlatform = cordova.platformId;
+      //   }
+      // })
+      storage.get('username').then(username => {
+        this.username = username;
+       });
+    }
+
+  ngOnInit() {
+   
+  }
+
+  goback(){
+    var se = this;
+    if(se.actionSheet){
+      se.actionSheet.dismiss();
+    }
+    se.navCtrl.back();
+  }
+
+  ionViewWillEnter(){
+    var se=this;
+
+    if(!se.searchhotel.inputExperienceItem){
+      se.checkGPSPermission();
+    }else{
+      se.loadDataAfterSearchItem();
+    }
+   
+    se.countfilter= 0;
+    se.zone.run(()=>{
+      if(se.searchhotel.ef_arrlocalcheck && se.searchhotel.ef_arrlocalcheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrlocalcheck.length;
+      }
+      if(se.searchhotel.ef_arrhoteltypecheck && se.searchhotel.ef_arrhoteltypecheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrhoteltypecheck.length;
+      }
+      // if(se.searchhotel.ef_arrstylecheck && se.searchhotel.ef_arrstylecheck.length >0){
+      //   se.countfilter += se.searchhotel.ef_arrstylecheck.length;
+      // }
+      if(se.searchhotel.ef_arrhouropencheck && se.searchhotel.ef_arrhouropencheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrhouropencheck.length;
+      }
+      if(se.searchhotel.ef_arrdistancecheck && se.searchhotel.ef_arrdistancecheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrdistancecheck.length;
+      }
+
+      if(se.searchhotel.stringFilterName && se.searchhotel.stringFilterName.length >0){
+        se.textsearch = se.searchhotel.stringFilterName;
+      }
+      if(se.searchhotel.inputExperienceText && se.textsearch && se.textsearch.length>0){
+        se.textsearch += ' | '+ se.searchhotel.inputExperienceText;
+      }else{
+        se.textsearch += se.searchhotel.inputExperienceText ? se.searchhotel.inputExperienceText : '';
+      }
+      
+    })
+    
+    //se.getLocationCoordinates();
+  }
+
+  loadDataAfterSearchItem(){
+    var se = this;
+      se.pageCount =0;
+      se.totalPage = 0;
+      se.textsearch='';
+      se.listSearchOriginal=[];
+      se.listSearch=[];
+      se.listSearchDisplay=[];
+      //Chọn item region => fill lại data theo region code
+      //chọn item place => fill data theo regionid
+      //if(se.searchhotel.inputExperienceRegionCode){
+        var tags ='';
+        if(se.searchhotel.experiencesearchTagsId){
+          tags = se.searchhotel.experiencesearchTagsId;
+        }
+        tags += se.buildFilter();
+        se.buildTextSearch();
+        se.regionCode = se.searchhotel.inputExperienceRegionCode;
+        let urlApi = '';
+        if(se.regionCode){
+          if(se.regionCode == 'ho-chi-minh'){
+            se.regionCode = 'sai-gon';
+          }
+          if(se.regionCode == 'quang-nam'){
+            se.regionCode = 'hoi-an';
+          }
+          if(tags != '' && tags != ','){
+            se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode+'&Tags='+tags;
+            urlApi = se.url +'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5';
+          }else{
+            se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode;
+            urlApi = se.url +'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5';
+          }
+          
+        }else if(!se.loaddatadone){
+          if(tags != '' && tags != ','){
+            se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionId='+se.searchhotel.inputExperienceItem.regionId+'&Tags='+tags;
+            urlApi = se.url +'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5';
+          }else{
+            se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionId='+se.searchhotel.inputExperienceItem.regionId;
+            urlApi = se.url +'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5';
+          }
+        }
+          
+          se.gf.RequestApi('GET',urlApi,{},{},'ExperienceSearch', 'loadDataAfterSearchItem').then((data:any)=>{
+          if(data && data.data.length >0){
+            se.dockedHeight = 300;
+            se.loaddatadone = true;
+            se.totalPage = Math.round(data.total/5);
+            se.storage.get('auth_token').then(auth_token => {
+              if (auth_token) {
+                  var text = "Bearer " + auth_token;
+                  let urlLike = C.urls.baseUrl.urlMobile + '/api/Data/GetPlaceUserLike';
+                  se.gf.RequestApi('GET', urlLike, {authorization: text}, {}, 'ExperienceSearch','GetPlaceUserLike').then((datalike:any) =>{
+                    if(datalike && datalike.length >0){
+                      se.dataListLike = datalike;
+                      data.data.forEach(element => {
+                        element.liked = se.checkItemLiked(element.id) ? true: false;
+                      });
+                      
+                      se.loadDataMap(data.data);
+                    }else{
+                      se.loadDataMap(data.data);
+                    }
+                  })
+                }else{
+                  se.loadDataMap(data.data);
+                }
+            })
+          }
+        })
+  }
+
+  ionViewWillLeave(){
+    var se = this;
+    se.textsearch = '';
+    se.regionCode='';
+    se.countfilter = 0;
+    se.loaddatadone=false;
+  }
+
+  getListSuggestByRegionCode(regionCode,tags){
+    var se = this,
+    urlSuggest='';
+    if(regionCode){
+      se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+regionCode;
+      urlSuggest =  se.url + (tags ? 'Tags='+tags : '')+'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5'
+      se.gf.RequestApi('GET',urlSuggest,{},{},'ExperienceSearch', 'getListSuggestByRegionCode').then((data:any)=>{
+        if(data && data.data.length >0){
+          se.loaddatadone = true;
+          se.dockedHeight = 300;
+          se.totalPage = Math.round(data.total/5);
+          se.storage.get('auth_token').then(auth_token => {
+            if (auth_token) {
+                var text = "Bearer " + auth_token;
+                let urlLike = C.urls.baseUrl.urlMobile + '/api/Data/GetPlaceUserLike';
+                se.gf.RequestApi('GET', urlLike, {authorization: text}, {}, 'ExperienceSearch','GetPlaceUserLike').then((datalike:any) =>{
+                  if(datalike && datalike.length >0){
+                    se.dataListLike = datalike;
+                    data.data.forEach(element => {
+                      element.liked = se.checkItemLiked(element.id) ? true: false;
+                    });
+                    se.bindDataListSuggest(data.data);
+                  }else{
+                    se.bindDataListSuggest(data.data);
+                  }
+                })
+              }else{
+                se.bindDataListSuggest(data.data);
+              }
+          })
+        }
+        
+      })
+    }
+  }
+
+  bindDataListSuggest(data){
+    var se = this;
+    se.listSearch = data;
+    se.listSearchOriginal = data;
+    se.bindMarker(data,'');
+  }
+
+  initMap(){
+    var se = this;
+    if(se.map){
+      se.map.eachLayer(function (layer) {
+          se.map.removeLayer(layer);
+      });
+      se.map.remove();
+    }
+      se.map = new Map('mapContainer').setView([se.locationCoords.latitude,se.locationCoords.longitude], 16);
+      tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(se.map);
+      $('.leaflet-top.leaflet-left').css('display', 'none');
+      $('.leaflet-bottom.leaflet-right').css('display', 'none');
+      setTimeout(function(){ se.map.invalidateSize()}, 500);
+      //se.animateMap(true);
+      se.getCityNameByLatLng(se.locationCoords.latitude,se.locationCoords.longitude);
+      se.clearMarkerAndRouting();
+      se.bindCurrentLocationMarker();
+  }
+
+  animateMap(isShow){
+    if(isShow){
+      $('.content-search').removeClass('cls-hidden').addClass('cls-visible');
+      $('.list-search-item').css('display', 'none');
+      $('.item-filter').css('display', 'none');
+    }else{
+      $('.content-search').removeClass('cls-visible').addClass('cls-hidden');
+      
+      $('.item-filter').css('display', 'block');
+      $('.list-search-item').css('display', 'block');
+    }
+  }
+
+  addMarkersToMap(type) {  
+    var se = this;
+    se.itemclick = true;
+    let url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode+'&SubRegions='+0+'&Tags='+se.getTagByType(type)+'&paging.pageNumber=0&paging.pageSize=5'
+      se.gf.RequestApi('GET',url,{},{},'ExperienceSearch', 'getListSuggestByRegionCode').then((data:any)=>{
+        se.listSearchOriginal=[];
+        se.listSearchOriginal.push(...data);
+       se.bindMarker(data,type);
+    })
+  }
+
+  bindMarker(data,type){
+    var se = this;
+    se.zone.run(()=>{
+      se.listSearch = data;
+      se.sortMarkerByDistance('totalDistance', null);
+      
+      setTimeout(()=>{
+        var i=0;
+          se.listSearch.forEach(rest =>{
+            var customMarkerIcon;
+            if(se.curType){
+              customMarkerIcon = icon({
+                className: 'custom-padding-marker-default',
+                iconUrl: se.getImageByTagId(type,rest.tags),
+                iconSize: [24, 24], 
+                popupAnchor: [0, -20],
+              });
+            }else{
+              customMarkerIcon = icon({
+                className: 'custom-padding-marker-default',
+                iconUrl: se.getImageByTagId('',rest.tags),
+                iconSize: [24, 24], 
+                popupAnchor: [0, -20]
+              });
+            }
+            
+            
+            if(i==0){
+              var customMarkerIconNearest;
+              if(se.curType){
+                let iconurl = se.getMarkerSelectedByTagId(se.curType);
+                  customMarkerIconNearest = L.divIcon({
+                  className: 'custom-padding-marker',
+                  //iconUrl: se.getMarkerSelectedByTagId(type ? type : rest.tags),
+                  iconSize: [30.7, 40], 
+                  popupAnchor: [0, -20],
+                  html: "<img src='"+iconurl+"'/><span class='div-marker-placename'>"+rest.name+"</span>"
+                });
+              }else{
+                let iconurl = se.getMarkerSelectedByTags(rest.tags.toString());
+                customMarkerIconNearest = L.divIcon({
+                  className: 'custom-padding-marker',
+                  //iconUrl: se.getMarkerSelectedByTags(rest.tags.toString()),
+                  iconSize: [30.7, 40], 
+                  popupAnchor: [0, -20],
+                  html: "<img src='"+iconurl+"'/><span class='div-marker-placename'>"+rest.name+"</span>"
+                });
+              }
+              
+             var optionSelected = { icon: customMarkerIconNearest, id: rest.id, type: type ? type : rest.tags, rest: rest};
+              var marker = L.marker([rest.latitude,rest.longitude], optionSelected).addTo(se.map);
+              marker.on('click',() => se.markerClick(marker,rest,se.map, false));
+              se.markersSelected.push(marker);
+            }else{
+              var option= {icon: customMarkerIcon, id: rest.id, type: type? type : rest.tags, rest: rest };
+              var marker = L.marker([rest.latitude,rest.longitude], option).addTo(se.map);
+              marker.on('click',() => se.markerClick(marker,rest,se.map, false));
+              se.markers.push(marker);
+            }
+          i++;
+          })
+          
+          //se.loadDataPaging();
+        //se.map.invalidateSize();
+        se.listSearchDisplay.push(...se.listSearch);
+      },200)
+      
+    })
+  }
+
+  bindMarkerPaging(data,type){
+    var se = this;
+    se.zone.run(()=>{
+      se.sortMarkerByDistance('totalDistance', null);
+      
+      setTimeout(()=>{
+        var i=0;
+        data.forEach(rest =>{
+            var customMarkerIcon;
+            if(se.curType){
+              customMarkerIcon = icon({
+                className: 'custom-padding-marker-default',
+                iconUrl: se.getImageByTagId(type,rest.tags),
+                iconSize: [24, 24], 
+                popupAnchor: [0, -20],
+              });
+            }else{
+              customMarkerIcon = icon({
+                className: 'custom-padding-marker-default',
+                iconUrl: se.getImageByTagId('',rest.tags),
+                iconSize: [24, 24], 
+                popupAnchor: [0, -20]
+              });
+            }
+              var option= {icon: customMarkerIcon, id: rest.id, type: type? type : rest.tags, rest: rest };
+              var marker = L.marker([rest.latitude,rest.longitude], option).addTo(se.map);
+              marker.on('click',() => se.markerClick(marker,rest,se.map, false));
+              se.markers.push(marker);
+           
+          })
+
+          //se.listSearchDisplay.push(...se.listSearch);
+      },200)
+      
+    })
+  }
+  /**
+   * Sắp xếp vị trí marker theo tên column sort, item làm mốc
+   * @sortColumn: tên cột dữ liệu sort
+   * @itemDest: item lấy làm mốc để sort
+   */
+  sortMarkerByDistance(sortColumn, itemDest){
+    var se = this;
+    se.listSearch.forEach(rest =>{
+      se.calculateDistanceMarker(rest,sortColumn, itemDest);
+    })
+
+    setTimeout(()=>{
+      if (se.listSearch && se.listSearch.length > 0) {
+        se.zone.run(() => se.listSearch.sort(function (a, b) {
+          let direction = -1;
+            if(a[sortColumn] && b[sortColumn] && a[sortColumn]*1 < b[sortColumn]*1){
+              return 1 * direction;
+            }else{
+              return -1 * direction;
+            }
+        }));
+      }
+      //Xóa luôn route vẽ trên bản đồ vì chỉ để tính distance
+      if(se.routesHidden && se.routesHidden.length >0){
+        se.routesHidden.forEach( (element :any) => {
+          se.map.removeControl(element);
+        });
+      }
+    },100)
+  }
+  /**
+   * Tính khoảng cách giữa các điểm so với vị trí hiện tại
+   * @rest: item cần sort
+   * @sortColumn: tên cột dữ liệu sort
+   * @itemDest: item lấy làm mốc để sort
+   */
+  calculateDistanceMarker(rest:any, sortColumn, itemDest){
+    var se = this;
+    var lat,lng;
+    var dist = 0;
+    var fromLL, toLL;
+    var bypass = 0;
+    // if(sortColumn == 'totalDistance'){
+    //   fromLL = L.latLng(se.locationCoords.latitude, se.locationCoords.longitude);
+    //   toLL = L.latLng(rest.latitude, rest.longitude);
+    // }else if(sortColumn == 'totalDistanceNearBy' && itemDest){
+    //   if(itemDest.id == rest.id){
+    //     bypass=1;
+    //   }else{
+    //     fromLL = L.latLng(itemDest.latitude, itemDest.longitude);
+    //     toLL = L.latLng(rest.latitude, rest.longitude);
+    //   }
+    // }
+    // if(!bypass){
+    //   var routingControl = L.Routing.control({
+    //     waypoints: [fromLL, toLL],
+    //     routeWhileDragging: true,
+    //     showAlternatives: false,
+    //     fitSelectedRoutes: false,
+    //     show: false,
+    //   })
+
+    //   routingControl.on('routesfound', function(e) {
+    //     var routes = e.routes;
+    //     rest[sortColumn] =  (Math.round(routes[0].summary.totalDistance)/1000).toFixed(1);
+    //   })
+    //   //se.map.fitBounds(L.latLngBounds(fromLL, toLL));
+    //   routingControl.onAdd(se.map);
+    //   se.routesHidden.push(routingControl);
+    // }else{
+    //   rest[sortColumn] = 999999;
+    // }
+    if(!rest.latitude || !rest.longitude){
+      rest[sortColumn] =0;
+    }else{
+      if(sortColumn == 'totalDistance'){
+        rest[sortColumn] = (Math.round(L.latLng(se.locationCoords.latitude, se.locationCoords.longitude).distanceTo(L.latLng(rest.latitude, rest.longitude)))/1000).toFixed(1);
+      }else if(sortColumn == 'totalDistanceNearBy' && itemDest){
+        if(itemDest.id == rest.id){
+          rest[sortColumn] = 9999999;
+        }else{
+          rest[sortColumn] = (Math.round(L.latLng(itemDest.latitude, itemDest.longitude).distanceTo(L.latLng(rest.latitude, rest.longitude)))/1000).toFixed(1);
+        }
+      }
+    }
+    
+  }
+
+  /**
+   * Add marker vị trí hiện tại vào map
+   */
+  bindCurrentLocationMarker(){
+    var se = this;
+    const customMarkerIcon = icon({
+      className: 'custom-padding-marker-default',
+      iconUrl: './assets/img_musttry/ic_mylocation.svg',
+      iconSize: [44, 44], 
+      popupAnchor: [0, -20]
+    });
+
+    var option= {icon: customMarkerIcon };
+    var marker = L.marker([se.locationCoords.latitude,se.locationCoords.longitude], option).addTo(se.map);
+        se.markers.push(marker);
+        //se.map.invalidateSize();
+  }
+
+  markerClick(marker, rest, map, isslide){
+    var se = this;
+    if(isslide){
+      se.slidehaschange= true;
+      se.markerhaschange= false;
+    }else{
+      se.slidehaschange= false;
+      se.markerhaschange= true;
+    }
+    
+     //clear old routing
+     if(se.routings && se.routings.length >0){
+      se.routings.forEach( (element :any) => {
+        se.map.removeControl(element);
+      });
+    }
+    //Clear old marker 
+    se.removeMarkerById(marker.options.id);
+    //Create selected marker
+    var markerNew:any = se.createNewMarkerById(marker, marker.options.rest);
+
+     var routingControl = L.Routing.control({
+            waypoints: [L.latLng(se.locationCoords.latitude, se.locationCoords.longitude), L.latLng(markerNew.options.rest.latitude, markerNew.options.rest.longitude)],
+            routeWhileDragging: true,
+            showAlternatives: false,
+            fitSelectedRoutes: false,
+            show: false,
+            lineOptions: {styles: [{color: 'transparent', opacity: 0.75}]},
+          }).addTo(map);
+          var distance= L.latLng(se.locationCoords.latitude, se.locationCoords.longitude).distanceTo(L.latLng(markerNew.options.rest.latitude, markerNew.options.rest.longitude))/1000;
+        routingControl.on('routesfound', function(e) {
+            var routes = e.routes;
+            var summary = routes[0].summary;
+            // if(summary.totalDistance >= 1000){
+            //   markerNew.bindPopup(rest.name+ ' - '+ Math.round(distance).toFixed(1)+ ' km/ '+Math.ceil(summary.totalTime % 3600 / 60) + ' phút'+'</br>'+rest.address+'</br>'+ (rest.workingHours.length >0 ? (rest.workingHours[0].name + ' từ '+ rest.workingHours[0].timeFrom + ' → ' + rest.workingHours[0].timeTo) : '' )).openPopup();
+            // }else{
+            //   if(summary.totalTime % 3600/ 60 >=1){
+            //     markerNew.bindPopup(rest.name+ ' - '+ Math.round(distance).toFixed(1)+ ' m/ '+Math.ceil(summary.totalTime % 3600/60) + ' phút'+'</br>'+rest.address+'</br>'+ (rest.workingHours.length >0 ? (rest.workingHours[0].name + ' từ '+ rest.workingHours[0].timeFrom + ' → ' + rest.workingHours[0].timeTo) : '' )).openPopup();
+            //   }else{
+            //     markerNew.bindPopup(rest.name+ ' - '+ Math.round(distance).toFixed(1)+ ' m/ '+Math.ceil(summary.totalTime % 3600) + ' giây'+'</br>'+rest.address+'</br>'+ (rest.workingHours.length >0 ? (rest.workingHours[0].name + ' từ '+ rest.workingHours[0].timeFrom + ' → ' + rest.workingHours[0].timeTo) : '' )).openPopup();
+            //   }
+              
+            // }
+            var idx = se.listSearch.findIndex((m:any)=>{ return m.id == markerNew.options.id});
+            if(idx && se.markerhaschange){
+              se.slider.slideTo(idx);
+            }
+         });
+        //se.routings.push(routingControl);
+        $('.leaflet-routing-container.leaflet-bar.leaflet-routing-collapsible.leaflet-control').css('display','none');
+        se.map.panTo(L.latLng(markerNew.options.rest.latitude, markerNew.options.rest.longitude), 16);
+
+        
+  }
+  /**
+   * Thay icon marker được tap trên bản đồ thành icon marker selected
+   * Todo: Clone marker được select
+   * Tạo marker selected dựa trên marker clone, push vào mảng marker selected
+   * Xóa marker cũ được select ở trên và add marker selected được tạo trên vào vị trí marker cũ
+   * @param marker 
+   * @param rest 
+   */
+  createNewMarkerById(marker, rest){
+    var se  = this;
+    var customMarkerIconNearest;
+    if(se.curType){
+      let iconurl = se.getMarkerSelectedByTagId(se.curType);
+      customMarkerIconNearest = L.divIcon({
+        className: 'custom-padding-marker',
+        //iconUrl: se.getMarkerSelectedByTagId(se.curType),
+        iconSize: [30.7, 40], 
+        popupAnchor: [0, -20],
+        html: "<img src='"+iconurl+"'/><span class='div-marker-placename'>"+rest.name+"</span>"
+      });
+    }else{
+      let iconurl = se.getMarkerSelectedByTags(marker.options.type ? marker.options.type.toString() : se.curType.toString());
+      customMarkerIconNearest = L.divIcon({
+        className: 'custom-padding-marker',
+        //iconUrl: se.getMarkerSelectedByTags(marker.options.type ? marker.options.type.toString() : se.curType.toString()),
+        iconSize: [30.7, 40], 
+        popupAnchor: [0, -20],
+        html: "<img src='"+iconurl+"'/><span class='div-marker-placename'>"+rest.name+"</span>"
+      });
+    }
+    
+    var optionSelected = { icon: customMarkerIconNearest, id: marker.options.id, type: marker.options.type, rest: rest};
+    var markerNew = L.marker([marker._latlng.lat,marker._latlng.lng], optionSelected).addTo(se.map);
+    markerNew.on('click',() => se.markerClick(markerNew,marker.options.rest,se.map,false));
+
+    if(se.markersSelected != null && se.markersSelected.length >0){
+      //Tạo marker mới theo marker cũ được selected
+      var objMarkerSelected :any =se.markersSelected[0];
+      const customMarkerIcon = icon({
+        className: 'custom-padding-marker-default',
+        iconUrl: se.getMarkerByItemTags(objMarkerSelected.options.type.toString()),
+        iconSize: [24, 24], 
+        popupAnchor: [0, -20]
+      });
+      var option = { icon: customMarkerIcon, id: objMarkerSelected.options.id, type: objMarkerSelected.options.type, rest: objMarkerSelected.options.rest};
+      var markerSelectedNew = L.marker([objMarkerSelected._latlng.lat,objMarkerSelected._latlng.lng], option).addTo(se.map);
+      markerSelectedNew.on('click',() => se.markerClick(markerSelectedNew,objMarkerSelected.options.rest,se.map,false));
+      se.markers.push(markerSelectedNew);
+      //Xóa mảng marker đang được selected
+      se.markersSelected.forEach(element => {
+        se.map.removeLayer(element);
+        //Clear old marker 
+        var obj: any = element;
+      });
+      se.markersSelected = [];
+      se.markersSelected.push(markerNew);
+      
+     }
+
+    return markerNew;
+  }
+
+  getImageByType(type){
+    switch(type){
+      case 1:
+        return './assets/img_musttry/an_gi.svg';
+        break;
+      case 2:
+        return './assets/img_musttry/xem_gi.svg';
+        break;
+      case 3:
+        return './assets/img_musttry/choi_gi.svg';
+        break;
+      case 4:
+        return './assets/img_musttry/o_dau.svg';
+        break;
+      case 5:
+        return './assets/img_musttry/song_ao.svg';
+        break;
+      case 6:
+        return './assets/img_musttry/phuong_tien.svg';
+        break;
+      default:
+        return './assets/img_musttry/marker.svg';
+        break;
+    }
+  }
+
+  getImageByTagId(TagId, tags){
+    switch(TagId){
+      case 3:
+        return './assets/img_musttry/an_gi.svg';
+        break;
+      case 6:
+        return './assets/img_musttry/xem_gi.svg';
+        break;
+      case 7:
+        return './assets/img_musttry/choi_gi.svg';
+        break;
+      case 4:
+        return './assets/img_musttry/o_dau.svg';
+        break;
+      case 9:
+        return './assets/img_musttry/song_ao.svg';
+        break;
+      case 8:
+        return './assets/img_musttry/phuong_tien.svg';
+        break;
+      default:
+        if(tags != null && tags.length >0){
+          return this.getMarkerByItemTags(tags.toString());
+        }else{
+          return './assets/img_musttry/marker.svg';
+        }
+        break;
+    }
+  }
+  
+  getTagByType(type){
+    switch(type){
+      case 1:
+        return 3;
+        break;
+      case 2:
+        return 6;
+        break;
+      case 3:
+        return 7;
+        break;
+      case 4:
+        return 4;
+        break;
+      case 5:
+        return 9;
+        break;
+      case 6:
+        return 8;
+        break;
+    }
+  }
+
+  /**
+   * Hàm lấy icon marker được chọn/ địa điểm gần nhất
+   */
+  getMarkerByItemTags(tags){
+    var se = this;
+    if(tags&& tags.length >0){
+      if(tags.indexOf(3) != -1)
+      {
+        return './assets/img_musttry/an_gi.svg';
+      }
+      if(tags.indexOf(6) != -1)
+      {
+        return './assets/img_musttry/xem_gi.svg';
+      }
+      if(tags.indexOf(7) != -1)
+      {
+        return './assets/img_musttry/choi_gi.svg';
+      }
+      if(tags.indexOf(4) != -1)
+      {
+        return './assets/img_musttry/o_dau.svg';
+      }
+      if(tags.indexOf(9) != -1)
+      {
+        return './assets/img_musttry/song_ao.svg';
+      }
+      if(tags.indexOf(8) != -1)
+      {
+        return './assets/img_musttry/phuong_tien.svg';
+      }else{
+        return './assets/img_musttry/marker.svg';
+      }
+    }
+  }
+
+  /**
+   * Hàm lấy icon marker được chọn/ địa điểm gần nhất
+   * @param TagId id tag theo từng địa điểm
+   */
+  getMarkerSelectedByTagId(TagId){
+    switch(TagId){
+      case 3:
+        return './assets/img_musttry/ic_food_selected.svg';
+        break;
+      case 6:
+        return './assets/img_musttry/ic_eye_selected.svg';
+        break;
+      case 7:
+        return './assets/img_musttry/ic_celebrate_selected.svg';
+        break;
+      case 4:
+        return './assets/img_musttry/ic_home_selected.svg';
+        break;
+      case 9:
+        return './assets/img_musttry/ic_camera_selected.svg';
+        break;
+      case 8:
+        return './assets/img_musttry/ic_airplane_selected.svg';
+        break;
+      default:
+        return './assets/img_musttry/marker.svg';
+        break;
+    }
+  }
+
+  /**
+   * Hàm lấy icon marker được chọn/ địa điểm gần nhất sau khi từ form lọc
+   * @param TagId id tag theo từng địa điểm
+   */
+  getMarkerSelectedByTags(tags){
+    if(tags&& tags.length >0){
+      if(tags.indexOf(3) != -1)
+      {
+        return './assets/img_musttry/ic_food_selected.svg';
+      }
+      if(tags.indexOf(6) != -1)
+      {
+        return './assets/img_musttry/ic_eye_selected.svg';
+      }
+      if(tags.indexOf(7) != -1)
+      {
+        return './assets/img_musttry/ic_celebrate_selected.svg';
+      }
+      if(tags.indexOf(4) != -1)
+      {
+        return './assets/img_musttry/ic_home_selected.svg';
+      }
+      if(tags.indexOf(9) != -1)
+      {
+        return './assets/img_musttry/ic_camera_selected.svg';
+      }
+      if(tags.indexOf(8) != -1)
+      {
+        return './assets/img_musttry/ic_airplane_selected.svg';
+      }
+      else{
+        return './assets/img_musttry/marker.svg';
+      }
+    }else{
+      return './assets/img_musttry/marker.svg';
+    }
+  }
+
+  hideMapElement(){
+    var se = this;
+    var el = $("#mapDiv");
+    if(el && el.length >0){
+      var elgmno = $("#mapDiv").querySelector('.gmnoprint');
+      if(elgmno && elgmno.length >0){
+        elgmno.attributes.style.value = elgmno.attributes.style.value + "; display: none";
+      }
+
+      var elplacecard = $("#mapDiv").querySelector('.place-card');
+      if(elplacecard && elplacecard.length >0){
+        elplacecard.attributes.style.value = elplacecard.attributes.style.value + "; display: none";
+      }
+
+      var ellogincontrol = $("#mapDiv").querySelector('.login-control');
+      if(ellogincontrol && ellogincontrol.length >0){
+        ellogincontrol.attributes.style.value = ellogincontrol.attributes.style.value + "; display: none";
+      }
+
+      var elgminset = $("#mapDiv").querySelector('.gm-inset');
+      if(elgminset && elgminset.length >0){
+        elgminset.attributes.style.value = elgminset.attributes.style.value + "; display: none";
+      }
+      
+    }
+  }
+
+  /**
+   * Sự kiện khi click vào từng nhóm item search
+   */
+  itemSearchClick(type){
+    var se = this;
+    se.curType = type;
+    //animation zoom map
+    se.animateMap(false);
+    //Add pin to map
+    se.addMarkersToMap(type);
+    //scroll to Top
+    se.content.scrollToTop(500);
+    //hide item-search
+    se.showHideItemSearch(true);
+    //add text to input search
+    se.addTextSearch(type);
+    
+  }
+
+
+  addTextSearch(type){
+    var se = this;
+    if(type==1){
+      se.textsearch = "Ăn gì";
+    }
+    if(type==2){
+      se.textsearch = "Xem gì";
+    }
+    if(type==3){
+      se.textsearch = "Chơi gì";
+    }
+    if(type==4){
+      se.textsearch = "Ở đâu";
+    }
+    if(type==5){
+      se.textsearch = "Sống ảo";
+    }
+    if(type==6){
+      se.textsearch = "Di chuyển";
+    }
+    $('.input-search').addClass('searchbar-has-focus');
+  }
+  /**
+   * Ẩn hiện div itemsearch/ listsearch khi chọn/xóa theo item
+   */
+  showHideItemSearch(show){
+    if(show){
+      $('.div-list-search-result').addClass('cls-show').removeClass('cls-hide');
+      $('.div-item-search').removeClass('cls-show').addClass('cls-hide');
+    }else{
+      $('.div-item-search').addClass('cls-show').removeClass('cls-hide');
+      $('.div-list-search-result').removeClass('cls-show').addClass('cls-hide');
+    }
+    
+  }
+
+  buildFilter(){
+    var se = this, sfilter= ',';
+    if(se.searchhotel.ef_arrhoteltypecheck){
+      sfilter += se.searchhotel.ef_arrhoteltypecheck.join(',');
+    }
+    if(se.searchhotel.ef_arrlocalcheck){
+      sfilter += se.searchhotel.ef_arrlocalcheck.join(',');
+    }
+    if(se.searchhotel.ef_arrhouropencheck){
+      sfilter += se.searchhotel.ef_arrhouropencheck.join(',');
+    }
+    if(se.searchhotel.ef_arrdistancecheck){
+      sfilter += se.searchhotel.ef_arrdistancecheck.join(',');
+    }
+    return sfilter;
+  }
+  /**
+   * Sự kiện khi người dùng nhập vào ô text search
+   */
+  getItems(event){
+    var se = this;
+    se.loaddatadone=false;
+    if(event.detail.value == "" || !se.searchhotel.inputExperienceItem){
+      se.cancelInput();
+    }else{
+      var se = this;
+      se.pageCount =0;
+      se.totalPage = 0;
+      se.textsearch='';
+      //Chọn item region => fill lại data theo region code
+      //chọn item place => fill data theo regionid
+      //if(se.searchhotel.inputExperienceRegionCode){
+        var tags ='';
+        if(se.searchhotel.experiencesearchTagsId){
+          tags = se.searchhotel.experiencesearchTagsId;
+        }
+        tags += se.buildFilter();
+        se.buildTextSearch();
+        se.regionCode = se.searchhotel.inputExperienceRegionCode;
+        let url = '';
+        if(se.regionCode){
+          if(se.regionCode == 'ho-chi-minh'){
+            se.regionCode = 'sai-gon';
+          }
+          if(se.regionCode == 'quang-nam'){
+            se.regionCode = 'hoi-an';
+          }
+
+          if(tags != '' && tags != ','){
+            url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode+'&Tags='+tags+'&paging.pageNumber=0&paging.pageSize=5';
+          }else{
+            url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode+'&paging.pageNumber=0&paging.pageSize=5';
+          }
+          
+        }else if(!se.loaddatadone){
+          if(tags != '' && tags != ','){
+            url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionId='+se.searchhotel.inputExperienceItem.regionId+'&Tags='+tags+'&paging.pageNumber=0&paging.pageSize=5';
+          }else{
+            url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionId='+se.searchhotel.inputExperienceItem.regionId+'&paging.pageNumber=0&paging.pageSize=5';
+          }
+        }
+          
+          se.gf.RequestApi('GET',url,{},{},'ExperienceSearch', 'getItems').then((data:any)=>{
+          if(data && data.length >0){
+            se.loaddatadone = true;
+            se.dockedHeight = 300;
+            se.storage.get('auth_token').then(auth_token => {
+              if (auth_token) {
+                  var text = "Bearer " + auth_token;
+                  let urlLike = C.urls.baseUrl.urlMobile + '/api/Data/GetPlaceUserLike';
+                  se.gf.RequestApi('GET', urlLike, {authorization: text}, {}, 'ExperienceSearch','GetPlaceUserLike').then((datalike:any) =>{
+                    if(datalike && datalike.length >0){
+                      se.dataListLike = datalike;
+                      data.forEach(element => {
+                        element.liked = se.checkItemLiked(element.id) ? true: false;
+                      });
+                      
+                      se.loadDataMap(data);
+                    }else{
+                      se.loadDataMap(data);
+                    }
+                  })
+                }else{
+                  se.loadDataMap(data);
+                }
+            })
+          }
+        })
+      //}
+    }
+  }
+
+  loadDataMap(data){
+    var se = this;
+    se.zone.run(()=>{
+      se.listSearch = data;
+      se.listSearchOriginal = [];
+      se.listSearchDisplay=[];
+      se.listSearchOriginal.push(...data);
+      se.regionId = data[0].regionId;
+      
+     
+    })
+    //Nếu item search theo item place thì lấy theo vị trí place
+    //Nếu search theo vùng thì lấy vị trí theo place đầu tiên của list place theo vùng
+    se.locationCoords.latitude = se.searchhotel.inputExperienceItem.latitude ? se.searchhotel.inputExperienceItem.latitude : data[0].latitude;
+    se.locationCoords.longitude = se.searchhotel.inputExperienceItem.longitude ? se.searchhotel.inputExperienceItem.longitude: data[0].longitude;
+
+    //vào trang chi tiết nếu chọn 1 địa điểm ko phải vùng
+    if(!se.regionCode && se.searchhotel.inputExperienceItem){
+      se.itemListSearchClick(se.searchhotel.inputExperienceItem);
+    }
+
+    se.clearMarkerAndRouting();
+    se.bindCurrentLocationMarker();
+    
+    se.initMap();
+    se.curType = '';
+    se.bindMarker(data,se.searchhotel.experiencesearchTagsId);
+    //scroll to Top
+    se.content.scrollToTop(500);
+  }
+
+  clickSearch(){
+    this.searchhotel.clearFilterExperience = false;
+    this.recent = this.searchhotel.ItemExperienceRegionRecent;
+    this.searchhotel.inputExperienceRegionCode = null;
+    this.searchhotel.inputExperienceText = null;
+    this.searchhotel.inputExperienceItem = null;
+    this.listSearchOriginal=[];
+    this.listSearch=[];
+    this.listSearchDisplay=[];
+    this.dockedHeight = 0;
+    this.navCtrl.navigateForward('/searchexperienceregion');
+  }
+
+  /**
+   * Nhấn xóa trên ô input/ xóa hết textsearch
+   */
+  cancelInput(){
+    var se= this;
+    se.itemclick = false;
+    //se.animateMap(true);
+    //se.showHideItemSearch(false);
+    se.clearMarkerAndRouting();
+    
+  }
+  /**
+   * Xóa marker theo id
+   */
+  removeMarkerById(id){
+    var se = this;
+    if(se.map){
+      se.map.eachLayer(function(layer) {
+        //Xóa marker được click
+        if(se.markers != null){
+          se.markers.forEach( (element :any) => {
+            if(element.options.id && element.options.id == id){
+              se.map.removeLayer(element);
+            }
+          });
+          
+        }
+      })
+    }
+  }
+  
+  clearMarkerAndRouting(){
+    var se = this;
+    if(se.map){
+      se.map.eachLayer(function(layer) {
+        // Remove all layers except the background (tilelayer)
+        // EDIT: and the main marker with the custom property
+        if(se.markers && se.markers.length >0){
+          se.markers.forEach( (element :any) => {
+            se.map.removeLayer(element);
+          });
+        }
+        if(se.markersSelected  && se.markersSelected.length >0){
+          se.markersSelected.forEach( (element :any) => {
+            se.map.removeLayer(element);
+          });
+        }
+        if(se.routings && se.routings.length >0){
+          se.routings.forEach( (element :any) => {
+            se.map.removeControl(element);
+          });
+        }
+      });
+    }
+  }
+
+  /**
+   * show popup lọc
+   */
+  async showFilter(){
+    var se = this;
+    se.loaddatadone=false;
+    if(se.actionSheet){
+      se.actionSheet.dismiss();
+    }
+    
+    se.curType='';
+    se.searchhotel.stringFilterName = '';
+    se.gf.setParams(se.regionCode,'experienceFilter_regionId');
+    const modal: HTMLIonModalElement =
+    await this.modalCtrl.create({
+      component: ExperienceFilterPage
+    });
+    modal.present();
+
+    modal.onDidDismiss().then((data: OverlayEventDetail) => {
+      var strFilter = '';
+      se.textsearch='';
+      se.pageCount =0;
+      se.totalPage =0;
+      se.listSearchOriginal=[];
+      se.listSearch=[];
+      se.listSearchDisplay=[];
+      let urlAPi='';
+      if (data.data || se.searchhotel.ef_arrdistancecheck.length >0) {
+        se.zone.run(() => {
+          strFilter = data.data;
+          se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode+''+strFilter;
+          urlAPi = se.url +'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5'
+            se.reLoadDataAfterFilter(urlAPi, strFilter);
+            se.buildTextSearch();
+        })
+      }else{
+        if(se.searchhotel.clearFilterExperience){
+          se.countfilter = 0;
+          se.textsearch = "";
+          se.cancelInput();
+          se.listSearchOriginal=[];
+          se.listSearch=[];
+          se.listSearchDisplay=[];
+          
+        }else{
+          strFilter += se.buildFilter();
+          se.url = C.urls.baseUrl.urlMobile + '/api/Data/GetPlace?regionCodes='+se.regionCode+'&Tags='+strFilter;
+          urlAPi = se.url +'&paging.pageNumber=0&paging.pageSize=5'
+          se.reLoadDataAfterFilter(urlAPi, '');
+          se.buildTextSearch();
+        }
+      }
+      
+    
+    })
+  }
+  buildTextSearch(){
+    var se = this;
+    if(se.searchhotel.stringFilterName && se.searchhotel.stringFilterName.length >0){
+      se.textsearch = se.searchhotel.stringFilterName;
+    }
+    if(se.searchhotel.inputExperienceText && se.textsearch && se.textsearch.length>0){
+      if(!se.textsearch.indexOf(se.searchhotel.inputExperienceText)){
+        se.textsearch += ' | '+ se.searchhotel.inputExperienceText;
+      }
+    }else{
+      if(!se.textsearch.indexOf(se.searchhotel.inputExperienceText)){
+        se.textsearch += se.searchhotel.inputExperienceText ? se.searchhotel.inputExperienceText : '';
+      }
+    }
+  }
+
+  /**
+   * Hàm load lại dữ liệu sau filter
+   * @param url url gọi api
+   * @param strFilter chuỗi filter
+   */
+  reLoadDataAfterFilter(url,strFilter){
+    var se = this;
+    se.gf.RequestApi('GET',url,{},{},'ExperienceSearch', 'reLoadDataAfterFilter').then((data:any)=>{
+      se.loaddatadone = true;
+      se.dockedHeight = 300;
+      se.totalPage = Math.round(data.total/5);
+      se.clearMarkerAndRouting();
+      data.data.forEach(element => {
+        se.calculateDistanceMarker(element, 'totalDistance', null);
+      });
+      if(se.searchhotel.ef_arrdistancecheck && se.searchhotel.ef_arrdistancecheck.length>0){
+        setTimeout(()=>{
+          let d = se.getDistanceFilter();
+          data = data.data.filter((item)=>{ return item.totalDistance <= d })
+        },50)
+      }
+
+      setTimeout(()=>{
+            se.storage.get('auth_token').then(auth_token => {
+              if (auth_token) {
+                  var text = "Bearer " + auth_token;
+                  let urlLike = C.urls.baseUrl.urlMobile + '/api/Data/GetPlaceUserLike';
+                  se.gf.RequestApi('GET', urlLike, {authorization: text}, {}, 'ExperienceSearch','GetPlaceUserLike').then((datalike:any) =>{
+                    if(datalike && datalike.length >0){
+                      se.dataListLike = datalike;
+                      data.data.forEach(element => {
+                        element.liked = se.checkItemLiked(element.id) ? true: false;
+                      });
+                      se.executeReloadData(data.data, strFilter);
+                    }else{
+                      se.executeReloadData(data.data, strFilter);
+                    }
+                  })
+                }else{
+                  se.executeReloadData(data.data, strFilter);
+                }
+            })
+        },150)
+    })
+  }
+
+  executeReloadData(data,strFilter){
+    var se = this;
+    se.zone.run(()=>{
+      se.listSearchDisplay=[];
+      se.listSearchOriginal=[];
+      se.listSearchOriginal.push(...data);
+    })
+    
+    se.bindMarker(data,strFilter);
+    se.reCountFilter();
+  }
+
+  getDistanceFilter(){
+    var se = this, distance = 0;
+      if(se.searchhotel.ef_arrdistancecheck && se.searchhotel.ef_arrdistancecheck.length>0)
+      {
+        let d = Math.max(...se.searchhotel.ef_arrdistancecheck);
+        distance = d == 1 ? 1 : ( d==4 ? d *5 : ((d-1) * 5) );
+      }   
+    return distance;
+  }
+  /**
+   * Hàm đếm lại số filter
+   * */
+  reCountFilter(){
+    var se = this;
+    se.countfilter = 0;
+    se.zone.run(()=>{
+      if(se.searchhotel.ef_arrhoteltypecheck && se.searchhotel.ef_arrhoteltypecheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrhoteltypecheck.length;
+      }
+      if(se.searchhotel.ef_arrstylecheck && se.searchhotel.ef_arrstylecheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrstylecheck.length;
+      }
+      if(se.searchhotel.ef_arrlocalcheck && se.searchhotel.ef_arrlocalcheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrlocalcheck.length;
+      }
+      if(se.searchhotel.ef_arrhouropencheck && se.searchhotel.ef_arrhouropencheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrhouropencheck.length;
+      }
+      if(se.searchhotel.ef_arrdistancecheck && se.searchhotel.ef_arrdistancecheck.length >0){
+        se.countfilter += se.searchhotel.ef_arrdistancecheck.length;
+      }
+    })
+  }
+
+  async itemListSearchClick(item){
+    var se = this;
+    if(se.actionSheet){
+      se.actionSheet.dismiss();
+    }
+    se.gf.setParams(item,'experienceItem');
+    //search marker by id and selected marker on map
+    se.searchAndClickMarker(item);
+    //se.sortMarkerByDistance('totalDistanceNearBy', item);
+    //setTimeout(async ()=>{
+      //let lstDistanceNearBy = se.listSearch.slice(0,3);
+      se.gf.setParams(se.listSearchDisplay, 'listSearch_ExperienceDetail');
+      //se.navCtrl.navigateForward('/experiencedetail');
+      const modal: HTMLIonModalElement =
+      await this.modalCtrl.create({
+        component: ExperienceDetailPage
+      });
+      modal.present();
+  
+      modal.onDidDismiss().then((data: OverlayEventDetail) => {
+        if (data.data) {
+          
+        }
+      })
+    //},200)
+    
+  }
+
+  searchAndClickMarker(item){
+    var se = this;
+    se.markerhaschange = false;
+    se.slidehaschange= true;
+    if(se.markers && se.markers.length >0){
+      se.markers.forEach( (element:any) => {
+        if(element.options.id == item.id){
+          se.markerClick(element, element.options.rest, se.map, true);
+        }
+      });
+    }
+  }
+  /**
+   * Sắp xếp theo lượt like nếu có lên trên; ko có like thì sắp xếp theo tên
+   */
+  async clickSort(event){
+    var se = this;
+    if(event){
+      se.sortData(event.detail.value);
+      se.sortvalue = event.detail.value;
+    }
+  }
+
+  sortData(sortValue){
+    var se = this;
+    if (se.listSearchDisplay && se.listSearchDisplay.length > 0) {
+      se.sort = se.sort*-1;
+      se.zone.run(() => se.listSearchDisplay.sort(function (a, b) {
+        let direction = -1;
+          if(sortValue == 2){
+            if (a['totalDistance']*1 < b['totalDistance']*1) {
+              return 1 * direction;
+            }
+            else{
+              return -1 * direction;
+            }
+          }
+          else if(sortValue == 3){
+            let direction =1;
+            if (a['totalLike'] < b['totalLike']) {
+              return 1 * direction;
+            }
+            else{
+              return -1 * direction;
+            }
+          }else if(sortValue == 1){
+            let a1='',b1='';
+            a1 = a['name'];
+            b1 = b['name'];
+
+            a1 = se.convertFontVNI(a1);
+            b1 = se.convertFontVNI(b1);
+
+            if (a1 < b1) {
+              return 1 * direction;
+            }
+            else if (a1 > b1) {
+              return -1 * direction;
+            }
+          }
+      }));
+    }
+  }
+  /**
+   * Chuyển ký tự font VNi vd: â - a ...
+   */
+  convertFontVNI(obj){
+    if(obj.indexOf('đ') != -1 || obj.indexOf('Đ') != -1){
+      obj = obj.replace('đ','d').replace('Đ','D');
+    }
+    if(obj.indexOf('ă') != -1 || obj.indexOf('Ă') != -1){
+      obj = obj.replace('ă','a').replace('Ă','A');
+    }
+    if(obj.indexOf('â') != -1 || obj.indexOf('Â') != -1){
+      obj = obj.replace('â','a').replace('Â','Â');
+    }
+    if(obj.indexOf('á') != -1 || obj.indexOf('Á') != -1){
+      obj = obj.replace('á','a').replace('Á','A');
+    }
+    if(obj.indexOf('à') != -1 || obj.indexOf('À') != -1){
+      obj = obj.replace('à','a').replace('À','A');
+    }
+    
+    if(obj.indexOf('ê') != -1 || obj.indexOf('Ê') != -1){
+      obj = obj.replace('ê','e').replace('Ê','Ê');
+    }
+    if(obj.indexOf('é') != -1 || obj.indexOf('É') != -1){
+      obj = obj.replace('é','e').replace('É','E');
+    }
+    if(obj.indexOf('è') != -1 || obj.indexOf('È') != -1){
+      obj = obj.replace('è','e').replace('È','E');
+    }
+    if(obj.indexOf('ẻ') != -1 || obj.indexOf('Ẻ') != -1){
+      obj = obj.replace('ẻ','e').replace('Ẻ','E');
+    }
+
+    if(obj.indexOf('ô') != -1 || obj.indexOf('Ô') != -1){
+      obj = obj.replace('ô','o').replace('Ô','O');
+    }
+    if(obj.indexOf('ồ') != -1 || obj.indexOf('Ồ') != -1){
+      obj = obj.replace('ồ','o').replace('Ồ','O');
+    }
+    if(obj.indexOf('ố') != -1 || obj.indexOf('Ố') != -1){
+      obj = obj.replace('ố','o').replace('Ố','O');
+    }
+
+    if(obj.indexOf('ú') != -1 || obj.indexOf('Ú') != -1){
+      obj = obj.replace('ú','u').replace('Ú','U');
+    }
+    if(obj.indexOf('ù') != -1 || obj.indexOf('Ù') != -1){
+      obj = obj.replace('ù','u').replace('Ù','U');
+    }
+    if(obj.indexOf('ủ') != -1 || obj.indexOf('Ủ') != -1){
+      obj = obj.replace('ủ','u').replace('Ủ','U');
+    }
+    if(obj.indexOf('ũ') != -1 || obj.indexOf('Ũ') != -1){
+      obj = obj.replace('ũ','u').replace('Ũ','U');
+    }
+
+    if(obj.indexOf('í') != -1 || obj.indexOf('Í') != -1){
+      obj = obj.replace('í','i').replace('Í','I');
+    }
+    if(obj.indexOf('ì') != -1 || obj.indexOf('Ì') != -1){
+      obj = obj.replace('ì','i').replace('Ì','I');
+    }
+    if(obj.indexOf('ỉ') != -1 || obj.indexOf('Ỉ') != -1){
+      obj = obj.replace('ỉ','i').replace('Ỉ','I');
+    }
+    if(obj.indexOf('ĩ') != -1 || obj.indexOf('Ĩ') != -1){
+      obj = obj.replace('ĩ','i').replace('Ĩ','I');
+    }
+
+    return obj;
+  }
+  /**
+   * Lọc theo giờ mở cửa
+   */
+  clickDoorOpen(){
+    var se = this;
+    if(se.listSearchDisplay && se.listSearchDisplay.length >0){
+      //Lọc lại list marker trên map 
+      if(se.markers && se.markers.length >0){
+        se.markersOriginal = se.markers;
+      }
+      se.filterHourOpen = se.filterHourOpen*-1;
+      if(se.filterHourOpen == -1){
+        se.zone.run(()=>{
+          var curDate = new Date();
+          //var currentTime:any = moment(curDate).format("HHmm");
+          var currentTime=2100;
+          se.listSearchDisplay = se.listSearchDisplay.filter((el)=>{
+            //let timecurrent = new Date().;
+            if(el.workingHours[0].name.indexOf('24/24') != -1){
+              return true;
+            }else{
+              
+              let fromTime = el.workingHours[0].timeFrom.replace(':','');
+              let toTime = el.workingHours[0].timeTo.replace(':','');
+              return currentTime*1 >= fromTime*1 && currentTime*1 <= toTime*1;
+            }
+          })
+          se.clearMarkerAndRouting();
+          se.bindMarker(se.listSearchDisplay,se.curType);
+        })
+      }else{
+        se.zone.run(()=>{
+          se.listSearchDisplay = [];
+          se.listSearch = se.listSearchOriginal;
+          se.clearMarkerAndRouting();
+          se.bindMarker(se.listSearch,se.curType);
+        })
+      }
+      
+    }
+  }
+
+  expandMap(){
+    var se = this;
+    se.animateMap(true);
+    se.showHideItemSearch(false);
+  }
+
+   //Check if application having GPS access permission  
+   checkGPSPermission() {
+     if(this.devicePlatform =="ios" || this.devicePlatform =="android" ){
+      this.androidPermissions.checkPermission(this.androidPermissions.PERMISSION.ACCESS_COARSE_LOCATION).then(
+        result => {
+          if (result.hasPermission) {
+   
+            //If having permission show 'Turn On GPS' dialogue
+            this.askToTurnOnGPS();
+          } else {
+   
+            //If not having permission ask for permission
+            this.requestGPSPermission();
+          }
+        },
+        err => {
+          alert(err);
+        }
+      );
+     }else{
+       this.getLocationCoordinates();
+     }
+    
+  }
+
+  requestGPSPermission() {
+    this.locationAccuracy.canRequest().then((canRequest: boolean) => {
+      if (canRequest) {
+        console.log("4");
+      } else {
+        //Show 'GPS Permission Request' dialogue
+        this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.ACCESS_COARSE_LOCATION)
+          .then(
+            () => {
+              this.requestGPS = true;
+              // call method to turn on GPS
+              this.askToTurnOnGPS();
+            },
+            error => {
+              //Show alert if user click on 'No Thanks'
+              this.requestGPS = false;
+              alert('requestPermission Error requesting location permissions ' + error)
+            }
+          );
+      }
+    });
+  }
+
+  askToTurnOnGPS() {
+    this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY).then(
+      () => {
+       
+        // When GPS Turned ON call method to get Accurate location coordinates
+        this.getLocationCoordinates()
+      },
+      error => { this.requestGPS = false; }
+    );
+  }
+
+  getLocationCoordinates() {
+    this.requestGPS = true;
+    this.geolocation.getCurrentPosition().then((resp) => {
+      this.locationCoords.latitude = resp.coords.latitude;
+      this.locationCoords.longitude = resp.coords.longitude;
+      this.locationCoords.accuracy = resp.coords.accuracy;
+      this.locationCoords.timestamp = resp.timestamp;
+
+      this.initMap();
+    }).catch((error) => {
+      // alert('Xin vui lòng mở dịch vụ định vị để tiếp tục sử dụng tính năng này.');
+      // setTimeout(()=>{
+      //   this.navCtrl.back();
+      // },2000)
+    })
+  }
+
+  getCityNameByLatLng(lat, lng) {
+    var se = this;
+    
+    let options: NativeGeocoderOptions = {
+      useLocale: true,
+      maxResults: 5
+    };
+
+    this.nativeGeocoder.reverseGeocode(lat, lng, options)
+    .then(
+      (result: NativeGeocoderResult[]) => {
+        var cityName = result[0].administrativeArea;
+        se.regionCode= se.convertFontVNI(cityName).replace(/ /g,'-');
+        if(se.regionCode){
+          if(se.regionCode == 'Quang-Nam'){
+            se.regionCode = 'hoi-an';
+          }
+          if(se.regionCode == 'Ho-Chi-Minh'){
+            se.regionCode = 'sai-gon';
+          }
+          se.getListSuggestByRegionCode(se.regionCode,null);
+          se.textsearch ='';
+          if(se.searchhotel.stringFilterName && se.searchhotel.stringFilterName.length >0){
+            se.textsearch += se.searchhotel.stringFilterName;
+          }
+          se.textsearch += ' | ' +cityName;
+        }
+      }
+    )
+    .catch((error: any) => console.log(error));
+    
+  }
+
+  likePlace(item){
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+            se.bindPlaceLikeLocal(item, true, se.listSearch);
+            se.bindPlaceLikeLocal(item, true, se.listSearchOriginal);
+            var text = "Bearer " + auth_token;
+            var header ={ authorization: text};
+            var body = item.id;
+            let urlLikePlace = C.urls.baseUrl.urlMobile + '/api/Data/LikePlace';
+            se.gf.RequestApi('POST',urlLikePlace,header,body,'ExperienceSearch', 'likePlace').then((data:any)=>{
+              
+            })
+        }else{
+          se.showConfirmLogin("Bạn cần đăng nhập để sử dụng chức năng này.");
+        }
+      })
+  }
+
+  unlikePlace(item){
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+            se.bindPlaceLikeLocal(item, false, se.listSearch);
+            se.bindPlaceLikeLocal(item, false, se.listSearchOriginal);
+            var text = "Bearer " + auth_token;
+            var header = { authorization: text};
+            var body = item.id;
+            let urlLikePlace = C.urls.baseUrl.urlMobile + '/api/Data/UnLikePlace';
+            se.gf.RequestApi('POST',urlLikePlace,header,body,'ExperienceSearch', 'unlikePlace').then((data:any)=>{
+              
+            })
+        }else{
+          se.showConfirmLogin("Bạn cần đăng nhập để sử dụng chức năng này.");
+        }
+      })
+  }
+
+  bindPlaceLikeLocal(item, islike, listItem){
+    var se = this;
+    if(listItem && listItem.length>0){
+      se.zone.run(()=>{
+        listItem.forEach(element => {
+          if(islike){
+            if(element.id == item.id){
+              element.liked = true;
+            }
+          }else{
+            if(element.id == item.id){
+              element.liked = false;
+            }
+          }
+        });
+      })
+    }
+  }
+
+  sharePlace(item){
+    this.socialSharing.share(null, null, null, item.shareUrl).then(() => {
+      // Success!
+    }).catch(() => {
+      // Error!
+    });
+  }
+
+  checkItemLiked(id) {
+    var co = 0;
+    if (id) {
+      for (let i = 0; i < this.dataListLike.length; i++) {
+        if (this.dataListLike.indexOf(id) != -1) {
+          co = 1;
+          break;
+        }
+      }
+    }
+
+    return co;
+  }
+
+  public async showConfirmLogin(msg){
+    let alert = await this.alertCtrl.create({
+      backdropDismiss: false,
+      message: msg,
+      cssClass: 'experience-search-confirm',
+      buttons: [
+      {
+        text: 'Để sau',
+        handler: () => {
+          this.storage.remove('auth_token');
+          this.storage.remove('email');
+          this.storage.remove('username');
+          this.storage.remove('jti');
+          this.storage.remove('userInfoData');
+          this.storage.remove('userRewardData');
+          this.storage.remove('point');
+          this.storage.remove('blogtripdefault');
+          this.zone.run(()=>{
+            this.gf.reLoad = true;
+            this.username= "";
+          })
+          alert.dismiss();
+        }
+      },
+      {
+        text: 'Đăng nhập',
+        role: 'OK',
+        handler: () => {
+          this.storage.remove('auth_token');
+          this.storage.remove('email');
+          this.storage.remove('username');
+          this.storage.remove('jti');
+          this.storage.remove('userInfoData');
+          this.storage.remove('userRewardData');
+          this.storage.remove('point');
+          this.storage.remove('blogtripdefault');
+          this.zone.run(()=>{
+            this.username= "";
+          })
+          this.navCtrl.navigateForward('/login');
+        }
+      }
+    ]
+    });
+    alert.present();
+    alert.onDidDismiss().then((data)=>{
+    })
+  }
+
+  slidechange(){
+    var se = this;
+    se.markerhaschange = false;
+    se.slidehaschange= true;
+    se.slider.getActiveIndex().then((currentIndex)=>{
+      let currentItemSelect = se.listSearch[currentIndex];
+      if(currentItemSelect){
+        if(se.markers && se.markers.length>0){
+          var curmarker:any = se.markers.filter((m:any)=>{ return m.options.rest && m.options.rest.id == currentItemSelect.id});
+          var markerSelected:any = se.markersSelected[0];
+
+          if(curmarker && curmarker.length>0 && curmarker[0].options.id != markerSelected.options.id){
+            se.markerClick(curmarker[0],currentItemSelect,se.map, true);
+          }
+        }
+      }
+    });
+  }
+
+  doInfinite(infiniteScroll){
+    var se = this;
+    se.zone.run(() => {
+        se.pageCount = se.pageCount + 1;
+        se._infiniteScroll = infiniteScroll;
+        se.loadDataInfinite();
+    })
+  }
+
+  loadDataInfinite(){
+    var se = this;
+      // se.totalPage = Math.round(se.listSearch.length /10);
+      // let count = se.listSearchDisplay.length;
+      // // if(count >= se.listSearch.length){
+      // //   return;
+      // // }
+      // let page = count + se.pageSize;
+      // if(page > se.listSearch.length)
+      // {
+      //   page = se.listSearch.length;
+      // }
+      // for(let i = count; i < page; i ++){
+      //   se.listSearchDisplay.push(se.listSearch[i]);
+      // }
+      let urlPaging = se.url +'&paging.pageNumber='+se.pageCount+'&paging.pageSize=5';
+      se.gf.RequestApi('GET',urlPaging,{},{},'ExperienceSearch', 'loadDataInfinite').then((data:any)=>{
+        if(data && data.data.length >0){
+          se.loaddatadone = true;
+          
+          se.storage.get('auth_token').then(auth_token => {
+            if (auth_token) {
+                var text = "Bearer " + auth_token;
+                let urlLike = C.urls.baseUrl.urlMobile + '/api/Data/GetPlaceUserLike';
+                se.gf.RequestApi('GET', urlLike, {authorization: text}, {}, 'ExperienceSearch','GetPlaceUserLike').then((datalike:any) =>{
+                  if(datalike && datalike.length >0){
+                    se.dataListLike = datalike;
+                    data.data.forEach(element => {
+                      element.liked = se.checkItemLiked(element.id) ? true: false;
+                    });
+                    
+                    se.loadDataPaging(data.data);
+                  }else{
+                    se.loadDataPaging(data.data);
+                  }
+                })
+              }else{
+                se.loadDataPaging(data.data);
+              }
+          })
+
+        }
+      })
+      if(se.sortvalue){
+        setTimeout(()=>{
+          se.sortData(se.sortvalue);
+        },100)
+      }
+      if(se._infiniteScroll){
+        se._infiniteScroll.target.complete();
+      }
+      
+  }
+
+  loadDataPaging(data){
+    var se = this;
+    data.forEach(item => {
+      if(!se.gf.checkExistsItemInArray(se.listSearch,item,'experiencesearch')){
+        se.listSearchOriginal.push(item);
+        se.listSearch.push(item);
+        se.listSearchDisplay.push(item);
+      }
+    });
+    setTimeout(()=>{
+      se.bindMarkerPaging(data,se.searchhotel.experiencesearchTagsId);
+    },100)
+    
+  }
+}

@@ -1,0 +1,179 @@
+<ion-header>
+    <!-- <ion-navbar>
+        <ion-title *ngIf="!username" class="title-header">Thêm</ion-title>
+        <ion-title *ngIf="username" class="title-header">Chào {{username}}</ion-title>
+    </ion-navbar> -->
+    <ion-toolbar>
+        <ion-row>
+            <ion-title *ngIf="!username" class="title-header">Thêm</ion-title>
+            <ion-title *ngIf="username" class="title-header">Chào {{username}}</ion-title>
+        </ion-row>
+    </ion-toolbar>
+</ion-header>
+<ion-content>
+    <div class="no-margin-bottom" *ngIf="isConnected">
+        <div class="div-item" *ngIf="!loginuser">
+            <ion-row>
+                <ion-col>
+                        <span class="label-header">Tài khoản của tôi</span>
+                </ion-col>
+            </ion-row>
+            <ion-row >
+                <ion-col size="1">
+                    <img src="./assets/imgs/ic_login.svg">
+                </ion-col>
+                <ion-col>
+                    <span class="item-list" (click)="goToLogin()">Đăng nhập/Đăng ký</span>
+                </ion-col>
+            </ion-row>
+        </div>
+        <!-- <div>
+            <ion-row *ngIf="loginuser">
+                <span class="label-header">Tài khoản của tôi</span>
+            </ion-row>
+            <ion-row (click)="showUserReward()">
+                <ion-col size="1">
+                        <img src="./assets/imgs/ic_gift.svg">
+                </ion-col>
+                <ion-col >
+                        <span class="item-list">Ưu đãi cho bạn</span>
+                </ion-col>
+            </ion-row>
+        </div> -->
+        <div class="div-item">
+            <ion-row>
+                <ion-col size="1">
+                    <img src="./assets/imgs/ic_i_p.svg">
+                </ion-col>
+                <ion-col size="6">
+                    <span (click)="Point()" class="item-list">iVIVUPoint</span>
+                </ion-col>
+                <ion-col size="5" style="text-align: right" *ngIf="point"><label style="font-size: 16px;color: #26bed6;font-weight: 500">{{ point }} điểm</label> </ion-col>
+            </ion-row>
+        </div>
+        <div class="div-item">
+            <ion-row (click)="showUserProfile()">
+                <ion-col size="1">
+                    <img src="./assets/imgs/ic_people.svg">
+                </ion-col>
+                <ion-col>
+                    <span class="item-list">Hồ sơ của tôi</span>
+                </ion-col>
+            </ion-row>
+        </div>
+        <div class="div-item">
+            <ion-row (click)="showUserReviews()">
+                <ion-col size="1">
+                    <img src="./assets/imgs/ic_review.svg">
+                </ion-col>
+                <ion-col>
+                    <span class="item-list">Nhận xét của tôi</span>
+                </ion-col>
+            </ion-row>
+        </div>
+        <div *ngIf="!username" class="item-support div-item">
+        <div class="support">
+                <ion-row>
+                    <ion-col>
+                        <span class="label-header">Nhân viên hỗ trợ</span>
+                    </ion-col>
+                </ion-row>
+                <ion-row >
+                    <ion-col size="1">
+                            <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                    </ion-col>
+                    <ion-col size="10" class="support-text"  (click)="makeCallSupport(1)">
+                            <span class="item-list item-call">iVIVU Hà Nội - 19002045</span>
+                    </ion-col>
+                    <ion-col size="1" class="support-text s-text t-right"  (click)="makeCallSupport(1)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                    <!-- <ion-col size="1" class="support-text t-right img-review"> <img class="img-support" src="./assets/imgs/ic_mail.svg"></ion-col> -->
+                </ion-row>
+                <ion-row >
+                        <ion-col size="1">
+                                <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                        </ion-col>
+                        <ion-col size="10" class="support-text" (click)="makeCallSupport(2)">
+                                <span class="item-list item-call">iVIVU Hồ Chí Minh - 19001870</span>
+                        </ion-col>
+                        <ion-col size="1" class="support-text s-text t-right" (click)="makeCallSupport(2)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                        <!-- <ion-col size="1" class="support-text t-right img-review"> <img class="img-support" src="./assets/imgs/ic_mail.svg"></ion-col> -->
+                    </ion-row>
+                    <ion-row >
+                            <ion-col size="1">
+                                    <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                            </ion-col>
+                            <ion-col size="10" class="support-text">
+                                    <span class="item-list item-call" (click)="makeCallSupport(3)">iVIVU Cần Thơ - 19002087</span>
+                            </ion-col>
+                            <ion-col size="1" class="support-text s-text t-right"  (click)="makeCallSupport(3)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                            <!-- <ion-col size="1" class="support-text t-right img-review"> <img class="img-support" src="./assets/imgs/ic_mail.svg"></ion-col> -->
+                        </ion-row>
+            </div>
+        </div>
+        <div *ngIf="username" class="item-support div-item">
+                <div class="support">
+                        <ion-row>
+                            <ion-col>
+                                    <span class="label-header">Nhân viên hỗ trợ</span>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row *ngFor="let sp of listSupport">
+                            <ion-col size="1">
+                                    <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                            </ion-col>
+                            <ion-col size="10" class="support-text">
+                                    <span class="item-list item-call">{{sp.name}}</span>
+                            </ion-col>
+                            <ion-col size="1" class="support-text s-text t-right" (click)="makeCallSupport()"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                            <!-- <ion-col size="1" class="support-text t-right img-review" (click)="sendSMSSupport()"> <img class="img-support" src="./assets/imgs/review_blue.svg"></ion-col> -->
+                        </ion-row>
+                        <ion-row >
+                                <ion-col size="1">
+                                        <ion-icon name="headset" style="opacity:0.4"></ion-icon>
+                                </ion-col>
+                                <ion-col size="10" class="support-text" (click)="makeCallSupport(2)">
+                                        <span class="item-list item-call">iVIVU - 19001870</span>
+                                </ion-col>
+                                <ion-col size="1" class="support-text s-text t-right"  (click)="makeCallSupport(2)"><img class="img-support" src="./assets/imgs/ic_call.svg"></ion-col>
+                                <!-- <ion-col size="1" class="support-text t-right img-review" (click)="sendSMSSupport()"> <img class="img-support" src="./assets/imgs/ic_mail.svg"></ion-col> -->
+                        </ion-row>
+                        
+                    </div>
+                </div>
+        <div>
+            <div class="setting div-item">
+                <ion-row>
+                    <ion-col>
+                            <span class="label-header">Cài đặt</span>
+                    </ion-col>
+                </ion-row>
+                <ion-row>
+                    <ion-col size="1">
+                            <img src="./assets/imgs/ic_noti.svg">
+                    </ion-col>
+                    <ion-col>
+                            <span class="item-list">Thông báo</span>
+                    </ion-col>
+                </ion-row>
+            </div>
+        </div>
+        <div *ngIf="loginuser" class="div-item">
+            <ion-row >
+                <ion-col size="1">
+                    <img src="./assets/imgs/ic_login.svg">
+                </ion-col>
+                <ion-col>
+                    <span class="item-list" (click)="goToLogout()">Đăng xuất</span>
+                </ion-col>
+            </ion-row>
+        </div>
+        </div>
+        <div class="no-margin-bottom" *ngIf="!isConnected" style="text-align: center;margin-top: 55px">
+            <img src="./assets/imgs/empty.svg">
+            <div>
+              <p class="text-empty">Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng.</p>
+            </div>
+
+        </div>
+    
+</ion-content>

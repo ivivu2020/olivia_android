@@ -1,0 +1,7 @@
+{
+  "name": "Olivia_App",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "angular"
+}

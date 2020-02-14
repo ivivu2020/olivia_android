@@ -1,0 +1,126 @@
+<ion-content class="experiencesearch-content" #scrollArea>
+    <div class="float-search">
+      <ion-row>
+        <ion-col size="2" class="no-padding col-item"><div class="item-float-search f-center"><img class="img-vector-left" src="../../assets/imgs/vector_left.svg"></div></ion-col>
+        <ion-col class="no-padding col-item">
+          <div class="item-float-search m-top-13">
+            <!-- <ion-input class="input-search" placeholder="Ăn gì, chơi gì, ở đâu..."></ion-input> -->
+            <ion-searchbar class="input-search" placeholder="Ăn gì, chơi gì, ở đâu..." searchIcon="false" [(ngModel)]="textsearch" (ionChange)="getItems($event)" (ionClear)="cancelInput()"
+            ></ion-searchbar>
+          </div>
+        </ion-col>
+      </ion-row>
+    </div>
+    <!-- <div class="div-map" *ngIf="linkMap">
+        <iframe id="experiencesearch-map" width="100%" height="428px" style=" margin-top:-100px" frameborder="0" scrolling="" marginheight="0" marginwidth="0"
+        [src]="linkMap">
+      </iframe>
+    </div>
+    <div class="div-map" *ngIf="!linkMap">
+      <img width="100%" height="328px" src="https://cdn1.ivivu.com/iVivu/2018/02/07/15/noimage-450x328.png">
+    </div> -->
+  <div class="div-map" id="mapContainer">
+
+  </div>
+  
+  <div class="content-search">
+      <div class="content-radius"></div>
+      <div class="div-rectangle"></div>
+      <div class="content-item-search">
+        <div  class="div-item-search">
+          <div class="padding-16"><ion-label class="title-item-search">Trải nghiệm phải thử</ion-label></div>
+          <div>
+            <ion-grid class="grid-item-search">
+              <ion-row  class="row-1">
+                <ion-col size="4"  class="no-padding f-center offset-left-8" (click)="itemSearchClick(1)"><img class="img-item-search" src="../../assets/imgs/icon_food.svg"></ion-col>
+                <ion-col class="no-padding f-center" (click)="itemSearchClick(2)"><img class="img-item-search" src="../../assets/imgs/icon_eye.svg"></ion-col>
+                <ion-col size="4"  class="no-padding f-center offset-right-8" (click)="itemSearchClick(3)"><img class="img-item-search" src="../../assets/imgs/icon_celebrate.svg"></ion-col>
+              </ion-row>
+    
+              <ion-row  class="row-2">
+                  <ion-col size="4"  class="no-padding f-center offset-left-8" (click)="itemSearchClick(1)"><ion-label>Ăn gì</ion-label></ion-col>
+                  <ion-col class="no-padding f-center" (click)="itemSearchClick(2)"><ion-label>Xem gì</ion-label></ion-col>
+                  <ion-col size="4"  class="no-padding f-center offset-right-8" (click)="itemSearchClick(3)"><ion-label>Chơi gì</ion-label></ion-col>
+              </ion-row>
+    
+              <ion-row  class="row-3">
+                  <ion-col size="4"  class="no-padding f-center offset-left-8" (click)="itemSearchClick(4)"><img class="img-item-search" src="../../assets/imgs/icon_home.svg"></ion-col>
+                  <ion-col class="no-padding f-center" (click)="itemSearchClick(5)"><img class="img-item-search" src="../../assets/imgs/icon_camera.svg"></ion-col>
+                  <ion-col size="4"  class="no-padding f-center offset-right-8" (click)="itemSearchClick(6)"><img class="img-item-search" src="../../assets/imgs/icon_airplane.svg"></ion-col>
+                </ion-row>
+      
+                <ion-row  class="row-4">
+                    <ion-col size="4"  class="no-padding f-center offset-left-8" (click)="itemSearchClick(4)"><ion-label>Ở đâu</ion-label></ion-col>
+                    <ion-col class="no-padding f-center" (click)="itemSearchClick(5)"><ion-label>Sống ảo</ion-label></ion-col>
+                    <ion-col size="4"  class="no-padding f-center offset-right-8" (click)="itemSearchClick(6)"><ion-label>Di chuyển</ion-label></ion-col>
+                </ion-row>
+            </ion-grid>
+          </div>
+          <div class="padding-16 p-top-35"><ion-label class="title-item-search">Bộ sưu tập</ion-label></div>
+          <div class="innerdeals1 slide-scroll" (scroll)="onScrollBlog($event)">
+              <div style="padding-left: 8px;position: relative;" class="cls-collect"
+                *ngFor="let slide of blog">
+                <img (click)="itemblog(slide)" class="slide2 img" *ngIf="slide.Avatar" [src]="slide.Avatar" />
+                <img (click)="itemblog(slide)" class="slide2 img" *ngIf="!slide.Avatar" src="https://cdn1.ivivu.com/iVivu/2018/02/07/15/noimage.png" />
+                <div (click)="itemblog(slide)" class="float-info">
+                  <ion-label class="text-title-blog">
+                    {{slide.Title}}
+                  </ion-label>
+                </div>
+                <div class="text-collect-total"></div>
+                <!-- <div class="float-infoicon" style="top:6px" (click)="share(slide.Url)">
+        
+                    <img  style="padding-top: 11px;width: 18px" src="./assets/imgs/ic_share.svg">
+                  </div>
+                  <div class="float-infoiconheart" style="top:4px" >
+          
+                    <img *ngIf="!slide.Like" class="img-heart"  src="./assets/imgs/heart-empty.svg"
+                      style="width:18px;height:18px;margin-top: 14px;" (click)="likeItemblog(slide.Id)">
+                      <img class="img-heart"  style="width:18px;height:18px;margin-top: 14px" *ngIf="slide.Like" (click)="unlikeItemblog(slide.Id)" src="./assets/imgs/heart-red.svg">
+                  </div>
+                  <div class="grad-icon-blog" ></div>
+                <div class="grad-blog"  (click)="itemblog(slide)"></div> -->
+              </div>
+              <div *ngIf="showloadmoreblog" class="div-loadmore">
+                <ion-spinner name="bubbles" class="spinner-bubbles hydrated"></ion-spinner>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter and list search -->
+          <div class="div-list-search-result cls-hide">
+            <!-- filter item -->
+            <div class="item-filter">
+              <ion-row  class="row-item-filter">
+                  <ion-col size="3"  class="no-padding align-self-center col-border col-item-search-1" ><div><img class="img-item-search-filter" src="../../assets/imgs/ic_filter_b.svg"><ion-label class="text-filter">Lọc</ion-label></div></ion-col>
+                  <ion-col class="no-padding align-self-center col-border col-item-search-2"><div><img class="img-item-search-sort" src="../../assets/imgs/ic_sort_b.svg"><ion-label class="text-sort">Sắp xếp</ion-label></div></ion-col>
+                  <ion-col size="3.6"  class="no-padding f-center align-self-center offset-right-8 col-border col-item-search-3"><div><ion-label class="text-dooropen">Đang mở cửa</ion-label></div></ion-col>
+                </ion-row>
+            </div>
+            <!-- list search -->
+            <div class="list-search-item">
+              <div [ngClass]="idx > 0 ? 'p-top-32' : ''" *ngFor="let slide of blog; let idx = index">
+                <div class="img-search-item">
+                    <img class="img-list-item" *ngIf="slide.Avatar" [src]="slide.Avatar" />
+                    <img class="img-list-item" *ngIf="!slide.Avatar" src="https://cdn1.ivivu.com/iVivu/2018/02/07/15/noimage.png" />
+                </div>
+
+                <div class="info-search-item">
+                  <!-- Tên -->
+                  <div class="name-search-item">{{slide.Title}}</div>
+                  <!-- Lượt thích -->
+                  <div class="text-like-search-item">40 Lượt thích</div>
+                  <!-- like and share -->
+                  <div class="div-likeandshare p-top-8">
+                      <img class="img-item-search-heart" src="../../assets/imgs/ic_heart_b.svg">
+                      <img class="img-item-search-share p-left-32" src="../../assets/imgs/ic_share_b.svg">
+                  </div>
+                 
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+      
+  </div>
+</ion-content>

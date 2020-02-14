@@ -1,0 +1,183 @@
+import { Component, NgZone, ViewChild, OnInit } from '@angular/core';
+import { NavController, ModalController, AlertController,Platform } from '@ionic/angular';
+import { Booking, ValueGlobal, RoomInfo, Bookcombo } from '../providers/book-service';
+import { Storage } from '@ionic/storage';
+import { C } from '../providers/constants';
+import { GlobalFunction } from '../providers/globalfunction';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { ActionSheetController } from '@ionic/angular';
+/**
+ * Generated class for the FacilitiesPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-flightdeparture',
+  templateUrl: 'flightdeparture.html',
+  styleUrls: ['flightdeparture.scss'],
+})
+export class FlightDeparturePage implements OnInit{
+    listflight:any;
+    listflightdisplay:any = [];
+    daytitle:string;
+    column: string;
+    airlinename=false;
+    sortairline=false;
+    isdepart = false;
+  constructor(public platform: Platform,public valueGlobal: ValueGlobal, public navCtrl: NavController, private Roomif: RoomInfo, public zone: NgZone,
+    public booking: Booking, public storage: Storage, public alertCtrl: AlertController, public value: ValueGlobal, public modalCtrl: ModalController, public gf: GlobalFunction,
+    public bookCombo: Bookcombo,private actionsheetCtrl: ActionSheetController) {
+        var params = this.gf.getParams('listflight')
+        if(params){
+            this.daytitle = params.title;
+            if(params.isdepart){
+                this.isdepart = true;
+                this.listflight = params.listdepart[0].flights;
+            }else{
+                this.isdepart = false;
+                this.listflight = params.listreturn[0].flights;
+            }
+            var se = this;
+            se.listflight.forEach(element => {
+                let de_date = new Date(element.departTime);
+                let de_date_landing = new Date(element.landingTime);
+                element.flighttime = moment(de_date).format("HH") +':'+  moment(de_date).format("MM")+ ' → ' + moment(de_date_landing).format("HH")+ ':' + moment(de_date_landing).format("MM");
+                if(se.bookCombo.ComboDetail.details[0].departTicketSale > element.price){
+                    let pricesdepartstr = se.bookCombo.ComboDetail.details[0].departTicketSale - element.price;
+                    element.pricedown = pricesdepartstr;
+                    element.pricestrdown = pricesdepartstr.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.") + 'đ';
+                  }
+                  if(se.bookCombo.ComboDetail.details[0].departTicketSale <= element.price){
+                    let pricesdepartstr = element.price - se.bookCombo.ComboDetail.details[0].departTicketSale;
+                    element.priceup = pricesdepartstr;
+                    element.pricestrup = pricesdepartstr.toLocaleString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.") + 'đ';
+                  }
+                  se.listflightdisplay.push(element);
+            });
+        }
+    }
+
+  ngOnInit(){
+  }
+
+  goback(){
+    this.modalCtrl.dismiss();
+  }
+  
+
+  openFilterFlight(){
+    this.airlinename = true;
+  }
+
+  sortAirline(event){
+    this.sortairline = true;
+    this.sort(event.detail.value);
+  }
+
+  /**Hàm sort list khách sạn theo giá, điểm trung bình 
+     * PDANH 23/01/2018
+     */
+    sort(property) {
+        var se = this;
+        se.column = property;
+        se.zone.run(() => se.listflightdisplay.sort(function (a, b) {
+            let direction = -1;
+            if(property == "priceup"){
+              if(!a[property] || !b[property]){
+                if(a[property] && !b[property]){
+                  return -1;
+                }
+                if(!a[property] && b[property]){
+                  return 1;
+                }
+                if(!a[property] && !b[property]){
+                  return -1;
+                }
+              }else{
+                if (a[property] * 1 < b[property] * 1) {
+                  return 1 * direction;
+                }
+                else if (a[property] * 1 > b[property] * 1) {
+                  return -1 * direction;
+                }
+              }
+            }else{
+              let direction = (property == "sortByTimeDepartEarly" || property =="sortByTimeLandingEarly") ? -1 : 1;
+              let columnname = "sortByTime";
+              if (a[columnname] < b[columnname]) {
+                return 1 * direction;
+              }
+              else if (a[columnname] > b[columnname]) {
+                return -1 * direction;
+              }
+            }
+        }));
+      };
+    /**Hàm lọc lại chuyến bay
+     * PDANH 24/04/2018
+     */
+      filterAirline(event){
+        var se = this;
+        if(event.detail.value && event.detail.value.length >0){
+          let arrAirline = event.detail.value;
+          let strAirline = "";
+          arrAirline.forEach(element => {
+            strAirline += (strAirline != "")? (","+element) : element;
+          });
+          se.listflightdisplay = [];
+          se.zone.run(()=>{
+            se.listflight.forEach(f => {
+              if(strAirline.indexOf(f.airlineCode) != -1){
+                se.listflightdisplay.push(f);
+              }
+            });
+          })
+        }else{
+          se.listflightdisplay = [];
+          se.zone.run(()=>{
+            se.listflight.forEach(f => {
+              se.listflightdisplay.push(f);
+            });
+          })
+        }
+        if(se.column){
+          this.sort(se.column);
+        }
+      }
+    /**Hàm chọn lại lịch bay trên list chuyến bay
+     * PDANH 24/04/2018
+     */
+      changeFlightInfo(obj){
+        var se = this;
+        //se.gf.setParams({isdepart: se.isdepart, flight: obj},'flightdeparture');
+        let flights =[];
+        flights.push(obj);
+        se.modalCtrl.dismiss({isdepart: se.isdepart, flights: {flights: flights}});
+      }
+
+      ionViewDidEnter() {
+        // ion-select customizing
+        const ionSelects = document.querySelectorAll('ion-select');
+        let img = null;
+        ionSelects.forEach((ionSelect) => {
+          const selectIconInner = ionSelect.shadowRoot.querySelector('.select-icon');
+          if(selectIconInner){
+            selectIconInner.setAttribute('style','display:none !important');
+          }
+          // if(selectIconInner){
+          //   selectIconInner.attributes.removeNamedItem("class");
+          //   img = document.createElement("img");
+          //   img.src = "./new-arrow-down-image.svg";
+          //   img.style.width = "12px";
+          //   img.style.paddingTop = "3px";
+          //   img.style.paddingLeft = "4px";
+          //   img.style.color = "black";
+          //   img.style.opacity = "0.5";
+          //   selectIconInner.appendChild(img);
+          // }
+        });
+    }
+}

@@ -1,0 +1,514 @@
+import { Component, NgZone,OnInit } from '@angular/core';
+import { NavController, Events, Platform, ModalController, ToastController } from '@ionic/angular';
+import * as request from 'request';
+import { AuthService } from '../providers/auth-service';
+import { HttpClientModule } from '@angular/common/http';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { SearchHotel } from '../providers/book-service';
+
+@Component({
+  selector: 'app-experiencefilter',
+  templateUrl: './experiencefilter.page.html',
+  styleUrls: ['./experiencefilter.page.scss'],
+})
+export class ExperienceFilterPage implements OnInit {
+  dataLocal: any=[];
+  dataFacility: any=[];
+  dataStyle: any=[];
+  dataHotelType: any=[];
+  dataDistance:any=[{id: 1, name: '1 km', totalPlace: 0},
+  {id: 2, name: '5 km', totalPlace: 0},
+  {id: 3, name: '10 km', totalPlace: 0},
+  {id: 4, name: '20 km', totalPlace: 0}];
+  arrlocalcheck: any=[];
+  arrstylecheck:any=[];
+  strLocal: string;
+  strStyle: string;
+  strDistance:string='distance';
+  objData: any;
+  ischeckbtnreset: boolean = false;
+  ischeckbtn: boolean = true;
+  strHotelType: any;
+  strHourOpen: any;
+  dataHourOpen: any=[];
+  arrhoteltypecheck: any=[];
+  arrhouropencheck: any=[];
+  arrdistancecheck:any=[];
+  checkfilterchange = false;
+
+  constructor(public zone: NgZone,
+    private searchhotel: SearchHotel,
+    private navCtrl: NavController,
+    public gf: GlobalFunction,
+    private modalCtrl: ModalController,
+    private toastCtrl: ToastController) { }
+
+  ngOnInit() {
+  }
+
+  ionViewWillEnter(){
+    var se = this;
+    se.loadFilterData();
+  }
+
+  loadFilterData(){
+    var se = this;
+    var regionId = se.gf.getParams('experienceFilter_regionId');
+    var strURL =  C.urls.baseUrl.urlMobile + '/api/erp/place/GetTagsByPlaceId?id=' + regionId;
+    se.gf.RequestApi('GET',strURL, {}, {}, "experienceFilter","GetTagsByPlaceId").then((data:any)=>{
+        se.objData = data;
+        se.bindData();
+    })
+
+    //Load subregion
+    var strURL_subRegion = C.urls.baseUrl.urlMobile + '/api/data/GetChildRegionByRegion?code=' + regionId;
+    se.gf.RequestApi('GET',strURL_subRegion, {}, {}, "experienceFilter","GetChildRegionByRegion").then((data:any)=>{
+      if(data && data.childRegions.length >0){
+        se.bindDataLocal(data.childRegions);
+      }
+    })
+  }
+
+  /**
+   * Load khu vực thuộc vùng đang filter
+   */
+  bindSubRegionData(){
+    var se = this;
+    se.arrlocalcheck=[];
+    if(se.searchhotel.ef_arrlocalcheck){
+      se.arrlocalcheck = se.searchhotel.ef_arrlocalcheck;
+    }
+    setTimeout(()=>{
+      //Local
+      if(se.dataLocal && se.dataLocal.length >0){
+        se.dataLocal.forEach(item => {
+          se.renderCssByType("local",(Number(item.placeTagId)).toString(), se.gf.checkExistsIndex(se.arrlocalcheck,item.placeTagId) );
+        });
+      }
+    },10)
+  }
+  /**
+   * Load thông tin Loại hình/ Phong cách/ Giờ hoạt động thuộc vùng đang filter
+   */
+  bindData(){
+    var se = this;
+    se.arrstylecheck=[];
+    se.arrhoteltypecheck=[];
+    se.arrhouropencheck=[];
+
+    se.zone.run(()=>{
+      //Lấy dữ liệu loại hình, giờ hoạt động, phong cách theo từng vùng lưu vào biến tương ứng
+      if(se.objData.tags && se.objData.tags.length >0){
+        se.objData.tags.forEach(group => {
+          if(group && group.length >0){
+            group.forEach(filterGroup => {
+              if(filterGroup.placeTagTypeId == 1)//Loại hình
+              {
+                se.strHotelType = 'hoteltype';
+                se.dataHotelType.push(filterGroup);
+              }
+              else if(filterGroup.placeTagTypeId == 2)//Giờ hoạt động
+              {
+                se.strHourOpen = 'houropen';
+                se.dataHourOpen.push(filterGroup);
+              }
+              else if(filterGroup.placeTagTypeId == 4)//Phong cách
+              {
+                se.strStyle = 'style';
+                se.dataStyle.push(filterGroup);
+              }
+            });
+          }
+        });
+        //Lấy lại mục được check chọn lưu vào biến
+        if(se.searchhotel.ef_arrhouropencheck){
+          se.arrhouropencheck = se.searchhotel.ef_arrhouropencheck;
+        }
+        if(se.searchhotel.ef_arrhoteltypecheck){
+          se.arrhoteltypecheck = se.searchhotel.ef_arrhoteltypecheck;
+        }
+        if(se.searchhotel.ef_arrstylecheck){
+          se.arrstylecheck = se.searchhotel.ef_arrstylecheck;
+        }
+        if(se.searchhotel.ef_arrdistancecheck){
+          se.arrdistancecheck = se.searchhotel.ef_arrdistancecheck;
+        }
+      }
+        //Render lại style selected các item được check chọn
+        setTimeout(()=>{
+          //style
+          if(se.dataStyle && se.dataStyle.length >0){
+            se.dataStyle.forEach(item => {
+              se.renderCssByType("style",(Number(item.placeTagId)).toString(), se.gf.checkExistsIndex(se.arrstylecheck,item.placeTagId) );
+            });
+          }
+           //hoteltype
+           if(se.dataHotelType && se.dataHotelType.length >0){
+            se.dataHotelType.forEach(item => {
+              se.renderCssByType("hoteltype",(Number(item.placeTagId)).toString(), se.gf.checkExistsIndex(se.arrhoteltypecheck,item.placeTagId) );
+            });
+          }
+          //houropen
+          if(se.dataHotelType && se.dataHourOpen.length >0){
+            se.dataHourOpen.forEach(item => {
+              se.renderCssByType("houropen",(Number(item.placeTagId)).toString(), se.gf.checkExistsIndex(se.arrhouropencheck,item.placeTagId) );
+            });
+          }
+          //distance
+          if(se.dataDistance && se.dataDistance.length>0){
+            se.dataDistance.forEach(item => {
+              se.renderCssByType("distance",(Number(item.id)).toString(), se.gf.checkExistsIndex(se.arrdistancecheck,item.id) );
+            });
+          }
+        })
+          
+      },10)
+  }
+
+  bindDataLocal(data){
+    var se = this;
+    se.zone.run(()=>{
+      if(data && data.length >0){
+        data.forEach(element => {
+          se.strLocal = 'local';
+          se.dataLocal.push(element);
+        });
+        if(se.searchhotel.ef_arrlocalcheck){
+          se.arrlocalcheck = se.searchhotel.ef_arrlocalcheck;
+        }
+      }
+        
+        setTimeout(()=>{
+          //Local
+          if(se.dataLocal && se.dataLocal.length >0){
+            se.dataLocal.forEach(item => {
+              se.renderCssByType("local",(Number(item.id)).toString(), se.gf.checkExistsIndex(se.arrlocalcheck,item.id) );
+            });
+          }
+        },10)
+      })
+  }
+
+  goback(){
+    this.navCtrl.back();
+  }
+
+/***
+ * Hàm set style mục chọn filter được check(màu xanh)/uncheck (ko màu)
+ * PDANH 28/01/2019
+ */
+renderCssByType(strType: string, strIndex: string,checked: boolean){
+  var objLocal = document.getElementsByClassName(strType + '-item-'+ strIndex);
+  if(objLocal[0]){
+    objLocal[0].classList.remove('local-check');
+    objLocal[0].classList.remove('local-uncheck');
+    objLocal[0].classList.remove('style-check');
+    objLocal[0].classList.remove('style-uncheck');
+    objLocal[0].classList.remove('hoteltype-check');
+    objLocal[0].classList.remove('hoteltype-uncheck');
+    objLocal[0].classList.remove('houropen-check');
+    objLocal[0].classList.remove('houropen-uncheck');
+    objLocal[0].classList.remove('distance-check');
+    objLocal[0].classList.remove('distance-uncheck');
+    if(strType == "local"){
+      objLocal[0].classList.add(checked ? 'local-check' : 'local-uncheck');
+      if(checked){
+        if(!this.gf.checkExistsIndex(this.arrlocalcheck, strIndex)){
+          this.arrlocalcheck.push(strIndex);
+        }
+      }else{
+        this.gf.removeItem(this.arrlocalcheck,strIndex);
+        this.gf.removeItem(this.searchhotel.ef_arrlocalcheck, strIndex);
+      }
+    }else if(strType == "style"){
+      objLocal[0].classList.add(checked ? 'style-check' : 'style-uncheck');
+      if(checked){
+        if(!this.gf.checkExistsIndex(this.arrstylecheck, strIndex)){
+          this.arrstylecheck.push(strIndex);
+        }
+      }else{
+        this.gf.removeItem(this.arrstylecheck,strIndex);
+        this.gf.removeItem(this.searchhotel.ef_arrstylecheck, strIndex);
+      }
+    }else if(strType == "facility"){
+      objLocal[0].classList.add(checked ? 'facility-check' : 'facility-uncheck');
+      
+    }else if(strType == "hoteltype"){
+      objLocal[0].classList.add(checked ? 'hoteltype-check' : 'hoteltype-uncheck');
+      if(checked){
+        if(!this.gf.checkExistsIndex(this.arrhoteltypecheck, strIndex)){
+          this.arrhoteltypecheck.push(strIndex);
+        }
+      }else{
+        this.gf.removeItem(this.arrhoteltypecheck,strIndex);
+        this.gf.removeItem(this.searchhotel.ef_arrhoteltypecheck, strIndex);
+      }
+    }else if(strType == "houropen"){
+      objLocal[0].classList.add(checked ? 'houropen-check' : 'houropen-uncheck');
+      if(checked){
+        if(!this.gf.checkExistsIndex(this.arrhouropencheck, strIndex)){
+          this.arrhouropencheck.push(strIndex);
+        }
+      }else {
+        this.gf.removeItem(this.arrhouropencheck,strIndex);
+        this.gf.removeItem(this.searchhotel.ef_arrhouropencheck, strIndex);
+      }
+    }else if(strType == "distance"){
+      objLocal[0].classList.add(checked ? 'distance-check' : 'distance-uncheck');
+      if(checked){
+        if(!this.gf.checkExistsIndex(this.arrdistancecheck, strIndex)){
+          this.arrdistancecheck.push(strIndex);
+        }
+      }else {
+        this.gf.removeItem(this.arrdistancecheck,strIndex);
+        this.gf.removeItem(this.searchhotel.ef_arrdistancecheck, strIndex);
+      }
+    }
+  }
+}
+/***
+ * Hàm click chọn item filter
+ * PDANH 14/09/2019
+ */
+itemClick(objEvent,type,placeTagId){
+    var se = this;
+    se.checkfilterchange = true;
+    //let idx = objEvent.target.className.toLocaleString().split(' ')[1].split('-')[2];
+    var obj = document.getElementsByClassName(objEvent.target.className.toLocaleString().split(' ')[1]);
+    obj[0].classList.remove('local-check');
+    obj[0].classList.remove('local-uncheck');
+    obj[0].classList.remove('style-check');
+    obj[0].classList.remove('style-uncheck');
+    obj[0].classList.remove('houropen-check');
+    obj[0].classList.remove('houropen-uncheck');
+    obj[0].classList.remove('hoteltype-check');
+    obj[0].classList.remove('hoteltype-uncheck');
+    obj[0].classList.remove('distance-check');
+    obj[0].classList.remove('distance-uncheck');
+    if(type=='hoteltype'){
+      se.renderCssByType(type, placeTagId, !se.gf.checkExistsIndex(se.arrhoteltypecheck,obj[0].id))
+    }
+    else if(type=='local'){
+      se.renderCssByType(type, placeTagId, !se.gf.checkExistsIndex(se.arrlocalcheck,obj[0].id))
+    }
+    else if(type=='houropen'){
+      se.renderCssByType(type, placeTagId, !se.gf.checkExistsIndex(se.arrhouropencheck,obj[0].id))
+    }
+    else if(type=='style'){
+      se.renderCssByType(type, placeTagId, !se.gf.checkExistsIndex(se.arrstylecheck,obj[0].id))
+    }
+    else if(type=='distance'){
+      se.renderCssByType(type, placeTagId, !se.gf.checkExistsIndex(se.arrdistancecheck,obj[0].id))
+    }
+    
+    //se.renderCssByType(type,placeTagId,)
+}
+
+close() {
+  var paramsFilter ={strLocalCheck:'', strHotelTypeCheck:'', strHourOpenCheck:'',strFilter:'', strFilterName:''}
+  
+  this.buildStringFilter(paramsFilter);
+
+  if(paramsFilter.strFilterName && paramsFilter.strFilterName.length >0){
+    this.searchhotel.stringFilterName = paramsFilter.strFilterName;
+  }
+  if( (paramsFilter.strFilter && paramsFilter.strFilter.length >0) || this.searchhotel.ef_arrdistancecheck.length >0){
+    this.searchhotel.clearFilterExperience = false;
+    this.modalCtrl.dismiss(paramsFilter.strFilter);
+  }else{
+    this.showWarning();
+  }
+  //this.modalCtrl.dismiss();
+}
+
+/***
+ * Hàm reset style mục chọn
+ * PDANH 28/01/2019
+ */
+clickCancel() {
+    this.ischeckbtnreset = true;
+    this.ischeckbtn = false;
+    //Reset other filter
+    //this.arrlocalcheck = [];
+    
+    this.searchhotel.clearFilterExperience = true;
+
+    let listMeal = document.getElementsByClassName("meal-check");
+    if(listMeal.length >0){
+      for(let i =listMeal.length-1; i>=0; i--){
+        listMeal[i].classList.remove('meal-check');
+      }
+    }
+    let listLocal = document.getElementsByClassName("local-check");
+    if(listLocal.length >0){
+      for(let i =listLocal.length-1; i>=0; i--){
+        listLocal[i].classList.remove('local-check');
+      }
+    }
+    let listStyle = document.getElementsByClassName("style-check");
+    if(listStyle.length >0){
+      for(let i =listStyle.length-1; i>=0; i--){
+        listStyle[i].classList.remove('style-check');
+      }
+    }
+    let listFacility = document.getElementsByClassName("houropen-check");
+    if(listFacility.length >0){
+      for(let i =listFacility.length-1; i>=0; i--){
+        listFacility[i].classList.remove('houropen-check');
+      }
+    }
+    let listHotelType = document.getElementsByClassName("hoteltype-check");
+    if(listHotelType.length >0){
+      for(let i =listHotelType.length-1; i >=0; i--){
+        listHotelType[i].classList.remove('hoteltype-check');
+      }
+    }
+
+    let listDistance = document.getElementsByClassName("distance-check");
+    if(listDistance.length >0){
+      for(let i =listDistance.length-1; i >=0; i--){
+        listDistance[i].classList.remove('distance-check');
+      }
+    }
+    
+    this.strLocal="";
+    this.strStyle="";
+    this.strHourOpen="";
+    this.strHotelType="";
+    this.arrhoteltypecheck=[];
+    this.arrlocalcheck=[];
+    this.arrhouropencheck=[];
+    this.arrstylecheck=[];
+    this.arrdistancecheck=[];
+    this.searchhotel.ef_arrlocalcheck = [];
+    this.searchhotel.ef_arrhouropencheck = [];
+    this.searchhotel.ef_arrstylecheck=[];
+    this.searchhotel.ef_arrhoteltypecheck=[];
+    this.searchhotel.ef_arrdistancecheck=[];
+}
+
+clickOk() {
+  this.ischeckbtn = true;
+  this.ischeckbtnreset = false;
+  //var strHotelTypeCheck ='',strStyleCheck='',strHourOpenCheck='',strLocalCheck='',strFilter='',strFilterName='';
+  this.searchhotel.clearFilterExperience = false;
+  var paramsFilter ={strLocalCheck:'', strHotelTypeCheck:'', strHourOpenCheck:'',strFilter:'', strFilterName:''}
+  
+  this.buildStringFilter(paramsFilter);
+
+  if(paramsFilter.strFilterName && paramsFilter.strFilterName.length >0){
+    this.searchhotel.stringFilterName = paramsFilter.strFilterName;
+  }
+  if( (paramsFilter.strFilter && paramsFilter.strFilter.length >0) || this.searchhotel.ef_arrdistancecheck.length >0){
+    this.searchhotel.clearFilterExperience = false;
+    this.modalCtrl.dismiss(paramsFilter.strFilter);
+  }else{
+    this.showWarning();
+  }
+  
+  }
+
+  buildStringFilter(paramsFilter){
+    //Local
+    let listLocal = document.getElementsByClassName("local-check");
+    this.searchhotel.ef_location = "";
+    if(listLocal.length >0){
+      for(let i =0; i<listLocal.length; i++){
+        if(i==0){
+          paramsFilter.strLocalCheck += listLocal[i].getAttribute("id");
+          paramsFilter.strFilterName += listLocal[i].getAttribute("name");
+        }else{
+          paramsFilter.strLocalCheck += "," + listLocal[i].getAttribute("id");
+          paramsFilter.strFilterName += ", " + listLocal[i].getAttribute("name");
+        }
+      }
+      if(paramsFilter.strLocalCheck.length >0){
+        this.searchhotel.ef_location = paramsFilter.strLocalCheck;
+        this.searchhotel.ef_arrlocalcheck = this.arrlocalcheck;
+        paramsFilter.strFilter +=  "&childRegions=" + paramsFilter.strLocalCheck;
+      }
+      
+    }
+    //HotelType
+    let listHotelType = document.getElementsByClassName("hoteltype-check");
+    this.searchhotel.ef_hoteltype = "";
+    if(listHotelType.length >0){
+      for(let i =0; i<listHotelType.length; i++){
+        if(i==0){
+          paramsFilter.strHotelTypeCheck += listHotelType[i].getAttribute("id");
+          if(paramsFilter.strFilterName && paramsFilter.strFilterName.length>0){
+            paramsFilter.strFilterName += ' | '+ listHotelType[i].getAttribute("name");
+          }else{
+            paramsFilter.strFilterName += listHotelType[i].getAttribute("name");
+          }
+          
+        }else{
+          paramsFilter.strHotelTypeCheck += "," + listHotelType[i].getAttribute("id");
+          paramsFilter.strFilterName += ", " + listHotelType[i].getAttribute("name");
+        }
+      }
+      this.searchhotel.ef_hoteltype = paramsFilter.strHotelTypeCheck;
+      this.searchhotel.ef_arrhoteltypecheck = this.arrhoteltypecheck;
+      if(paramsFilter.strHotelTypeCheck.length >0){
+        paramsFilter.strFilter +=  "&Tags=" + paramsFilter.strHotelTypeCheck;
+      }
+      
+    }
+    //houropen
+    let listHourOpen = document.getElementsByClassName("houropen-check");
+    this.searchhotel.ef_houropen = "";
+    if(listHourOpen.length >0){
+      for(let i =0; i<listHourOpen.length; i++){
+        if(i==0){
+          paramsFilter.strHourOpenCheck += listHourOpen[i].getAttribute("id");
+          if(paramsFilter.strFilterName && paramsFilter.strFilterName.length>0){
+            paramsFilter.strFilterName += ' | '+ listHourOpen[i].getAttribute("name");
+          }else{
+            paramsFilter.strFilterName += listHourOpen[i].getAttribute("name");
+          }
+        }else{
+          paramsFilter.strHourOpenCheck += "," + listHourOpen[i].getAttribute("id");
+          paramsFilter.strFilterName +=  ", " + listHourOpen[i].getAttribute("name");
+        }
+      }
+      this.searchhotel.ef_houropen = paramsFilter.strHourOpenCheck;
+      this.searchhotel.ef_arrhouropencheck = this.arrhouropencheck;
+      if(paramsFilter.strFilter.length >0){
+        paramsFilter.strFilter += ',' + paramsFilter.strHourOpenCheck;
+      }else{
+        paramsFilter.strFilter += "&Tags=" + paramsFilter.strHourOpenCheck;
+      }
+      
+    }
+    //Distance
+    let listDistance = document.getElementsByClassName("distance-check");
+    if(listDistance.length >0){
+      for(let i =0; i<listDistance.length; i++){
+        if(i==0){
+          if(paramsFilter.strFilterName && paramsFilter.strFilterName.length>0){
+            paramsFilter.strFilterName += ' | '+ listDistance[i].getAttribute("name");
+          }else{
+            paramsFilter.strFilterName += listDistance[i].getAttribute("name");
+          }
+        }else{
+          paramsFilter.strFilterName +=  ", " + listDistance[i].getAttribute("name");
+        }
+      }
+      this.searchhotel.ef_arrdistancecheck = this.arrdistancecheck;
+    }
+
+    return paramsFilter;
+  }
+
+  async showWarning(){
+    var se = this;
+    let toast = await se.toastCtrl.create({
+      message: 'Quý khách vui lòng chọn ít nhất một loại hình trải nghiệm!',
+      duration: 3000,
+      position: 'top'
+    });
+
+    toast.present();
+  }
+}

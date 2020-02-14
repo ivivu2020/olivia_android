@@ -1,0 +1,244 @@
+import { Injectable } from '@angular/core';
+import { FirebaseAnalytics } from '@ionic-native/firebase-analytics/ngx';
+import { Platform, AlertController, ToastController } from '@ionic/angular';
+import { C } from '../providers/constants';
+import { NetworkProvider } from '../network-provider.service';
+import { AppVersion } from '@ionic-native/app-version/ngx';
+
+@Injectable({
+    providedIn: 'root'  // <- ADD THIS
+})
+export class GlobalFunction{
+    private DepartureParams :any;
+    private showpickupdatefromdetail = false;
+    private HotelRoomDetail: any;
+    private exchangeGiftParams: any;
+    private mytripBookingDetailParams: any;
+    private roomInfoParams: any;
+    private hotelNotesParams: any;
+    private hotelExpsNotesParams: any;
+    private showOccupancyFromRequestcombo: boolean = false;
+    private hotelListMoodParams:any;
+    private listFlightParams:any;
+    private flightComboParams:any;
+    private hotellistmoodselectedParams:any;
+    private isOnline:any;
+    public reLoad = true;
+    public reLoaddetail = true;
+  hotelReviewListParams: any;
+    constructor(public platform: Platform,public fba: FirebaseAnalytics,public networkProvider: NetworkProvider,public alertCtrl: AlertController,public appVersion: AppVersion,
+      public toastCtrl: ToastController){
+
+    }
+
+    public setReLoadValue(value){
+      this.reLoad = value;
+    }
+    public setReLoadDetailValue(value){
+      this.reLoaddetail = value;
+    }
+
+    public getReLoadValue(){
+      return this.reLoad;
+    }
+
+    public getAppVersion(){
+      return this.appVersion.getVersionNumber();
+    }
+    
+    public googleAnalytion(viewName,action,options ){
+        if(C.ENV == "prod"){
+            this.platform.ready().then(() => {
+              this.fba.logEvent(action, { 'hitType': 'event', 'eventCategory': viewName , 'eventLabel': options})
+              .then((res: any) => {console.log(res);})
+              .catch((error: any) => console.error(error));
+        })
+      }
+    }
+
+    public googleAnalytionCustom(action,params ){
+      if(C.ENV == "prod"){
+          this.platform.ready().then(() => {
+            this.fba.logEvent(action, params)
+            .then((res: any) => {console.log(res);})
+            .catch((error: any) => console.error(error));
+      })
+    }
+  }
+
+    // //Kiểm tra mạng trước khi loaddata
+    // public checkNetworkStatus(): Promise<boolean>{
+    //   return new Promise((resolve, reject) => {
+    //     this.networkProvider.getNetworkStatus().subscribe((connected: boolean) => {
+    //       if (connected) {
+    //         resolve(true);
+    //       }else{
+    //         resolve(false);
+    //         this.showWarning('Không có kết nối mạng','Vui lòng kết nối mạng để sử dụng các tính năng của ứng dụng','Đóng');
+    //       }
+    //     });
+    //   });
+    // }
+    
+    public async showWarning(header,msg,textButtonOK){
+      //if(!this.alertCtrl){
+        let alert = await this.toastCtrl.create({
+          message: msg,
+          //header: header,
+          duration: 3000,
+          position: "top"
+      });
+      alert.present();
+      //}
+  }
+
+  public async showToastWarning(msg){
+    let alert = await this.toastCtrl.create(({
+      message: msg,
+      duration: 3000,
+      position: "top"
+    }))
+    alert.present();
+  }
+    
+  public async showConfirmUpdate(){
+      let alert = await this.alertCtrl.create({
+        message: '',
+        buttons: [
+        {
+          text: 'Để sau',
+          handler: () => {
+          }
+        },
+        {
+          text: 'Cập nhật',
+          role: 'OK',
+          handler: () => {
+            //this.
+          }
+        }
+      ]
+    });
+    alert.present();
+  }
+
+    public setParams(params,type) {
+      if(type == 'departure'){
+        this.DepartureParams = params;
+      }
+      if(type == 'showpickupdatefromdetail'){
+        this.showpickupdatefromdetail = params;
+      }
+      if(type=='hotelroomdetail'){
+        this.HotelRoomDetail = params;
+      }
+      if(type=='exchangegift'){
+        this.exchangeGiftParams = params;
+      }
+      if(type=='mytripbookingdetail'){
+        this.mytripBookingDetailParams = params;
+      }
+      if(type=='roomInfo'){
+        this.roomInfoParams = params;
+      }
+      if(type=='hotelnotes'){
+        this.hotelNotesParams = params;
+      }
+      if(type=='hotelexpsnotes'){
+        this.hotelExpsNotesParams = params;
+      }
+      if(type=='requestcombo'){
+        this.showOccupancyFromRequestcombo = params;
+      }
+      if(type=='hotellistmood'){
+        this.hotelListMoodParams = params;
+      }
+      if(type=='hotellistmoodselected'){
+        this.hotellistmoodselectedParams = params;
+      }
+      if(type=='listflight'){
+        this.listFlightParams = params;
+      }
+      if(type=='flightcombo'){
+        this.flightComboParams = params;
+      }
+      if(type=='hotelreviewlist'){
+        this.hotelReviewListParams = params;
+      }
+
+    }
+  
+    public getParams(type) {
+      if(type == 'departure'){
+        return this.DepartureParams;
+      }
+      if(type == 'showpickupdatefromdetail'){
+        return this.showpickupdatefromdetail;
+      }
+      if(type=='hotelroomdetail'){
+        return this.HotelRoomDetail;
+      }
+      if(type=='exchangegift'){
+        return this.exchangeGiftParams;
+      }
+      if(type=='mytripbookingdetail'){
+        return this.mytripBookingDetailParams;
+      }
+      if(type=='roomInfo'){
+        return this.roomInfoParams;
+      }
+      if(type=='hotelnotes'){
+        return this.hotelNotesParams;
+      }
+      if(type=='hotelexpsnotes'){
+        return this.hotelExpsNotesParams;
+      }
+      if(type=='requestcombo'){
+        return this.showOccupancyFromRequestcombo;
+      }
+      if(type=='hotellistmood'){
+        return this.hotelListMoodParams;
+      }
+      if(type=='hotellistmoodselected'){
+        return this.hotellistmoodselectedParams;
+      }
+      if(type=='listflight'){
+        return this.listFlightParams;
+      }
+      if(type=='flightcombo'){
+        return this.flightComboParams;
+      }
+      if(type=='hotelreviewlist'){
+        return this.hotelReviewListParams;
+      }
+    }
+
+    public getNetworkStatus(){
+      return this.isOnline;
+    }
+    public setNetworkStatus(value){
+      this.isOnline = value;
+    }
+
+
+    public checkExistsIndex(array,idx){
+      return array.find((item) => {
+         return item*1 == idx*1;
+      })
+    }
+  
+    public removeItem(array,itemcheck){
+      array.filter((item,index) => {array.indexOf(item) === index});
+      array.forEach( (item, index) => {
+        if(item*1 == itemcheck*1)
+        {
+          array.splice(index,1);
+        }
+      });
+   }
+
+   public getServerVersion(){
+     return "1.2.5";
+   }
+  
+}

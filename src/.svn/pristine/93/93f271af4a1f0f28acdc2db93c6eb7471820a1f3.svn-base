@@ -1,0 +1,23 @@
+
+    .button
+    {
+        background: #F79221;
+        color: #ffffff;
+        border-color: #F79221;
+        width: 90%;
+        font-size: 20px;
+        height: 48px;
+    } 
+    .btn-close{
+        position: absolute;
+        right: 0px;
+        top: -36px;
+        width: 48px;
+        height: 48px;
+        background-color: #fff;
+        font-size: 2em;
+        color: #828282;
+    }
+    .t-center{
+        align-self: center;
+    }

@@ -1,0 +1,265 @@
+import { Component, OnInit,NgZone } from '@angular/core';
+import { NavController,Platform, ToastController } from '@ionic/angular';
+import { C } from './../providers/constants';
+import { GlobalFunction } from './../providers/globalfunction';
+import { Badge } from '@ionic-native/badge/ngx';
+import { Storage } from '@ionic/storage';
+import * as request from 'requestretry';
+import * as moment from 'moment';
+import { ValueGlobal } from '../providers/book-service';
+
+/**
+ * Generated class for the InboxPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
+
+@Component({
+  selector: 'app-tab4',
+  templateUrl: 'tab4.page.html',
+  styleUrls: ['./tab4.page.scss'],
+})
+export class Tab4Page implements OnInit{
+  // items= [
+  //   {id:1, title: 'Cập nhật trạng thái booking', message: 'iVIVU đã kiểm tra tình trạng phòng của Booking IVIVU123456 tại Swiss-Belresort Tuyền Lâm - Đà Lạt và đã gửi thông tin thanh toán cho Quý khách.',date: '1 giờ trước', status: 0},
+  //   {id:2, title: 'Chia sẻ nhận xét về khách sạn', message: 'Quý khách hãy đánh giá khách sạn Imperial Vũng Tàu để nhận đến 10 điểm tích luỹ và giúp mọi người hiểu hơn về khách sạn nhé!',date: '12/10/2018', status: 1},
+  //   {id:3, title: 'Chuẩn bị khởi hành đi Imperial Vũng Tàu', message: 'Xe sẽ khởi hành đi Imperial Vũng Tàu tại số 1 Lê Duẩn, Q1 - Cổng Thảo Cầm Viên lúc 10 giờ. Quý khách vui lòng có mặt tại điểm đón trước 20 phút',date: '10/10/2018', status: 1},
+  //   {id:4, title: '6 điểm check-in giải nhiệt nắng hè đẹp tựa trời Tây ở Vũng Tàu', message: 'Những ngày đầu hè nắng nóng, bạn hãy tìm cho mình điểm đến giải nhiệt hiệu quả. Vũng Tàu là một trong những gợi ý phù hợp dành cho bạn.',date: '10/10/2018', status: 1},
+  //   {id:5, title: 'Thay đổi thông tin chuyến bay', message: 'Booking IVIVU888888 có số hiệu chuyến bay BL678 thay đỗi sang (Số hiệu chuyến bay BL888, 10 giờ, thứ 6, ngày 02, tháng 07)',date: '01/10/2018', status: 1},
+
+  // ]
+  public items = [];
+  public phone = '';
+  public email = '';
+  constructor(public platform: Platform,public navCtrl: NavController,public gf: GlobalFunction,private badge: Badge,
+    private storage: Storage,
+    private zone: NgZone,
+    public toastCtrl: ToastController,
+    public valueGlobal: ValueGlobal) {
+    //google analytic
+    gf.googleAnalytion('inbox','load','');
+    //get phone
+    this.storage.get('phone').then(data =>{
+      if(data){
+        this.phone = data;
+      }
+    })
+    //get email
+    this.storage.get('email').then(e =>{
+      if(e){
+        this.email = e;
+      }
+    })
+  }
+
+  ngOnInit(){
+
+  }
+
+  ionViewWillEnter() {
+    if(document.querySelector(".tabbar")){
+      document.querySelector(".tabbar")['style'].display = 'flex';
+    }
+    //19/07/2019: Load thông tin notification
+    this.loadUserNotification();
+  }
+
+  async handleSplashScreen(): Promise<void> {
+    try {
+      // wait for App to finish loading
+      await this.platform.ready()
+    } catch (error) {
+      if (error) {
+        error.page = "inbox";
+        error.func = "handleSplashScreen";
+        C.writeErrorLog(error);
+        throw new Error(error)
+      };
+    }
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.style.opacity = '0';
+      setTimeout(() => { splash.remove() }, 300);
+    }
+
+  }
+
+  /**
+     * Load thông báo của user
+     */
+    loadUserNotification(){
+      var se = this;
+      se.storage.get('auth_token').then(auth_token => {
+          if (auth_token) {
+              var text = "Bearer " + auth_token;
+              var options = {
+              method: 'GET',
+              url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/GetNotificationByUser',
+              timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+              headers:
+              {
+                  'cache-control': 'no-cache',
+                  'content-type': 'application/json',
+                  authorization: text
+              }
+              };
+              request(options, function (error, response, body) {
+              if (error) {
+                  error.page = "inbox";
+                  error.func = "loadUserNotification";
+                  error.param =  JSON.stringify(options);
+                  C.writeErrorLog(error);
+              }else{
+                  if(body && body != "[]"){
+                      var data = JSON.parse(body);
+                      se.zone.run(()=>{
+                        se.items = data;
+                        se.items.forEach(element =>{
+                          let arrdate = moment(element.created).format('DD/MM/YYYY/hh/mm').split('/');
+                          let d = new Date(Number(arrdate[2]), Number(arrdate[1])-1, Number(arrdate[0]),Number(arrdate[3]),Number(arrdate[4]));
+                          let today = new Date();
+                          if( moment(today).diff(d, 'hours') <= 24){
+                            element.date = moment(d).diff(today, 'hours') + " giờ trước";
+                          }else{
+                            element.date = moment(element.created).format('DD/MM/YYYY');
+                          }
+                          element.deleted = false;
+                        });
+                        let countNoti = se.items.filter(item=>{ return !item.status }).length;
+                        se.badge.set(countNoti);
+                        se.valueGlobal.countNotifi = countNoti;
+                      })
+                  }else{
+                    se.items = [];
+                  }
+              }
+              });
+          }
+      })
+  }
+  /**
+   * Hàm set lại trạng thái thông báo
+   */
+  updateStatusMessage(item){
+    var se = this;
+    se.items.forEach(element => {
+      if(element.id == item.id){
+        se.zone.run(()=>{
+          if(!element.status){
+            element.status = 1;
+            //update status xuống db
+            se.callUpdateStatus(element);
+          }
+        })
+      }
+    });
+
+    //show notifi
+    se.presentToastNotifi(item.title);
+  }
+  /**
+   * Hàm update trạng thái đã đọc thông báo
+   */
+  callUpdateStatus(item){
+    var se = this;
+      se.storage.get('auth_token').then(auth_token => {
+          if (auth_token) {
+              var text = "Bearer " + auth_token;
+              var options = {
+              method: 'POST',
+              url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/UpdateStatusNotificationOfUser',
+              timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+              headers:
+              {
+                  'cache-control': 'no-cache',
+                  'content-type': 'application/json',
+                  authorization: text
+              },
+              body: {
+                "id": item.id,
+                "phoneNumber": this.phone,
+                "email": this.email,
+                "memberId": auth_token,
+                "switchTypeOf": item.switchTypeOf,
+                "switchAction": item.switchAction,
+                "switchObj": item.switchObj,
+                "title": item.title,
+                "message": item.message,
+                "status": 1
+              },
+              json: true,
+              };
+              request(options, function (error, response, body) {
+              if (error) {
+                  error.page = "inbox";
+                  error.func = "loadUserNotification";
+                  error.param =  JSON.stringify(options);
+                  C.writeErrorLog(error);
+              }else if(body && body.success){
+                 se.valueGlobal.countNotifi--;  
+              }
+              });
+          }
+      })
+  }
+ /**
+   * Hàm xóa thông báo
+   */
+  deleteNotifi(item){
+    var se = this;
+    se.storage.get('auth_token').then(auth_token => {
+        if (auth_token) {
+            var text = "Bearer " + auth_token;
+            var options = {
+            method: 'POST',
+            url: C.urls.baseUrl.urlMobile +'/mobile/OliviaApis/DeleteNotificationOfUser',
+            timeout: 10000, maxAttempts: 5, retryDelay: 2000,
+            headers:
+            {
+                'cache-control': 'no-cache',
+                'content-type': 'application/json',
+                authorization: text
+            },
+            body: {
+              "id": item.id,
+              "phoneNumber": this.phone,
+              "email": this.email,
+              "memberId": auth_token,
+              "switchTypeOf": item.switchTypeOf,
+              "switchAction": item.switchAction,
+              "switchObj": item.switchObj,
+              "title": item.title,
+              "message": item.message,
+              "status": 1
+            },
+            json: true,
+            };
+            request(options, function (error, response, body) {
+            if (error) {
+                error.page = "inbox";
+                error.func = "loadUserNotification";
+                error.param =  JSON.stringify(options);
+                C.writeErrorLog(error);
+            }else if(body && body.success){
+              se.zone.run(()=>{
+                item.deleted = true;     
+              })
+            }
+            });
+        }
+    })
+  }
+
+   /**
+   * Hàm show cảnh báo
+   */
+  async presentToastNotifi(msg) {
+    const toast = await this.toastCtrl.create({
+      message: msg,
+      duration: 3000,
+      position: 'top',
+    });
+    toast.present();
+  }
+}

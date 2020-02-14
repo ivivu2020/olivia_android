@@ -1,0 +1,96 @@
+// http://ionicframework.com/docs/theming/
+@import '~@ionic/angular/css/core.css';
+@import '~@ionic/angular/css/normalize.css';
+@import '~@ionic/angular/css/structure.css';
+@import '~@ionic/angular/css/typography.css';
+@import '~@ionic/angular/css/display.css';
+@import '~@ionic/angular/css/padding.css';
+@import '~@ionic/angular/css/float-elements.css';
+@import '~@ionic/angular/css/text-alignment.css';
+@import '~@ionic/angular/css/text-transformation.css';
+@import '~@ionic/angular/css/flex-utils.css';
+
+:root{
+    --ion-row-width:100%;
+}
+
+.button {
+    height: 48px;
+    border-radius: 28px;
+    font-size: 18px;
+    margin: 8px;
+}
+
+label > p{
+    margin: 2px 0;
+    line-height: 20px;
+}
+.item-inner{
+    padding-inline-end: 0;
+}
+
+::ng-deep {
+    .item-inner{
+        border-style: none;
+    }
+    .text-loading{
+        text-align: center;
+    }
+}
+
+.loading-wrapper.sc-ion-loading-ios {
+    padding-top: 0 !important; 
+    padding-bottom: 0 !important;
+    height: 80px !important;
+}
+
+.loading-wrapper.sc-ion-loading-md {
+    padding-top: 0 !important; 
+    padding-bottom: 0 !important;
+    height: 80px !important;
+}
+// ion-range.range-review div.range-bar{
+//     --bar-background: #26bed6;
+//     --ion-color-primary: #ccc;
+
+
+.body{
+    background: #003C71;
+    background-image: url('./assets/logo_splash.svg');
+    margin: 0 auto;
+    width: 200px;
+    height: 160px;
+    position: relative;
+    background-repeat: no-repeat;
+}
+
+
+:host{
+    --ion-color-primary:#26bed6;
+}
+
+ion-toolbar{
+    text-align: center;
+}
+    button:focus{
+    outline:none;
+   }
+
+// .sc-ion-action-sheet-md {
+//     border-top: solid 1px #ccc;
+//     -webkit-padding-start: 0 !important;
+//   }
+//   .action-sheet-group .ion-activatable:first-child .sc-ion-action-sheet-md,.action-sheet-title.sc-ion-action-sheet-md{
+//    border: none;   
+//    -webkit-padding-start: 0 !important;
+//   }
+  
+
+//   .action-sheet-group.sc-ion-action-sheet-md:last-child {
+//     padding-bottom: 0;
+//     padding: 0 16px !important;
+// }  
+    --background-activated{
+        background-image: url('./assets/imgs/ic_check.svg');
+        background-repeat: no-repeat;
+    }

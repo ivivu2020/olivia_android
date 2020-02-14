@@ -1,0 +1,246 @@
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["occupancy-occupancy-module"],{
+
+/***/ "./src/app/occupancy/occupancy.html":
+/*!******************************************!*\
+  !*** ./src/app/occupancy/occupancy.html ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "<ion-header>\n    <ion-toolbar style=\"min-height: 0px;text-align: center\">\n      <ion-title>Số lượng đặt phòng</ion-title>\n      <ion-buttons start>\n        <button ion-button routerLink=\"/\" routerDirection=\"root\" class=\"btn-close\">\n          <!-- <span ion-text color=\"primary\" showWhen=\"ios\">Hủy</span> -->\n          <ion-icon name=\"md-close\" showWhen=\"android,windows\"></ion-icon>\n        </button>\n      </ion-buttons>\n    </ion-toolbar>\n  </ion-header>\n  <ion-content>\n    <div style=\"margin-left: -15px\">\n      <ion-list>\n        <ion-item>\n          <ion-row>\n            <ion-col text-left>\n              <p style=\"color: #26bed6;padding: 5px;width: 130px\">\n                <label style=\"font-weight: bold;padding-left: 4px;\">{{adults}}</label>\n                <label style=\"color: #000000;padding-left: 4px\">người lớn</label>\n                <p>\n            </ion-col>\n  \n            <ion-col text-center class=\"t-center\">\n              <div align=\"right\">\n                <img *ngIf=\"ischeckadults==true\" (click)=\"minusadults()\" src=\"./assets/ic_facility/ic_minus.png\">\n                <img *ngIf=\"ischeckadults==false\" (click)=\"minusadults()\" src=\"./assets/ic_facility/ic_minus_disable.png\">\n              </div>\n  \n  \n            </ion-col>\n  \n            <ion-col text-right  class=\"t-center\">\n              <img (click)=\"plusadults()\" src=\"./assets/ic_facility/ic_add.png\">\n  \n            </ion-col>\n          </ion-row>\n  \n        </ion-item>\n        <ion-item>\n          <ion-row>\n            <ion-col text-left >\n              <p style=\"color: #26bed6;padding: 5px 5px;width: 130px\">\n                <label style=\"font-weight: bold;padding-left: 4px;\">{{child}}</label>\n                <label style=\"color: #000000;padding-left: 4px\">trẻ em</label>\n                <p>\n            </ion-col>\n            <ion-col text-center  class=\"t-center\">\n              <div align=\"right\" >\n                <img *ngIf=\"ischeckchild==true\" (click)=\"minuschild()\" src=\"./assets/ic_facility/ic_minus.png\">\n                <img *ngIf=\"ischeckchild==false\" (click)=\"minuschild()\" src=\"./assets/ic_facility/ic_minus_disable.png\">\n  \n              </div>\n            </ion-col>\n            <ion-col text-right  class=\"t-center\">\n              <img (click)=\"pluschild()\" src=\"./assets/ic_facility/ic_add.png\">\n  \n            </ion-col>\n          </ion-row>\n        </ion-item>\n        <ion-item>\n          <ion-row>\n            <ion-col text-left>\n              <p style=\"color: #26bed6;padding: 5px 5px;width: 130px\">\n                <label style=\"font-weight: bold;padding-left: 4px;\">{{room}}</label>\n                <label style=\"color: #000000;padding-left: 4px\">phòng</label>\n                <p>\n            </ion-col>\n            <ion-col text-center  class=\"t-center\">\n              <div align=\"right\">\n                <img *ngIf=\"ischeckroom==true\" (click)=\"minusroom()\" src=\"./assets/ic_facility/ic_minus.png\">\n                <img *ngIf=\"ischeckroom==false\" (click)=\"minusroom()\" src=\"./assets/ic_facility/ic_minus_disable.png\">\n              </div>\n            </ion-col>\n            <ion-col text-right class=\"t-center\">\n              <img (click)=\"plusroom()\" src=\"./assets/ic_facility/ic_add.png\">\n            </ion-col>\n          </ion-row>\n        </ion-item>\n      </ion-list>\n    </div>\n  \n    <div style=\"margin-left: 12px\">\n      <label style=\"font-size: 14px;font-weight: bold\">\n        Tuổi trẻ em\n      </label>\n      <ion-list *ngFor=\"let msg of arrchild\">\n        <ion-item style=\"margin-left: -15px\">\n          <ion-label>{{msg.text}}</ion-label>\n          <ion-select style=\"color: #26bed6\" [(ngModel)]=\"msg.numage\" interface=\"action-sheet\">\n              <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"<1\"><1</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"1\">1</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"2\">2</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"3\">3</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"4\">4</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"5\">5</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"6\">6</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"7\">7</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"8\">8</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"9\">9</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"10\">10</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"11\">11</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"12\">12</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"13\">13</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"14\">14</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"15\">15</ion-option>\n            <ion-option (ionSelect)=\"selectclick($event,msg.text)\" value=\"16\">16</ion-option>\n          </ion-select>\n        </ion-item>\n  \n      </ion-list>\n    </div>\n  </ion-content>\n  <ion-footer>\n    <div style=\"background-color: #ffffff; text-align: center\">\n      <button (click)=\"data()\" ion-button round outline class=\"button\">Xác nhận</button>\n    </div>\n  </ion-footer>"
+
+/***/ }),
+
+/***/ "./src/app/occupancy/occupancy.module.ts":
+/*!***********************************************!*\
+  !*** ./src/app/occupancy/occupancy.module.ts ***!
+  \***********************************************/
+/*! exports provided: OccupancyPageModule */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "OccupancyPageModule", function() { return OccupancyPageModule; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/fesm2015/common.js");
+/* harmony import */ var _angular_forms__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/forms */ "./node_modules/@angular/forms/fesm2015/forms.js");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm2015/router.js");
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @ionic/angular */ "./node_modules/@ionic/angular/dist/fesm5.js");
+/* harmony import */ var _occupancy__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./occupancy */ "./src/app/occupancy/occupancy.ts");
+
+
+
+
+
+
+
+let OccupancyPageModule = class OccupancyPageModule {
+};
+OccupancyPageModule = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"])({
+        declarations: [
+            _occupancy__WEBPACK_IMPORTED_MODULE_6__["OccupancyPage"],
+        ],
+        imports: [
+            _angular_common__WEBPACK_IMPORTED_MODULE_2__["CommonModule"],
+            _angular_forms__WEBPACK_IMPORTED_MODULE_3__["FormsModule"],
+            _ionic_angular__WEBPACK_IMPORTED_MODULE_5__["IonicModule"],
+            _angular_router__WEBPACK_IMPORTED_MODULE_4__["RouterModule"].forChild([{
+                    path: '',
+                    component: _occupancy__WEBPACK_IMPORTED_MODULE_6__["OccupancyPage"]
+                }]),
+        ],
+        schemas: [_angular_core__WEBPACK_IMPORTED_MODULE_1__["CUSTOM_ELEMENTS_SCHEMA"]]
+    })
+], OccupancyPageModule);
+
+
+
+/***/ }),
+
+/***/ "./src/app/occupancy/occupancy.scss":
+/*!******************************************!*\
+  !*** ./src/app/occupancy/occupancy.scss ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = ".button {\n  background: #F79221;\n  color: #ffffff;\n  border-color: #F79221;\n  width: 90%;\n  font-size: 12px;\n  height: 48px;\n}\n\n.btn-close {\n  position: absolute;\n  right: 0px;\n  top: -36px;\n  width: 48px;\n  height: 48px;\n  background-color: #fff;\n  font-size: 2em;\n  color: #828282;\n}\n\n.t-center {\n  align-self: center;\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvb2NjdXBhbmN5L0U6XFxEQVRBXFxpdml2dW1vYmlsZWFwcFxcb2xpdmlhXFxPbGl2aWFfQXBwL3NyY1xcYXBwXFxvY2N1cGFuY3lcXG9jY3VwYW5jeS5zY3NzIiwic3JjL2FwcC9vY2N1cGFuY3kvb2NjdXBhbmN5LnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQ0k7RUFFSSxtQkFBQTtFQUNBLGNBQUE7RUFDQSxxQkFBQTtFQUNBLFVBQUE7RUFDQSxlQUFBO0VBQ0EsWUFBQTtBQ0RSOztBREdJO0VBQ0ksa0JBQUE7RUFDQSxVQUFBO0VBQ0EsVUFBQTtFQUNBLFdBQUE7RUFDQSxZQUFBO0VBQ0Esc0JBQUE7RUFDQSxjQUFBO0VBQ0EsY0FBQTtBQ0FSOztBREVJO0VBQ0ksa0JBQUE7QUNDUiIsImZpbGUiOiJzcmMvYXBwL29jY3VwYW5jeS9vY2N1cGFuY3kuc2NzcyIsInNvdXJjZXNDb250ZW50IjpbIlxuICAgIC5idXR0b25cbiAgICB7XG4gICAgICAgIGJhY2tncm91bmQ6ICNGNzkyMjE7XG4gICAgICAgIGNvbG9yOiAjZmZmZmZmO1xuICAgICAgICBib3JkZXItY29sb3I6ICNGNzkyMjE7XG4gICAgICAgIHdpZHRoOiA5MCU7XG4gICAgICAgIGZvbnQtc2l6ZTogMTJweDtcbiAgICAgICAgaGVpZ2h0OiA0OHB4O1xuICAgIH0gXG4gICAgLmJ0bi1jbG9zZXtcbiAgICAgICAgcG9zaXRpb246IGFic29sdXRlO1xuICAgICAgICByaWdodDogMHB4O1xuICAgICAgICB0b3A6IC0zNnB4O1xuICAgICAgICB3aWR0aDogNDhweDtcbiAgICAgICAgaGVpZ2h0OiA0OHB4O1xuICAgICAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjZmZmO1xuICAgICAgICBmb250LXNpemU6IDJlbTtcbiAgICAgICAgY29sb3I6ICM4MjgyODI7XG4gICAgfVxuICAgIC50LWNlbnRlcntcbiAgICAgICAgYWxpZ24tc2VsZjogY2VudGVyO1xuICAgIH0iLCIuYnV0dG9uIHtcbiAgYmFja2dyb3VuZDogI0Y3OTIyMTtcbiAgY29sb3I6ICNmZmZmZmY7XG4gIGJvcmRlci1jb2xvcjogI0Y3OTIyMTtcbiAgd2lkdGg6IDkwJTtcbiAgZm9udC1zaXplOiAxMnB4O1xuICBoZWlnaHQ6IDQ4cHg7XG59XG5cbi5idG4tY2xvc2Uge1xuICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gIHJpZ2h0OiAwcHg7XG4gIHRvcDogLTM2cHg7XG4gIHdpZHRoOiA0OHB4O1xuICBoZWlnaHQ6IDQ4cHg7XG4gIGJhY2tncm91bmQtY29sb3I6ICNmZmY7XG4gIGZvbnQtc2l6ZTogMmVtO1xuICBjb2xvcjogIzgyODI4Mjtcbn1cblxuLnQtY2VudGVyIHtcbiAgYWxpZ24tc2VsZjogY2VudGVyO1xufSJdfQ== */"
+
+/***/ }),
+
+/***/ "./src/app/occupancy/occupancy.ts":
+/*!****************************************!*\
+  !*** ./src/app/occupancy/occupancy.ts ***!
+  \****************************************/
+/*! exports provided: OccupancyPage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "OccupancyPage", function() { return OccupancyPage; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm2015/core.js");
+/* harmony import */ var _ionic_angular__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @ionic/angular */ "./node_modules/@ionic/angular/dist/fesm5.js");
+/* harmony import */ var _providers_book_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../providers/book-service */ "./src/app/providers/book-service.ts");
+/* harmony import */ var ionic_angular__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ionic-angular */ "./node_modules/ionic-angular/es2015/index.js");
+/* harmony import */ var _providers_globalfunction__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./../providers/globalfunction */ "./src/app/providers/globalfunction.ts");
+
+
+
+
+
+
+let OccupancyPage = class OccupancyPage {
+    constructor(platform, navCtrl, searchhotel, gf) {
+        this.platform = platform;
+        this.navCtrl = navCtrl;
+        this.searchhotel = searchhotel;
+        this.gf = gf;
+        this.adults = 2;
+        this.child = 0;
+        this.room = 1;
+        this.arrchild = [];
+        this.ischeckadults = true;
+        this.ischeckchild = false;
+        this.ischeckroom = false;
+        if (searchhotel.adult) {
+            this.adults = searchhotel.adult;
+        }
+        if (searchhotel.child) {
+            this.child = searchhotel.child;
+        }
+        if (searchhotel.roomnumber) {
+            this.room = searchhotel.roomnumber;
+        }
+        if (searchhotel.arrchild) {
+            this.arrchild = searchhotel.arrchild;
+        }
+        this.platform.ready().then(() => {
+            this.platform.registerBackButtonAction(() => {
+                this.navCtrl.navigateBack('/');
+            });
+        });
+        gf.googleAnalytion('occupancy', 'load', '');
+    }
+    ngOnInit() {
+    }
+    closeModal() {
+        this.navCtrl.navigateBack('/');
+    }
+    plusadults() {
+        if (this.adults < 50) {
+            this.adults++;
+        }
+        if (this.adults == 1) {
+            this.ischeckadults = false;
+        }
+        else {
+            this.ischeckadults = true;
+        }
+    }
+    minusadults() {
+        if (this.adults > 1) {
+            this.adults--;
+        }
+        if (this.adults == 1) {
+            this.ischeckadults = false;
+        }
+        else {
+            this.ischeckadults = true;
+        }
+    }
+    pluschild() {
+        if (this.child < 12) {
+            this.child++;
+            var arr = { text: 'Trẻ em' + ' ' + this.child, numage: "7" };
+            this.arrchild.push(arr);
+        }
+        if (this.child == 0) {
+            this.ischeckchild = false;
+        }
+        else {
+            this.ischeckchild = true;
+        }
+    }
+    minuschild() {
+        if (this.child > 0) {
+            this.child--;
+            this.arrchild.splice(this.arrchild.length - 1, 1);
+        }
+        if (this.child == 0) {
+            this.ischeckchild = false;
+            this.arrchild.splice(this.arrchild.length - 1, 1);
+        }
+        else {
+            this.ischeckchild = true;
+        }
+    }
+    selectclick(event, text) {
+        for (let i = 0; i < this.arrchild.length; i++) {
+            if (this.arrchild[i].text == text) {
+                this.arrchild[i].numage = event;
+                break;
+            }
+        }
+    }
+    plusroom() {
+        if (this.room < 9) {
+            this.room++;
+        }
+        if (this.room == 1) {
+            this.ischeckroom = false;
+        }
+        else {
+            this.ischeckroom = true;
+        }
+    }
+    minusroom() {
+        if (this.room > 1) {
+            this.room--;
+        }
+        if (this.room == 1) {
+            this.ischeckroom = false;
+        }
+        else {
+            this.ischeckroom = true;
+        }
+    }
+    data() {
+        this.searchhotel.adult = this.adults;
+        this.searchhotel.child = this.child;
+        this.searchhotel.roomnumber = this.room;
+        this.searchhotel.arrchild = this.arrchild;
+        if (this.searchhotel.showPopup) {
+            this.navCtrl.navigateBack('/hoteldetail');
+        }
+        else {
+            this.navCtrl.navigateBack('/');
+        }
+    }
+    ionViewDidLoad() {
+        let elements = document.querySelectorAll(".tabbar");
+        if (elements != null) {
+            Object.keys(elements).map((key) => {
+                elements[key].style.display = 'none';
+            });
+        }
+    }
+};
+OccupancyPage = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
+        selector: 'app-occupancy',
+        template: __webpack_require__(/*! ./occupancy.html */ "./src/app/occupancy/occupancy.html"),
+        styles: [__webpack_require__(/*! ./occupancy.scss */ "./src/app/occupancy/occupancy.scss")]
+    }),
+    tslib__WEBPACK_IMPORTED_MODULE_0__["__metadata"]("design:paramtypes", [ionic_angular__WEBPACK_IMPORTED_MODULE_4__["Platform"], _ionic_angular__WEBPACK_IMPORTED_MODULE_2__["NavController"],
+        _providers_book_service__WEBPACK_IMPORTED_MODULE_3__["SearchHotel"], _providers_globalfunction__WEBPACK_IMPORTED_MODULE_5__["GlobalFunction"]])
+], OccupancyPage);
+
+
+
+/***/ })
+
+}]);
+//# sourceMappingURL=occupancy-occupancy-module.js.map
