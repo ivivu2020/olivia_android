@@ -6,7 +6,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "npm install -g ionic && npm install -g cordova && npx gulp svgSprite && npm install angular-idle-preload --save && export NODE_OPTIONS=--max_old_space_size=8096 && ionic build --prod --release --optimizejs --cleancss --cleanjs",
+    "build": "ionic cordova build android --prod --release --optimizejs --cleancss --cleanjs",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
