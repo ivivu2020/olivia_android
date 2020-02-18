@@ -7,6 +7,7 @@ import * as request from 'requestretry';
 import { ActivatedRoute } from '@angular/router';
 import { HotelreviewsimagePage } from './../hotelreviewsimage/hotelreviewsimage';
 import { SearchHotel } from '../providers/book-service';
+import { Storage } from '@ionic/storage';
 /**
  * Generated class for the HotelreviewsPage page.
  *
@@ -25,10 +26,29 @@ export class HotelReviewsPage implements OnInit {
   HotelReviews;
   HotelID;
   arrHotelReviews = [];
-  constructor(public platform: Platform, public navCtrl: NavController, public gf: GlobalFunction, private activatedRoute: ActivatedRoute, public zone: NgZone, public searchhotel: SearchHotel, public modalCtrl: ModalController) {
+  constructor(public platform: Platform, public navCtrl: NavController, public gf: GlobalFunction, private activatedRoute: ActivatedRoute, public zone: NgZone, public searchhotel: SearchHotel, public modalCtrl: ModalController,
+    private storage: Storage) {
     this.HotelID = this.activatedRoute.snapshot.paramMap.get('id');
     this.Name = this.activatedRoute.snapshot.paramMap.get('name');
-    this.getdata();
+    this.storage.get('hoteldetail_'+this.HotelID).then((data) =>{
+      if(data){
+        this.zone.run(()=>{
+          this.Name=data.Name;
+          this.HotelReviews=data.HotelReviews
+  
+            for (let index = 0; index <  this.HotelReviews.length; index++) {
+  
+              this.HotelReviews[index].DateStayed = moment(this.HotelReviews[index].DateStayed).format('DD-MM-YYYY');
+              // this.HotelReviews[index].ReviewPoint = Math.round(this.HotelReviews[index].ReviewPoint *100)/100;
+              this.HotelReviews[index].ReviewPoint= Math.round(this.HotelReviews[index].ReviewPoint *100)/100
+              this.arrHotelReviews.push(this.HotelReviews[index]);
+            }
+            this.sortdate();
+        })
+      }else{
+        this.getdata();
+      }
+    })
     //Xử lý nút back của dt
     this.platform.ready().then(() => {
       this.platform.backButton.subscribe(() => {

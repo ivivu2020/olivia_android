@@ -12,6 +12,7 @@ import { Storage } from '@ionic/storage';
 import { FirebaseDynamicLinks } from '@ionic-native/firebase-dynamic-links/ngx';
 import * as request from 'requestretry';
 import { AppVersion } from '@ionic-native/app-version/ngx';
+import { CodePush } from '@ionic-native/code-push/ngx';
 
 @Component({
   selector: 'app-root',
@@ -46,7 +47,8 @@ export class AppComponent {
     public valueGlobal: ValueGlobal,
     private firebaseDynamicLinks: FirebaseDynamicLinks,
     private toastCrl: ToastController,
-    private appVersion: AppVersion
+    private appVersion: AppVersion,
+    private codePush: CodePush,
   ) {
     this.initializeApp();
 
@@ -70,6 +72,12 @@ export class AppComponent {
 
   initializeApp() {
     this.platform.ready().then(() => {
+      //codepush
+      this.codePush.sync().subscribe((syncStatus) => {console.log(syncStatus)} );
+
+      const downloadProgress = (progress) => { console.log(`Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`); }
+      this.codePush.sync({}, downloadProgress).subscribe((syncStatus) => console.log(syncStatus)) ;
+
       this.statusBar.show();
       this.statusBar.styleLightContent();
       //phone

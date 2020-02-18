@@ -29,6 +29,7 @@
     <preference name="AndroidLaunchMode" value="singleTask" />
     <preference name="GOOGLE_MAPS_ANDROID_API_KEY" value="AIzaSyCQzf2MGU_DutboClZZC5dx4n9Ddhfdflk" />
     <platform name="android">
+        <preference name="APP_SECRET" value="7c69c7a8-fd01-452a-81fe-c266cb36e203" />
         <preference name="GoogleAndroidClientId" value="936105820400-80afpaikiol4ummmeie7vl82fm8lhs94.apps.googleusercontent.com" />
         <preference name="loadUrlTimeoutValue" value="200000" />
         <allow-intent href="market:*" />

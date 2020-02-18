@@ -76,6 +76,7 @@ import { InsurrancedetailPageModule } from './insurrancedetail/insurrancedetail.
 import { SearchBlogModalPageModule } from './searchblogmodal/searchblogmodal.module';
 import { BlogModalPageModule } from './blogmodal/blogmodal.module';
 import { Market } from '@ionic-native/market/ngx';
+import {CodePush} from '@ionic-native/code-push/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -152,6 +153,7 @@ import { Market } from '@ionic-native/market/ngx';
     //GoogleMap,
     Market,
     DeviceLocation,
+    CodePush,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]

@@ -896,7 +896,7 @@ export class HotelListPage implements OnInit {
   filter() {
     var id1 = { name: this.name, code: this.code };
     //this.navCtrl.push('SearchPage', id1);
-    this.router.navigateByUrl('/searchhotel');
+    this.navCtrl.navigateForward('/searchhotel');
   }
   async presentLoadingnavi() {
     var loader = await this.loadingCtrl.create({
@@ -918,7 +918,7 @@ export class HotelListPage implements OnInit {
     //this.router.navigateByUrl('/hoteldetail/'+id);
     this.valueGlobal.logingoback = '/hoteldetail/' + id;
     setTimeout(() => {
-      this.router.navigateByUrl('/hoteldetail/' + id);
+      this.navCtrl.navigateForward('/hoteldetail/' + id);
     }, 10)
 
     //}
@@ -965,7 +965,7 @@ export class HotelListPage implements OnInit {
   }
 
   filterAgain() {
-    this.router.navigateByUrl('/searchhotelfilteragain');
+    this.navCtrl.navigateForward('/searchhotelfilteragain');
   }
   clearFilter() {
     //set về default
@@ -987,7 +987,7 @@ export class HotelListPage implements OnInit {
     })
   }
   searchAgain() {
-    this.router.navigateByUrl('/');
+    this.navCtrl.navigateForward('/');
   }
   async presentModal() {
     const modal: HTMLIonModalElement =
@@ -1035,7 +1035,7 @@ export class HotelListPage implements OnInit {
    * PDANH  29/01/2018
    */
   goToLogin() {
-    this.router.navigateByUrl('/login');
+    this.navCtrl.navigateForward('/login');
   }
   /*** Set like item
    * PDANH  29/01/2018
@@ -1083,7 +1083,7 @@ export class HotelListPage implements OnInit {
       }
       else {
         this.hotelId = id;
-        this.router.navigateByUrl('/login');
+        this.navCtrl.navigateForward('/login');
       }
     });
 
@@ -1133,7 +1133,7 @@ export class HotelListPage implements OnInit {
         });
       }
       else {
-        this.router.navigateByUrl('/login');
+        this.navCtrl.navigateForward('/login');
       }
     });
   }
@@ -1235,7 +1235,7 @@ export class HotelListPage implements OnInit {
         this.fcm.getToken().then(token => {
           this.gf.DeleteTokenOfUser(token, id_token, this.gf.getAppVersion());
         });
-        this.router.navigateByUrl('/login');
+        this.navCtrl.navigateForward('/login');
       }
     });
   }
@@ -1341,8 +1341,8 @@ export class HotelListPage implements OnInit {
       this.searchhotel.tagIds = null;
       this.searchhotel.classIds = null;
     })
-    //this.router.navigateByUrl('/hotellist/true');
-    //this.router.navigateByUrl(['/app/tabs/hotellist/true']);
+    //this.navCtrl.navigateForward('/hotellist/true');
+    //this.navCtrl.navigateForward(['/app/tabs/hotellist/true']);
     this.zone.run(() => {
       this.searchhotel.minprice = null;
       this.searchhotel.maxprice = null;
@@ -1378,7 +1378,7 @@ export class HotelListPage implements OnInit {
             this.storage.remove('userRewardData');
             this.storage.remove('point');
             this.storage.remove('listblogtripdefault');
-            this.router.navigateByUrl('/tabs/tab1');
+            this.navCtrl.navigateBack('/tabs/tab1');
           }
         },
         {
@@ -1393,7 +1393,7 @@ export class HotelListPage implements OnInit {
             this.storage.remove('userRewardData');
             this.storage.remove('point');
             this.storage.remove('listblogtripdefault');
-            this.router.navigateByUrl('/login');
+            this.navCtrl.navigateForward('/login');
           }
         }
       ]
@@ -1402,23 +1402,5 @@ export class HotelListPage implements OnInit {
   }
   changeinfo() {
     this.navCtrl.navigateForward('/popupinfobkg');
-  }
-
-  tabclick(idx){
-    if(idx == 1){
-      this.router.navigateByUrl('/app/tabs/tab1');
-    }
-    else if(idx == 2){
-      this.router.navigateByUrl('/app/tabs/tab2');
-    }
-    else if(idx == 3){
-      this.router.navigateByUrl('/app/tabs/tab3');
-    }
-    else if(idx == 4){
-      this.router.navigateByUrl('/app/tabs/tab4');
-    }
-    else if(idx == 5){
-      this.router.navigateByUrl('/app/tabs/tab5');
-    }
   }
 }

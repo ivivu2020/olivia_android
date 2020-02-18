@@ -97,6 +97,7 @@ export class ValueGlobal {
     likePlaceCount: any;
     //total
     PriceAvgPlusTAStr:string;
+    notRefreshDetail: boolean = false;
 }
 export class SearchHotel {
     recent: Array<ItemBook>;

@@ -4,6 +4,7 @@ import { C } from './../providers/constants';
 import { GlobalFunction } from './../providers/globalfunction';
 import { ActivatedRoute } from '@angular/router';
 import * as request from 'requestretry';
+import { Storage } from '@ionic/storage';
 /**
  * Generated class for the FacilitiesPage page.
  *
@@ -21,10 +22,21 @@ export class FacilitiesPage implements OnInit{
   HotelFacilities;
   HotelID;
   urlpath = C.urls.baseUrl.urlPost;
-  constructor(public platform: Platform,public navCtrl: NavController, private gf: GlobalFunction, private activatedRoute:ActivatedRoute,public zone: NgZone) {
+  constructor(public platform: Platform,public navCtrl: NavController, private gf: GlobalFunction, private activatedRoute:ActivatedRoute,public zone: NgZone,
+    private storage: Storage) {
     this.HotelID = this.activatedRoute.snapshot.paramMap.get('id');
     this.Name = this.activatedRoute.snapshot.paramMap.get('name');
-    this.getdata();
+    this.storage.get('hoteldetail_'+this.HotelID).then((data) =>{
+      if(data){
+        let jsondata = data;
+        this.zone.run(()=>{
+          this.Name = jsondata.Name;
+          this.HotelFacilities = jsondata.HotelFacilities
+        })
+      }else{
+        this.getdata();
+      }
+    })
     //Xử lý nút back của dt
     this.platform.ready().then(() => {
       this.platform.backButton.subscribe(() => {

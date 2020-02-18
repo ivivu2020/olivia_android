@@ -57,12 +57,6 @@ export class HotelRoomDetailPage implements OnInit {
       this.roomdetailarr.push(this.roomdetail);
     }
 
-    //Xử lý nút back của dt
-    this.platform.ready().then(() => {
-      this.platform.backButton.subscribe(() => {
-        this.navCtrl.navigateBack('/hoteldetail/' + this.HotelID);
-      })
-    })
     //google analytic
     gf.googleAnalytion('hotelroomdetail', 'load', '');
   }

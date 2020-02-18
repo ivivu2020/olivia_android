@@ -185,7 +185,7 @@ export class HotelDetailPage implements OnInit {
     public networkProvider: NetworkProvider,
     private activeRoute: ActivatedRoute,
     public activityService: ActivityService) {
-    this.valueGlobal.notRefreshDetail = false;
+
   }
 
   public async ngOnInit() {
@@ -339,10 +339,7 @@ export class HotelDetailPage implements OnInit {
     var timeDiff = Math.abs(date2.getTime() - date1.getTime());
     this.duration = Math.ceil(timeDiff / (1000 * 3600 * 24));
     this.loadTopSale24h(null);
-    if(!this.valueGlobal.notRefreshDetail){
-      this.presentLoading();
-      this.valueGlobal.notRefreshDetail = false;
-    }
+    this.presentLoading();
   }
 
   loadTopSale24h(id) {
@@ -377,28 +374,24 @@ export class HotelDetailPage implements OnInit {
 
   ionViewWillEnter() {
     var se = this;
+    this.zone.run(() => {
+      this.loadpricecombodone = false;
+      this.loadcomplete = false;
+      this.hotelRoomClasses = [];
+      this.flashSaleEndDate = null;
+      this.allowbookcombofc = true;
+      this.searchhotel.ischeckBOD = false;
+      this.ischeckBOD = false;
+      this.checkBODdone = false;
+    });
+    se.storage.get('jti').then((uid: any) => {
+      se.memberid = uid;
+    })
+    se.loaddata();
     //se.presentLoadingDetail();
     se.storage.get('email').then(email => {
       se.usermail = email;
     })
-    se.storage.get('jti').then((uid: any) => {
-      se.memberid = uid;
-    })
-    if(!this.valueGlobal.notRefreshDetail){
-      se.loaddata();
-      this.zone.run(() => {
-        this.loadpricecombodone = false;
-        this.loadcomplete = false;
-        this.hotelRoomClasses = [];
-        this.flashSaleEndDate = null;
-        this.allowbookcombofc = true;
-        this.searchhotel.ischeckBOD = false;
-        this.ischeckBOD = false;
-        this.checkBODdone = false;
-      });
-    }
-    
-   
     //bind lại cin,cout khi đóng popup requestcombo
     if ((se.searchhotel.CheckInDate && new Date(se.cin).toLocaleDateString() != new Date(se.searchhotel.CheckInDate).toLocaleDateString())
       || se.searchhotel.CheckOutDate && new Date(se.cout).toLocaleDateString() != new Date(se.searchhotel.CheckOutDate).toLocaleDateString()) {
@@ -519,7 +512,7 @@ export class HotelDetailPage implements OnInit {
     this.allowbookcombofx = true;
     this.gf.setParams(true, 'requestcombo');
     modal.present();
-    //this.navCtrl.navigateForward('/requestcombo');;
+    //this.router.navigateByUrl('/requestcombo');;
 
     modal.onDidDismiss().then((data: OverlayEventDetail) => {
       var se = this;
@@ -1509,8 +1502,7 @@ export class HotelDetailPage implements OnInit {
 
     var value = { Address: this.Address, Name: this.name, imghotel: this.imgHotel, cin: this.cin, cout: this.cout, dur: this.duration, room: this.arrroom, adults: this.adults, child: this.child, roomnumber: this.roomvalue, coroom: coroom, texttitle: this.text };
     this.searchhotel.hotelID = id;
-    this.valueGlobal.notRefreshDetail = true;
-    this.navCtrl.navigateForward('/hotelroomdetail');
+    this.router.navigateByUrl('/hotelroomdetail');
     // alert(self.arrroom);
   }
   // selectclick() {
@@ -1959,21 +1951,27 @@ excuteLoadHotelRoom(data){
 
   }
   DescriptionPage() {
-    this.valueGlobal.notRefreshDetail = true;
-    this.navCtrl.navigateForward('/hoteldescription/' + this.HotelID + '/' + this.hotelname);
+    this.router.navigateByUrl('/hoteldescription/' + this.HotelID + '/' + this.hotelname);
   }
   HotelreviewsPage() {
-    this.valueGlobal.notRefreshDetail = true;
-    this.navCtrl.navigateForward('/hotelreviews/' + this.HotelID + '/' + this.hotelname);
+    this.router.navigateByUrl('/hotelreviews/' + this.HotelID + '/' + this.hotelname);
   }
   FacilitiesPage() {
-    this.valueGlobal.notRefreshDetail = true;
-    this.navCtrl.navigateForward('/facilities/' + this.HotelID + '/' + this.hotelname);
+    this.router.navigateByUrl('/facilities/' + this.HotelID + '/' + this.hotelname);
   }
   PolicyPage() {
-    this.valueGlobal.notRefreshDetail = true;
-    this.navCtrl.navigateForward('/policy/' + this.HotelID + '/' + this.hotelname);
+    this.router.navigateByUrl('/policy/' + this.HotelID + '/' + this.hotelname);
   }
+  // async presentAlertbook() {
+  //   const alertController = document.querySelector('ion-alert-controller');
+  //   await alertController.componentOnReady();
+
+  //   let alert = await this.alertCtrl.create({
+  //     message: 'Phòng cuối cùng vừa được đặt. Quý khách vui lòng chọn ngày khác.',
+  //     buttons: ['Ok']
+  //   });
+  //   alert.present();
+  // }
 
   book(id, MealTypeRates, indexme, roomName, indexroom) {
     //this.presentLoadingNew();
@@ -2072,13 +2070,13 @@ excuteLoadHotelRoom(data){
           // console.log(self.Roomif.payment);
           self.Roomif.ischeckpayment = true;
           self.Roomif.roomcancelhbed = 1;
-          self.navCtrl.navigateForward('/roomdetailreview')
+          self.router.navigateByUrl('/roomdetailreview')
         } else if (rs.Msg == "RQ") {
           self.Roomif.payment = rs.Msg;
           // console.log(self.Roomif.payment);
           self.Roomif.ischeckpayment = false;
           self.Roomif.roomcancelhbed = 1;
-          self.navCtrl.navigateForward('/roomdetailreview')
+          self.router.navigateByUrl('/roomdetailreview')
         }
       });
     }
@@ -2088,7 +2086,7 @@ excuteLoadHotelRoom(data){
         self.Roomif.payment = self.arrroom[0].MealTypeRates[indexme].Penaltys[0].IsPenaltyFree;
         self.Roomif.ischeckpayment = true;
         self.Roomif.roomcancelhbed = 1;
-        self.navCtrl.navigateForward('/roomdetailreview');
+        self.router.navigateByUrl('/roomdetailreview');
       }
       else {
         if (MealTypeRates.HotelRoomHBedReservationRequest.rooms[0].rateType == 'RECHECK') {
@@ -2104,7 +2102,7 @@ excuteLoadHotelRoom(data){
 
       self.Roomif.ischeckpayment = true;
       self.Roomif.roomcancelhbed = 1;
-      self.navCtrl.navigateForward('/roomdetailreview');
+      self.router.navigateByUrl('/roomdetailreview');
     }
     //}
 
@@ -2166,7 +2164,7 @@ excuteLoadHotelRoom(data){
         // self.storage.set(MealTypeRates.HotelRoomHBedReservationRequest.rooms[0].rateKey,json.cancelPolicy[0].IsPenaltyFree);
         // self.listkeyhdbed.push(MealTypeRates.HotelRoomHBedReservationRequest.rooms[0].rateKey);
         self.Roomif.roomcancelhbed = 0;
-        self.navCtrl.navigateForward('/roomdetailreview');
+        self.router.navigateByUrl('/roomdetailreview');
       }
       else {
         alert("Đã hết phòng, vui lòng chọn lại phòng khác!");
@@ -2203,40 +2201,40 @@ excuteLoadHotelRoom(data){
     this.searchhotel.isRefreshDetail = false;
     this.searchhotel.showPopup = false;
     if (this.searchhotel.rootPage == "mainpage" || this.searchhotel.rootPage == "topdeal") {
-      this.navCtrl.navigateForward('/app/tabs/tab1');
+      this.router.navigateByUrl('/app/tabs/tab1');
     }
     // else if(this.searchhotel.rootPage == "roompaymentselect")
     // {
-    //   this.navCtrl.navigateForward('/');
+    //   this.router.navigateByUrl('/');
     // }
     else {
       if (this.searchhotel.rootPage == "listpage") {
-        //this.navCtrl.navigateForward('/hotellist/false');
-        this.navCtrl.navigateBack('/hotellist/false');
+        //this.router.navigateByUrl('/hotellist/false');
+        this.router.navigateByUrl('/hotellist/false');
       }
       else if (this.searchhotel.rootPage == "likepage") {
-        this.navCtrl.navigateForward('/tabs/tab2');
+        this.router.navigateByUrl('/tabs/tab2');
       }
       else if (this.searchhotel.rootPage == "MyTrip") {
-        this.navCtrl.navigateForward('/app/tabs/tab3');
+        this.router.navigateByUrl('/app/tabs/tab3');
       }
       else if (this.searchhotel.rootPage == "combolist") {
-        this.navCtrl.navigateForward('/combolist');
+        this.router.navigateByUrl('/combolist');
       }
       else if (this.searchhotel.rootPage == "topdeallist") {
-        this.navCtrl.navigateForward('/topdeallist');
+        this.router.navigateByUrl('/topdeallist');
       }
       else if (this.searchhotel.rootPage == "listmood") {
         let hotellistmoodparams = this.gf.getParams('hotellistmood')
         if (hotellistmoodparams) {
-          //this.navCtrl.navigateForward('/hotellistmood/'+hotellistmoodparams.moodid+'/'+hotellistmoodparams.title);
-          this.navCtrl.navigateForward('/hotellistmood/' + hotellistmoodparams.moodid + '/' + hotellistmoodparams.title);
+          //this.router.navigateByUrl('/hotellistmood/'+hotellistmoodparams.moodid+'/'+hotellistmoodparams.title);
+          this.router.navigateByUrl('/hotellistmood/' + hotellistmoodparams.moodid + '/' + hotellistmoodparams.title);
         } else {
           this.navCtrl.back();
         }
 
       } else {
-        this.navCtrl.navigateForward('/');
+        this.router.navigateByUrl('/');
       }
     }
   }
@@ -2394,7 +2392,7 @@ excuteLoadHotelRoom(data){
     this.searchhotel.CheckOutDate = this.cout;
     //Xóa clone page-searchhotel do push page
     //this.clearClonePage("page-pickup-calendar");
-    //this.navCtrl.navigateForward('/pickup-calendar/true');
+    //this.router.navigateByUrl('/pickup-calendar/true');
   }
   clearClonePage(pagename) {
     //Xóa clone do push page
@@ -2550,7 +2548,7 @@ excuteLoadHotelRoom(data){
       else {
         //se.valueGlobal.logingoback = 'TabPage';
         se.HotelIDLike = se.HotelID;
-        se.navCtrl.navigateForward('/login');
+        se.router.navigateByUrl('/login');
       }
     });
     //google analytic
@@ -2606,7 +2604,7 @@ excuteLoadHotelRoom(data){
       }
       else {
         //se.valueGlobal.logingoback = 'TabPage';
-        se.navCtrl.navigateForward('/login');
+        se.router.navigateByUrl('/login');
       }
     });
     //google analytic
@@ -2622,8 +2620,7 @@ excuteLoadHotelRoom(data){
     this.searchhotel.showPopup = true;
     this.gf.setParams({ objroom: obj, jsonroom: this.jsonroom2.Hotels[0], imgHotel: this.imgHotel, address: this.Address }, 'hotelroomdetail');
     this.searchhotel.hotelID = this.HotelID;
-    this.valueGlobal.notRefreshDetail = true;
-    this.navCtrl.navigateForward('/hotelroomdetail');
+    this.router.navigateByUrl('/hotelroomdetail');
     // let modal = this.modalCtrl.create('HotelRoomDetailPage', param);
     // modal.present();
     //google analytic
@@ -2761,7 +2758,7 @@ excuteLoadHotelRoom(data){
       this.ischeckBOD = false;
       this.checkBODdone = false;
     });
-    //this.navCtrl.navigateForward('/pickup-calendar/true');
+    //this.router.navigateByUrl('/pickup-calendar/true');
     let fromdate = new Date(this.searchhotel.CheckInDate ? this.searchhotel.CheckInDate : this.cin);
     let todate = new Date(this.searchhotel.CheckOutDate ? this.searchhotel.CheckOutDate : this.cout);
     //check âm lịch
@@ -2870,7 +2867,7 @@ excuteLoadHotelRoom(data){
       if (!auth_token) {
         //this.valueGlobal.logingoback = 'TabPage';
         this.valueGlobal.backValue = 'carcombo';
-        this.navCtrl.navigateForward('/login');
+        this.router.navigateByUrl('/login');
       }
     });
   }
@@ -3117,11 +3114,11 @@ excuteLoadHotelRoom(data){
             self.Roomif.payment = rs.Msg;
             self.Roomif.ischeckpayment = false;
           }
-          self.navCtrl.navigateForward('/combocarnew');
+          self.router.navigateByUrl('/combocarnew');
 
         });
       } else {
-        self.navCtrl.navigateForward('/combocarnew');
+        self.router.navigateByUrl('/combocarnew');
       }
     }
     else if (value == 4 && this.usermail) {
@@ -3134,7 +3131,7 @@ excuteLoadHotelRoom(data){
           }
         });
       modal.present();
-      //this.navCtrl.navigateForward('/requestcombo');;
+      //this.router.navigateByUrl('/requestcombo');;
 
       modal.onDidDismiss().then((data: OverlayEventDetail) => {
         var se = this;
@@ -3271,7 +3268,7 @@ excuteLoadHotelRoom(data){
       self.Roomif.ischeckpayment = true;
       self.Roomif.roomcancelhbed = 1;
       this.bookCombo.ComboId = this.comboid?this.comboid:null;
-      self.navCtrl.navigateForward('roomdetailreview')
+      self.router.navigateByUrl('roomdetailreview')
     }
     else {
       if (this.searchhotel.CheckInDate && this.searchhotel.CheckOutDate) {
@@ -3288,7 +3285,7 @@ excuteLoadHotelRoom(data){
             }
           });
         modal.present();
-        //this.navCtrl.navigateForward('/requestcombo');;
+        //this.router.navigateByUrl('/requestcombo');;
 
         modal.onDidDismiss().then((data: OverlayEventDetail) => {
           var se = this;
@@ -3539,7 +3536,7 @@ excuteLoadHotelRoom(data){
     self.bookCombo.hasInsurrance = self.hasInsurrance ? true : false;
     self.bookCombo.checkInsurranceFee = self.checkInsurranceFee;
     self.bookCombo.objInsurranceFee = self.objInsurranceFee;
-    self.navCtrl.navigateForward('/flightcomboreviews');
+    self.router.navigateByUrl('/flightcomboreviews');
   }
 
   showRoomInfo() {
@@ -3635,7 +3632,7 @@ excuteLoadHotelRoom(data){
             this.storage.remove('userRewardData');
             this.storage.remove('point');
             this.storage.remove('blogtripdefault');
-            this.navCtrl.navigateForward('/');
+            this.router.navigateByUrl('/');
           }
         },
         {
@@ -3650,7 +3647,7 @@ excuteLoadHotelRoom(data){
             this.storage.remove('userRewardData');
             this.storage.remove('point');
             this.storage.remove('blogtripdefault');
-            this.navCtrl.navigateForward('/login');
+            this.router.navigateByUrl('/login');
           }
         }
       ]
@@ -3824,7 +3821,7 @@ excuteLoadHotelRoom(data){
               var decoded = jwt_decode(au.auth_token);
               se.storage.remove('point');
               se.storage.set('point', decoded.point);
-              se.navCtrl.navigateForward('/carcombo');
+              se.router.navigateByUrl('/carcombo');
             })
           }
         })

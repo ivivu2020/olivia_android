@@ -2292,7 +2292,7 @@ export class Tab1Page implements OnInit {
         }
         //this.navCtrl.navigateForward('/hotellist/false');
         //this.navCtrl.navigateForward(['/app/tabs/hotellist/'+ se.isrefresh]);
-        this.router.navigateByUrl('/hotellist/'+ se.isrefresh);
+        this.navCtrl.navigateForward('/hotellist/'+ se.isrefresh);
         this.gf.googleAnalytion('main', 'Search', '' + this.authService.regioncode + '|' + this.input + '|' + this.cin + '|' + this.cout);
       }
       else if (this.co == 0) {
@@ -2370,7 +2370,7 @@ export class Tab1Page implements OnInit {
           this.searchhotel.gbmsg = obj;
           //this.navCtrl.navigateForward('/hotellist/false');
           //this.navCtrl.navigateForward(['/app/tabs/hotellist/'+ se.isrefresh]);
-          this.router.navigateByUrl('/hotellist/'+ se.isrefresh);
+          this.navCtrl.navigateForward('/hotellist/'+ se.isrefresh);
           this.gf.googleAnalytion('main', 'Search', '' + this.authService.regioncode + '|' + this.input + '|' + this.cin + '|' + this.cout + '|' + this.gbitem.RegionCode);
         }
       }
@@ -2397,7 +2397,7 @@ export class Tab1Page implements OnInit {
             se.isrefresh = "true";
           }
           //this.navCtrl.navigateForward(['/app/tabs/hotellist/'+ se.isrefresh]);
-          this.router.navigateByUrl('/hotellist/'+ se.isrefresh);
+          this.navCtrl.navigateForward('/hotellist/'+ se.isrefresh);
           this.gf.googleAnalytion('main', 'Search', '' + (this.authService.regioncode ? this.authService.regioncode : this.gbmsg.RegionCode) + '|' + this.input + '|' + this.cin + '|' + this.cout);
 
         }
@@ -2527,7 +2527,7 @@ export class Tab1Page implements OnInit {
     this.searchhotel.flag = 1;
     this.valueGlobal.logingoback = '/hotellist/true';
     //this.navCtrl.navigateForward(['/app/tabs/hotellist/true']);
-    this.router.navigateByUrl('/hotellist/true');
+    this.navCtrl.navigateForward('/hotellist/true');
     //google analytic
     this.gf.googleAnalytion('topregion', 'Search', this.authService.regioncode);
   }
