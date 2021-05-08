@@ -129,7 +129,7 @@
     "leaflet": "^1.5.1",
     "leaflet-routing-machine": "^3.2.12",
     "moment": "^2.24.0",
-    "ng-packagr": "^5.0.1",
+    "ng-packagr": "^10.1.1",
     "plugin": "^0.3.3",
     "requestretry": "^4.0.0",
     "rxjs": "~6.3.3",
